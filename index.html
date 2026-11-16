@@ -1156,7 +1156,7 @@ function stats(s){
 
 // ---------- results: dashboard ----------
 // Two levels: the overview (what the pilot says so far, all sessions) and one participant's session. `view` decides.
-function renderResults(){closeMenu();dirtyNotes.clear();if(view&&!sessions.includes(view))view=null;if(!view)renderOverview();else if(isDone(view))renderSession();else renderReview();setHash(view?'session='+encodeURIComponent(view.participant):'overview')}
+function renderResults(){closeMenu();dirtyNotes.clear();syncUnloadGuard();if(view&&!sessions.includes(view))view=null;if(!view)renderOverview();else if(isDone(view))renderSession();else renderReview();setHash(view?'session='+encodeURIComponent(view.participant):'overview')}
 
 // ---------- routing ----------
 // Screens a researcher may reload, bookmark or step back to: #overview, #session=<code>, #explore=<n>&c=<A|B|C>.
@@ -1372,11 +1372,11 @@ const noteBox=(id,value,ph,auto)=>'<div class="notebox'+(auto?' auto':'')+'" dat
   +(auto?'':'<div class="noteacts" hidden><button class="btn small primary" data-act="note-save" type="button">Save</button><button class="btn small" data-act="note-cancel" type="button">Cancel</button><span class="note">unsaved · Ctrl+Enter saves, Esc cancels</span></div>')
   +'<span class="savedmsg" aria-live="polite">'+(auto&&value?'saved':'')+'</span></div>';
 const dirtyNotes=new Set(),autoTimers=new Map();
-function autoFlush(){if(!autoTimers.size)return;autoTimers.forEach((t,id)=>{clearTimeout(t);dirtyNotes.delete(id)});autoTimers.clear();saveSessions()}
+function autoFlush(){if(!autoTimers.size)return;autoTimers.forEach((t,id)=>{clearTimeout(t);dirtyNotes.delete(id)});autoTimers.clear();saveSessions();syncUnloadGuard()}
 const focusInNote=()=>!!(document.activeElement&&document.activeElement.matches('#results textarea'));
 const noteSaved=id=>id==='notes'?(view.notes||''):trialNote(view,id.slice(3));
 function noteWrite(id,v){if(id==='notes')view.notes=v;else{view.trialNotes=view.trialNotes||{};view.trialNotes[id.slice(3)]=v}}
-function noteSetDirty(box,on){const id=box.dataset.note;box.querySelector('.noteacts').hidden=!on;box.classList.toggle('dirty',on);if(on){dirtyNotes.add(id);box.querySelector('.savedmsg').textContent=''}else dirtyNotes.delete(id)}
+function noteSetDirty(box,on){const id=box.dataset.note;box.querySelector('.noteacts').hidden=!on;box.classList.toggle('dirty',on);if(on){dirtyNotes.add(id);box.querySelector('.savedmsg').textContent=''}else dirtyNotes.delete(id);syncUnloadGuard()}
 function noteSave(box){const id=box.dataset.note,ta=box.querySelector('textarea');noteWrite(id,ta.value);saveSessions();noteSetDirty(box,false);
   const m=box.querySelector('.savedmsg');m.textContent='Saved';clearTimeout(m._t);m._t=setTimeout(()=>{m.textContent=''},1800);afterNoteSettled()}
 function noteCancel(box){const ta=box.querySelector('textarea');ta.value=noteSaved(box.dataset.note);noteSetDirty(box,false);afterNoteSettled()}
@@ -1392,10 +1392,12 @@ function scheduleIdleRender(){clearTimeout(idleTimer);idleTimer=setTimeout(()=>{
 },4000)}
 $('results').addEventListener('focusout',e=>{if(e.relatedTarget&&e.relatedTarget.matches&&e.relatedTarget.matches('#results textarea'))return;setTimeout(afterNoteSettled,0)});
 const leaveOk=()=>{autoFlush();return !dirtyNotes.size||confirm('A note has not been saved. Leave without saving it?')};
-addEventListener('beforeunload',e=>{autoFlush();if(dirtyNotes.size){e.preventDefault();e.returnValue=''}});
+// The unload guard is registered only while a note is unsaved, so an idle page never carries a beforeunload handler.
+function onBeforeUnload(e){autoFlush();if(dirtyNotes.size){e.preventDefault();e.returnValue=''}}
+function syncUnloadGuard(){if(dirtyNotes.size)addEventListener('beforeunload',onBeforeUnload);else removeEventListener('beforeunload',onBeforeUnload)}
 $('results').addEventListener('input',e=>{const box=e.target.closest('.notebox');if(!box||!view)return;const id=box.dataset.note;if(pendingRender)scheduleIdleRender();
-  if(box.dataset.auto){noteWrite(id,e.target.value);dirtyNotes.add(id);box.querySelector('.savedmsg').textContent='saving…';clearTimeout(autoTimers.get(id));
-    autoTimers.set(id,setTimeout(()=>{autoTimers.delete(id);saveSessions();dirtyNotes.delete(id);box.querySelector('.savedmsg').textContent=e.target.value?'saved':'';afterNoteSettled()},500));return}
+  if(box.dataset.auto){noteWrite(id,e.target.value);dirtyNotes.add(id);syncUnloadGuard();box.querySelector('.savedmsg').textContent='saving…';clearTimeout(autoTimers.get(id));
+    autoTimers.set(id,setTimeout(()=>{autoTimers.delete(id);saveSessions();dirtyNotes.delete(id);syncUnloadGuard();box.querySelector('.savedmsg').textContent=e.target.value?'saved':'';afterNoteSettled()},500));return}
   noteSetDirty(box,e.target.value!==noteSaved(id))});
 $('results').addEventListener('keydown',e=>{const box=e.target.closest('.notebox');if(!box||box.dataset.auto||!e.target.matches('textarea'))return;
   if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();if(dirtyNotes.has(box.dataset.note))noteSave(box)}
