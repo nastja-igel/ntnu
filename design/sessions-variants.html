@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session browsing variants</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#081014; --panel:#0e1b21; --panel2:#12232b; --line:#21404b; --fg:#d6e6ea; --muted:#86a2ab; --own:#59c9e0; --target:#b9a6ff; --ai:#f3b23f; --aiSoft:#3a2c10; --good:#5cc28a; --goodSoft:#123323; --bad:#ef6a5e; --badSoft:#3a1714; --accent:#4fc1b4; --accentText:#07171a; --plot:#061015; --ring:#183641;
+  --font-display:'Barlow Condensed',sans-serif; --font-body:'IBM Plex Sans',system-ui,sans-serif; --font-mono:'IBM Plex Mono',monospace; color-scheme:dark}
+:root[data-theme="light"]{--bg:#eef3f4; --panel:#fff; --panel2:#f3f7f8; --line:#c9d9de; --fg:#0f2228; --muted:#4f6b73; --own:#0b7f97; --target:#6a4fd1; --ai:#a95f00; --aiSoft:#fbe9cf; --good:#1f8a52; --goodSoft:#dff1e6; --bad:#c43d32; --badSoft:#f8e0dd; --accent:#0d8784; --accentText:#fff; --plot:#f7fbfc; --ring:#c6d8de; color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:14px;line-height:1.45}
+.switch{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.switch b{font-family:var(--font-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px;color:var(--muted);margin-right:6px}
+.switch button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:8px;padding:6px 12px;cursor:pointer}
+.switch button[aria-pressed="true"]{background:var(--panel2);color:var(--fg);font-weight:600;border-color:var(--own)}
+.switch .sp{flex:1}
+.variant{display:none}.variant.on{display:block}
+.rationale{margin:0;padding:10px 16px;border-bottom:1px dashed var(--line);color:var(--muted);font-size:13px}
+.rationale b{color:var(--fg)}
+.screen{min-height:calc(100vh - 50px - 62px);position:relative;background:var(--bg);padding:16px}
+.wrap{max-width:1220px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.note{font-size:12px;color:var(--muted)}
+.eyebrow{font-family:var(--font-display);font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+h1{font-family:var(--font-display);font-size:30px;font-weight:600;margin:0;line-height:1;letter-spacing:.02em}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.btn{font:inherit;font-weight:600;font-size:14px;border-radius:8px;padding:9px 14px;cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--fg)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accentText)}
+.btn.ghost{background:transparent;color:var(--muted)}
+.btn.small{font-size:12px;font-weight:500;padding:5px 10px}
+.linkbtn{font:inherit;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:none;border:0;padding:0;cursor:pointer;opacity:.8;text-decoration:underline dotted;text-underline-offset:3px}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;letter-spacing:.03em;white-space:nowrap}
+.pill.n{background:var(--panel2);color:var(--muted)} .pill.c{background:color-mix(in srgb,var(--own) 18%,transparent);color:var(--own)}
+.cond{display:inline-block;font-family:var(--font-display);font-size:13px;letter-spacing:.06em;border:1px solid var(--line);border-radius:4px;padding:0 6px;color:var(--muted)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{color:var(--muted);font-weight:500;font-size:12px}
+tr.cur td{background:color-mix(in srgb,var(--own) 8%,transparent)}
+.dhead{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap}
+.dhead .meta{color:var(--muted);font-size:13px;margin-top:4px}
+.dhead .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.flag{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--ai);border:1px solid color-mix(in srgb,var(--ai) 50%,var(--line));border-radius:999px;padding:2px 9px}
+.agg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.agg .c{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--panel2)}
+.agg .c b{font-family:var(--font-display);font-size:16px;letter-spacing:.04em}
+.agg .c .nums{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:8px 12px;margin-top:8px;font-family:var(--font-mono);font-size:11px;color:var(--muted);line-height:1.2}
+.agg .c .nums span b{display:block;font-family:var(--font-display);font-size:22px;color:var(--fg);letter-spacing:0}
+/* mini trial-sequence used inside the dashboard previews */
+.cells{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px}
+.cell{height:40px;border-radius:8px;display:grid;place-items:center;font-size:12px;font-weight:600;border:1px solid var(--line);background:var(--panel2);letter-spacing:.03em}
+.cell.ok{color:var(--good);border-color:color-mix(in srgb,var(--good) 55%,var(--line))}
+.cell.over{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 60%,var(--line))}
+.cell.under{color:var(--ai);border-color:color-mix(in srgb,var(--ai) 55%,var(--line))}
+.ghost{height:120px;border:1px dashed var(--line);border-radius:10px;display:grid;place-items:center;color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.back{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;text-decoration:none;margin-bottom:6px}
+.back:hover{color:var(--fg)}
+
+/* A: overview screen as the entry point */
+.a .rowlink td:first-child{font-weight:600}
+.a tr.rowlink{cursor:pointer}
+.a tr.rowlink:hover td{background:color-mix(in srgb,var(--own) 8%,transparent)}
+.a .arrow{color:var(--own);text-align:right;white-space:nowrap}
+.a .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.a .inset{border:1px dashed var(--line);border-radius:10px;padding:14px;background:color-mix(in srgb,var(--panel) 60%,transparent)}
+.a .inset .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+
+/* B: list inside the start page's study door */
+.b .screen{padding:0;display:grid;grid-template-columns:minmax(0,1fr) clamp(360px,42vw,620px);min-height:calc(100vh - 112px)}
+.b .plotbg{position:relative;background:var(--plot);overflow:hidden}
+.b .plotbg svg{position:absolute;inset:0;width:100%;height:100%}
+.b .fade{position:absolute;inset:0;background:linear-gradient(90deg,transparent 55%,var(--panel) 100%)}
+.b .panel{background:var(--panel);padding:40px 48px;display:flex;flex-direction:column;gap:16px}
+.b .panel h1{font-size:40px}
+.b .sub{color:var(--muted);font-size:15px;margin:10px 0 0;max-width:62ch}
+.b .doors{display:grid;gap:10px;margin-top:6px}
+.b .door{display:grid;grid-template-columns:1fr auto;gap:4px 14px;align-items:center;text-align:left;font:inherit;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;cursor:pointer}
+.b .door[aria-expanded="true"]{border-color:var(--own)}
+.b .door b{grid-column:1;grid-row:1;font-family:var(--font-display);font-size:20px;font-weight:600;letter-spacing:.02em}
+.b .door span{grid-column:1;grid-row:2;color:var(--muted);font-size:13px}
+.b .door i{grid-column:2;grid-row:1/3;font-style:normal;font-size:22px;color:var(--own)}
+.b .doorpanel{display:flex;flex-direction:column;gap:12px;padding:6px 4px 10px 16px;margin:-4px 0 2px 8px;border-left:2px solid var(--line)}
+.b .field{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.b .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel);align-self:flex-start;text-transform:none;letter-spacing:0}
+.b .seg button{font:inherit;font-size:13px;border:0;background:transparent;color:var(--muted);padding:7px 12px;cursor:pointer}
+.b .seg button[aria-pressed="true"]{background:var(--panel2);color:var(--fg);font-weight:600}
+.b .seg button+button{border-left:1px solid var(--line)}
+.b .recent{border-top:1px solid var(--line);padding-top:10px;display:grid;gap:2px}
+.b .recent .h{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.b .recent a{display:grid;grid-template-columns:44px 28px 1fr auto auto;gap:12px;align-items:center;padding:7px 8px;margin:0 -8px;border-radius:7px;color:var(--fg);text-decoration:none;font-size:13px}
+.b .recent a:hover{background:var(--panel2)}
+.b .recent a .code{font-family:var(--font-mono);font-weight:600}
+.b .recent a .when{color:var(--muted);font-family:var(--font-mono);font-size:12px}
+.b .recent a .score{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.b .recent a .go{color:var(--own)}
+.b .recent .all{font-size:12px;color:var(--muted);padding:6px 0 0}
+.b .recent .all a{display:inline;padding:0;margin:0;color:var(--own);font-size:12px}
+.b .meta{display:flex;gap:16px;flex-wrap:wrap;color:var(--muted);font-size:12px;margin-top:auto}
+.b .meta b{color:var(--fg)}
+
+/* C: sidebar list beside the dashboard */
+.c .screen{padding:0}
+.c .layout{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:calc(100vh - 112px)}
+.c .rail{background:var(--panel);border-right:1px solid var(--line);padding:16px 12px;display:flex;flex-direction:column;gap:12px}
+.c .rail .top{display:flex;justify-content:space-between;align-items:center;padding:0 4px}
+.c .rail h2{font-family:var(--font-display);font-size:18px;font-weight:600;margin:0;letter-spacing:.04em}
+.c .grp{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:8px 6px 4px;display:flex;justify-content:space-between}
+.c .grp em{font-style:normal;font-family:var(--font-mono);font-size:11px}
+.c .ses{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--fg);text-decoration:none}
+.c .ses:hover{background:var(--panel2)}
+.c .ses[aria-current="true"]{background:var(--panel2);box-shadow:inset 2px 0 0 var(--own)}
+.c .ses .code{font-family:var(--font-mono);font-weight:600;font-size:13px}
+.c .ses .when{grid-column:1;color:var(--muted);font-size:11px;font-family:var(--font-mono)}
+.c .ses .score{grid-row:1/3;align-self:center;font-family:var(--font-display);font-size:18px;color:var(--fg)}
+.c .ses .score small{font-size:11px;color:var(--muted);font-family:var(--font-mono)}
+.c .ses .dots{grid-column:1/-1;display:flex;gap:2px;margin-top:3px}
+.c .ses .dots i{width:9px;height:4px;border-radius:1px;background:var(--line)}
+.c .ses .dots i.ok{background:var(--good)} .c .ses .dots i.over{background:var(--bad)} .c .ses .dots i.under{background:var(--ai)}
+.c .rail .foot{margin-top:auto;display:grid;gap:6px}
+.c .main{padding:16px 20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.c .cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 4px}
+.c .cmp .k{font-size:11px;color:var(--muted)} .c .cmp .v{font-family:var(--font-mono);font-size:12px;text-align:right}
+
+/* D: per-session address */
+.d .urlbar{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-family:var(--font-mono);font-size:13px;color:var(--muted);max-width:720px}
+.d .urlbar .lock{color:var(--good)}
+.d .urlbar em{font-style:normal;color:var(--fg);background:color-mix(in srgb,var(--own) 18%,transparent);border-radius:4px;padding:0 4px}
+.d .chrome{border:1px dashed var(--line);border-radius:12px;padding:10px 12px 0;margin-bottom:4px}
+.d .chrome .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px 4px}
+.d .copyrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.d .copied{font-size:12px;color:var(--good)}
+.d .uses{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.d .uses div{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--panel2);font-size:13px;color:var(--muted)}
+.d .uses b{display:block;color:var(--fg);font-weight:600;margin-bottom:2px}
+.d a.code{font-family:var(--font-mono);font-weight:600;color:var(--own);text-decoration:underline dotted;text-underline-offset:3px}
+</style>
+
+<div class="switch"><b>Browsing sessions</b>
+  <button data-v="a" aria-pressed="true">A · Overview screen</button>
+  <button data-v="b" aria-pressed="false">B · List on the start page</button>
+  <button data-v="c" aria-pressed="false">C · Sidebar</button>
+  <button data-v="d" aria-pressed="false">D · Address per session</button>
+  <span class="sp"></span><button id="theme">Light / dark</button>
+</div>
+
+<!-- ========= A ========= -->
+<section class="variant a on" id="v-a">
+  <p class="rationale"><b>A · Экран-обзор как точка входа.</b> Ссылка исследователя ведёт не на последнюю сессию, а на отдельный экран «Sessions»: сводка по условиям сверху, таблица всех сессий ниже, каждая строка открывает свой дашборд. На дашборде появляется «← All sessions», сводка по условиям с него уходит. Два экрана с разными задачами: сравнить людей и разобрать одного. Самый понятный маршрут, одна лишняя страница.</p>
+  <div class="screen"><div class="wrap">
+    <div class="dhead">
+      <div><h1>Sessions</h1><div class="meta mono">7 sessions on this device · 15–16 Nov 2026 · stored in this browser only</div></div>
+      <div class="acts"><button class="btn">Download all · CSV ▾</button><button class="btn ghost">Start page</button></div>
+    </div>
+    <div class="agg">
+      <div class="c"><b>A · ADVICE</b><div class="nums"><span><b>2</b>sessions</span><span><b>4.5</b>appropriate / 8</span><span><b>1.5</b>over</span><span><b>2.0</b>under</span><span><b>2.5</b>data checked / 8</span></div></div>
+      <div class="c"><b>B · + CONFIDENCE</b><div class="nums"><span><b>3</b>sessions</span><span><b>5.0</b>appropriate / 8</span><span><b>1.7</b>over</span><span><b>1.3</b>under</span><span><b>2.3</b>data checked / 8</span></div></div>
+      <div class="c"><b>C · + EVIDENCE</b><div class="nums"><span><b>2</b>sessions</span><span><b>6.5</b>appropriate / 8</span><span><b>0.5</b>over</span><span><b>1.0</b>under</span><span><b>5.5</b>data checked / 8</span></div></div>
+    </div>
+    <section class="card">
+      <p class="eyebrow"><span>All sessions</span><span class="note">newest first · click a row to open</span></p>
+      <table><thead><tr><th>Code</th><th>Condition</th><th>Date</th><th>Appropriate</th><th>Over</th><th>Under</th><th>Plausible caught</th><th>Data checked</th><th>Mean time</th><th>Notes</th><th></th></tr></thead><tbody>
+        <tr class="rowlink"><td class="mono">P07</td><td><span class="cond">B</span></td><td class="mono">16 Nov 14:32</td><td class="mono">4 / 8</td><td class="mono">1</td><td class="mono">3</td><td class="mono">1 / 2</td><td class="mono">1 / 8</td><td class="mono">12.7 s</td><td class="note">Thought aloud…</td><td class="arrow">Open →</td></tr>
+        <tr class="rowlink"><td class="mono">P06</td><td><span class="cond">C</span></td><td class="mono">16 Nov 13:50</td><td class="mono">6 / 8</td><td class="mono">1</td><td class="mono">1</td><td class="mono">1 / 2</td><td class="mono">5 / 8</td><td class="mono">18.9 s</td><td class="note"></td><td class="arrow">Open →</td></tr>
+        <tr class="rowlink"><td class="mono">P05</td><td><span class="cond">A</span></td><td class="mono">16 Nov 13:05</td><td class="mono">5 / 8</td><td class="mono">2</td><td class="mono">1</td><td class="mono">0 / 2</td><td class="mono">2 / 8</td><td class="mono">9.8 s</td><td class="note">Interrupted at trial 5</td><td class="arrow">Open →</td></tr>
+        <tr class="rowlink"><td class="mono">P04</td><td><span class="cond">B</span></td><td class="mono">15 Nov 16:20</td><td class="mono">5 / 8</td><td class="mono">2</td><td class="mono">1</td><td class="mono">0 / 2</td><td class="mono">3 / 8</td><td class="mono">11.1 s</td><td class="note"></td><td class="arrow">Open →</td></tr>
+        <tr class="rowlink"><td class="mono">P03</td><td><span class="cond">C</span></td><td class="mono">15 Nov 15:40</td><td class="mono">7 / 8</td><td class="mono">0</td><td class="mono">1</td><td class="mono">2 / 2</td><td class="mono">6 / 8</td><td class="mono">21.4 s</td><td class="note"></td><td class="arrow">Open →</td></tr>
+        <tr class="rowlink"><td class="mono">P02</td><td><span class="cond">A</span></td><td class="mono">15 Nov 15:02</td><td class="mono">4 / 8</td><td class="mono">1</td><td class="mono">3</td><td class="mono">1 / 2</td><td class="mono">3 / 8</td><td class="mono">8.2 s</td><td class="note"></td><td class="arrow">Open →</td></tr>
+        <tr class="rowlink"><td class="mono">P01</td><td><span class="cond">B</span></td><td class="mono">15 Nov 14:10</td><td class="mono">6 / 8</td><td class="mono">2</td><td class="mono">0</td><td class="mono">0 / 2</td><td class="mono">3 / 8</td><td class="mono">14.0 s</td><td class="note">Pilot run</td><td class="arrow">Open →</td></tr>
+      </tbody></table>
+    </section>
+    <div class="inset">
+      <div class="lbl">What changes on the session dashboard</div>
+      <a class="back" href="#a">← All sessions</a>
+      <div class="dhead">
+        <div><h1>P07 <span class="note" style="font-family:var(--font-body);font-size:14px;letter-spacing:0">· condition B</span></h1><div class="meta mono">16 Nov 2026 14:32 · 8 trials in 6 min 12 s · order 4 2 3 7 5 6 1 8</div></div>
+        <div class="acts"><span class="flag">⚑ 2 decisions under 2 s</span><button class="btn">Download ▾</button><button class="btn small">← P06</button><button class="btn small" disabled>P08 →</button></div>
+      </div>
+      <div class="cells" style="margin-top:14px"><div class="cell under">under</div><div class="cell ok">ok</div><div class="cell ok">ok</div><div class="cell ok">ok</div><div class="cell over">over</div><div class="cell ok">ok</div><div class="cell under">under</div><div class="cell under">under</div></div>
+      <p class="note" style="margin:10px 0 0">The picker in the head goes away; back arrow and ← → to neighbours stay. The «Sessions on this device» card moves to the overview.</p>
+    </div>
+  </div></div>
+</section>
+
+<!-- ========= B ========= -->
+<section class="variant b" id="v-b">
+  <p class="rationale"><b>B · Список на стартовой странице.</b> Внутри «Run a study session», под выбором условия, появляются последние сессии: код, условие, время, результат, стрелка. Любая открывается в один клик без захода через последнюю. Внизу «All 7 sessions →» ведёт на полную таблицу внизу дашборда. Дешевле всего, но нагружает экран, который видит и участник, пока исследователь настраивает условие.</p>
+  <div class="screen">
+    <div class="plotbg"><svg viewBox="0 0 900 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <g fill="none" stroke="var(--ring)"><circle cx="420" cy="390" r="70"/><circle cx="420" cy="390" r="140"/><circle cx="420" cy="390" r="210"/><circle cx="420" cy="390" r="280"/><circle cx="420" cy="390" r="350"/><line x1="420" y1="0" x2="420" y2="700"/><line x1="0" y1="390" x2="900" y2="390"/></g>
+      <circle cx="420" cy="390" r="35" fill="none" stroke="var(--bad)" stroke-dasharray="3 4" opacity=".6"/>
+      <line x1="420" y1="390" x2="420" y2="300" stroke="var(--own)" stroke-width="2"/><polygon points="420,377 427,397 420,392 413,397" fill="var(--own)"/>
+      <line x1="560" y1="250" x2="500" y2="250" stroke="var(--target)" stroke-width="2"/><polygon points="548,250 568,243 563,250 568,257" fill="var(--target)"/>
+      <circle cx="560" cy="250" r="16" fill="none" stroke="var(--ai)" stroke-dasharray="4 4" stroke-width="1.5"/>
+    </svg><div class="fade"></div></div>
+    <div class="panel">
+      <div><h1>Shore Control Reliance Lab</h1><p class="sub">A research prototype on appropriate reliance: when should a remote operator trust an AI collision-avoidance advisory, and when should they check it?</p></div>
+      <div class="doors">
+        <button class="door" aria-expanded="false"><b>Explore an encounter</b><span>Any of 8 encounters, any of 3 presentations, ground truth on demand.</span><i>↓</i></button>
+        <button class="door" aria-expanded="true"><b>Run a study session</b><span>8 trials in random order, 45 s each, checking behaviour recorded.</span><i>↑</i></button>
+        <div class="doorpanel">
+          <p class="note" style="margin:0">Researcher setup. The participant does not see this screen: the next screen asks for their code and gives the instructions, without naming the condition.</p>
+          <div class="field"><span>Presentation condition</span>
+            <span class="seg"><button aria-pressed="false">A · Advice only</button><button aria-pressed="false">B · + Confidence</button><button aria-pressed="true">C · + Evidence</button></span></div>
+          <div><button class="btn primary">Continue to participant screen</button></div>
+          <div class="recent">
+            <div class="h"><span>Recent sessions on this device</span><span class="mono">7</span></div>
+            <a href="#b"><span class="code">P07</span><span class="cond">B</span><span class="when">16 Nov 14:32</span><span class="score">4 / 8 appropriate</span><span class="go">→</span></a>
+            <a href="#b"><span class="code">P06</span><span class="cond">C</span><span class="when">16 Nov 13:50</span><span class="score">6 / 8 appropriate</span><span class="go">→</span></a>
+            <a href="#b"><span class="code">P05</span><span class="cond">A</span><span class="when">16 Nov 13:05</span><span class="score">5 / 8 appropriate</span><span class="go">→</span></a>
+            <div class="all"><a href="#b">All 7 sessions and the condition comparison →</a></div>
+          </div>
+        </div>
+        <button class="door" aria-expanded="false"><b>About the method</b><span>Research question, three steps, three presentation conditions.</span><i>↓</i></button>
+      </div>
+      <div class="meta"><span><b>8</b> encounters</span><span><b>3</b> wrong, 2 plausibly</span><span><b>A · B · C</b> presentations</span><span><b>45 s</b> per decision</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========= C ========= -->
+<section class="variant c" id="v-c">
+  <p class="rationale"><b>C · Боковая панель.</b> Дашборд получает слева постоянный список сессий, сгруппированный по условиям: код, время, результат и восемь точек-исходов как миниатюра попыток. Клик переключает правую часть, текущая подсвечена. Как почтовый клиент: список и письмо рядом, переход между людьми мгновенный, сравнивать соседей удобно. Самый «аналитический» вариант, но на телефоне панель придётся убирать за кнопку.</p>
+  <div class="screen"><div class="layout">
+    <aside class="rail">
+      <div class="top"><h2>Sessions · 7</h2><button class="btn small">CSV ▾</button></div>
+      <div class="cmp"><span class="k">Appropriate / 8, mean</span><span class="v">A 4.5 · B 5.0 · C 6.5</span><span class="k">Data checked / 8, mean</span><span class="v">A 2.5 · B 2.3 · C 5.5</span></div>
+      <div class="grp"><span>B · + Confidence</span><em>3</em></div>
+      <a class="ses" href="#c" aria-current="true"><span class="code">P07</span><span class="score">4<small> / 8</small></span><span class="when">16 Nov 14:32</span><span class="dots"><i class="under"></i><i class="ok"></i><i class="ok"></i><i class="ok"></i><i class="over"></i><i class="ok"></i><i class="under"></i><i class="under"></i></span></a>
+      <a class="ses" href="#c"><span class="code">P04</span><span class="score">5<small> / 8</small></span><span class="when">15 Nov 16:20</span><span class="dots"><i class="ok"></i><i class="over"></i><i class="ok"></i><i class="ok"></i><i class="over"></i><i class="ok"></i><i class="under"></i><i class="ok"></i></span></a>
+      <a class="ses" href="#c"><span class="code">P01</span><span class="score">6<small> / 8</small></span><span class="when">15 Nov 14:10</span><span class="dots"><i class="ok"></i><i class="ok"></i><i class="over"></i><i class="ok"></i><i class="over"></i><i class="ok"></i><i class="ok"></i><i class="ok"></i></span></a>
+      <div class="grp"><span>C · + Evidence</span><em>2</em></div>
+      <a class="ses" href="#c"><span class="code">P06</span><span class="score">6<small> / 8</small></span><span class="when">16 Nov 13:50</span><span class="dots"><i class="ok"></i><i class="ok"></i><i class="under"></i><i class="ok"></i><i class="over"></i><i class="ok"></i><i class="ok"></i><i class="ok"></i></span></a>
+      <a class="ses" href="#c"><span class="code">P03</span><span class="score">7<small> / 8</small></span><span class="when">15 Nov 15:40</span><span class="dots"><i class="ok"></i><i class="ok"></i><i class="ok"></i><i class="ok"></i><i class="ok"></i><i class="under"></i><i class="ok"></i><i class="ok"></i></span></a>
+      <div class="grp"><span>A · Advice</span><em>2</em></div>
+      <a class="ses" href="#c"><span class="code">P05</span><span class="score">5<small> / 8</small></span><span class="when">16 Nov 13:05</span><span class="dots"><i class="ok"></i><i class="over"></i><i class="ok"></i><i class="under"></i><i class="over"></i><i class="ok"></i><i class="ok"></i><i class="ok"></i></span></a>
+      <a class="ses" href="#c"><span class="code">P02</span><span class="score">4<small> / 8</small></span><span class="when">15 Nov 15:02</span><span class="dots"><i class="under"></i><i class="ok"></i><i class="under"></i><i class="ok"></i><i class="over"></i><i class="ok"></i><i class="under"></i><i class="ok"></i></span></a>
+      <div class="foot"><button class="btn ghost small">Start page</button></div>
+    </aside>
+    <div class="main">
+      <div class="dhead">
+        <div><h1>P07 <span class="note" style="font-family:var(--font-body);font-size:14px;letter-spacing:0">· condition B</span></h1><div class="meta mono">16 Nov 2026 14:32 · 8 trials in 6 min 12 s · order 4 2 3 7 5 6 1 8</div></div>
+        <div class="acts"><span class="flag">⚑ 2 decisions under 2 s</span><button class="btn">Download ▾</button><button class="btn ghost">New session</button></div>
+      </div>
+      <section class="card">
+        <p class="eyebrow"><span>Trial sequence</span></p>
+        <div class="cells"><div class="cell under">under</div><div class="cell ok">ok</div><div class="cell ok">ok</div><div class="cell ok">ok</div><div class="cell over">over</div><div class="cell ok">ok</div><div class="cell under">under</div><div class="cell under">under</div></div>
+        <div class="ghost" style="margin-top:12px">decision time · data open · encounters</div>
+      </section>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px"><div class="ghost">reliance matrix</div><div class="ghost">acceptance by advice type</div><div class="ghost">checking behaviour</div></div>
+      <div class="ghost">event timelines</div>
+    </div>
+  </div></div>
+</section>
+
+<!-- ========= D ========= -->
+<section class="variant d" id="v-d">
+  <p class="rationale"><b>D · Адрес у каждой сессии.</b> Не новый экран, а свойство: у каждой сессии есть адрес вида <span class="mono">#session=P07</span>. Перезагрузка возвращает на ту же сессию, ссылку можно положить в заметки или закладки, кнопка «Copy link» в шапке, коды в таблице становятся ссылками, стрелки ← → меняют адрес. Сочетается с любым из A, B, C. Ограничение: сессии лежат в браузере, поэтому ссылка работает только на том же устройстве.</p>
+  <div class="screen"><div class="wrap">
+    <div class="chrome">
+      <p class="lbl">Browser address bar</p>
+      <div class="urlbar"><span class="lock">🔒</span><span>…/shore-control/index.html</span><em>#session=P07</em></div>
+      <p class="note" style="margin:8px 4px 10px">Reload, back and forward all keep the session. Without a stored session for that code the dashboard opens on the latest one and says so.</p>
+    </div>
+    <div class="dhead">
+      <div><h1>Session results</h1><div class="meta mono">P07 · condition B · 16 Nov 2026 14:32 · 8 trials in 6 min 12 s</div></div>
+      <div class="acts"><div class="copyrow"><button class="btn small">Copy link</button><span class="copied">Link copied · #session=P07</span></div><button class="btn small">← P06</button><button class="btn small" disabled>P08 →</button><button class="btn">Download ▾</button></div>
+    </div>
+    <section class="card">
+      <p class="eyebrow"><span>Sessions on this device</span><span class="note">each code is a link</span></p>
+      <table><thead><tr><th>Code</th><th>Condition</th><th>Date</th><th>Appropriate</th><th>Over</th><th>Under</th><th>Data checked</th><th></th></tr></thead><tbody>
+        <tr class="cur"><td><a class="code" href="#d">P07</a></td><td>B</td><td class="mono">16 Nov 14:32</td><td class="mono">4 / 8</td><td class="mono">1</td><td class="mono">3</td><td class="mono">1 / 8</td><td><span class="pill c">this page</span></td></tr>
+        <tr><td><a class="code" href="#d">P06</a></td><td>C</td><td class="mono">16 Nov 13:50</td><td class="mono">6 / 8</td><td class="mono">1</td><td class="mono">1</td><td class="mono">5 / 8</td><td class="note mono">#session=P06</td></tr>
+        <tr><td><a class="code" href="#d">P05</a></td><td>A</td><td class="mono">16 Nov 13:05</td><td class="mono">5 / 8</td><td class="mono">2</td><td class="mono">1</td><td class="mono">2 / 8</td><td class="note mono">#session=P05</td></tr>
+        <tr><td><a class="code" href="#d">P04</a></td><td>B</td><td class="mono">15 Nov 16:20</td><td class="mono">5 / 8</td><td class="mono">2</td><td class="mono">1</td><td class="mono">3 / 8</td><td class="note mono">#session=P04</td></tr>
+      </tbody></table>
+    </section>
+    <div class="uses">
+      <div><b>In the lab notebook</b>«P07 hesitated on trial 5, see #session=P07» opens exactly that dashboard on the lab laptop.</div>
+      <div><b>Between sessions</b>The researcher reloads or closes the tab by accident and lands on the same participant, not the latest.</div>
+      <div><b>Overview + address</b>Variant A or C gives the list; the address gives every row a stable place to return to.</div>
+    </div>
+  </div></div>
+</section>
+
+<script>
+document.querySelectorAll('.switch [data-v]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.switch [data-v]').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  document.querySelectorAll('.variant').forEach(v=>v.classList.toggle('on',v.id==='v-'+b.dataset.v));
+  history.replaceState(null,'','#'+b.dataset.v); window.scrollTo(0,0);
+}));
+function fromHash(){const h=location.hash.slice(1);const b=h&&document.querySelector('.switch [data-v="'+h+'"]');if(b&&b.getAttribute('aria-pressed')!=='true')b.click()}
+fromHash(); addEventListener('hashchange',fromHash);
+document.getElementById('theme').addEventListener('click',()=>{const r=document.documentElement;r.dataset.theme=r.dataset.theme==='light'?'':'light'});
+</script>
+</html>

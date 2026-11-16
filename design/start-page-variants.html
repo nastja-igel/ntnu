@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Start page variants</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#081014; --panel:#0e1b21; --panel2:#12232b; --line:#21404b; --fg:#d6e6ea; --muted:#86a2ab;
+  --own:#59c9e0; --target:#b9a6ff; --ai:#f3b23f; --aiSoft:#3a2c10; --good:#5cc28a; --bad:#ef6a5e; --goodSoft:#123323; --badSoft:#3a1714;
+  --plot:#061015; --ring:#183641; --ringLabel:#4f7380;
+  --font-display:'Barlow Condensed','Arial Narrow',sans-serif; --font-body:'IBM Plex Sans',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#eef3f4; --panel:#ffffff; --panel2:#f3f7f8; --line:#c9d9de; --fg:#0f2228; --muted:#4f6b73;
+  --own:#0b7f97; --target:#6a4fd1; --ai:#a95f00; --aiSoft:#fbe9cf; --good:#1f8a52; --bad:#c43d32; --goodSoft:#dff1e6; --badSoft:#f8e0dd;
+  --plot:#f7fbfc; --ring:#c6d8de; --ringLabel:#6b8890; color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:14px;line-height:1.45}
+/* ---- switcher (not part of the design) ---- */
+.switch{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.switch b{font-family:var(--font-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px;color:var(--muted);margin-right:6px}
+.switch button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:8px;padding:6px 12px;cursor:pointer}
+.switch button[aria-pressed="true"]{background:var(--panel2);color:var(--fg);font-weight:600;border-color:var(--own)}
+.switch .sp{flex:1}
+.variant{display:none;padding:16px;min-height:calc(100vh - 50px);flex-direction:column}
+.variant.on{display:flex}
+.variant footer{margin-top:auto;padding-top:14px}
+/* generous air between the last block and the footer, on every variant */
+.a .choices,.b .grid,.c .stage,.c .method,.d .table{margin-bottom:80px}
+.variant>.wrap:last-child,.variant>.col{display:flex;flex-direction:column;flex:1;width:100%}
+.rationale{max-width:1220px;margin:0 auto 14px;padding:10px 12px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);font-size:13px}
+.rationale b{color:var(--fg)}
+.wrap{max-width:1220px;margin:0 auto}
+/* ---- shared primitives from the prototype ---- */
+h1{font-family:var(--font-display);font-weight:600;letter-spacing:.02em;margin:0;line-height:1.02;text-wrap:balance}
+.sub{color:var(--muted);margin:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.eyebrow{font-family:var(--font-display);font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
+.seg button{font:inherit;font-size:13px;border:0;background:transparent;color:var(--muted);padding:7px 12px;cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--panel2);color:var(--fg);font-weight:600}
+.seg button+button{border-left:1px solid var(--line)}
+select,input[type=text]{font:inherit;font-size:13px;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:7px 8px;max-width:100%}
+.btn{font:inherit;font-weight:600;font-size:14px;border-radius:8px;padding:10px 16px;cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--fg)}
+.btn.primary{background:var(--good);border-color:var(--good);color:var(--panel)}
+.btn.ghost{background:transparent}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.field{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.field select,.field input,.field .seg{text-transform:none;letter-spacing:0;align-self:flex-start;max-width:100%}
+.field select{width:100%}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;letter-spacing:.03em}
+.pill.ok{background:var(--goodSoft);color:var(--good)} .pill.no{background:var(--badSoft);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)}
+footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;margin-top:24px}
+.plotsvg{display:block;width:100%;height:auto;background:var(--plot);border-radius:8px}
+
+/* ---- A: two doors (current, refined) ---- */
+.a .hero{max-width:72ch;padding:12px 0 18px}
+.a h1{font-size:44px}
+.a .sub{font-size:17px;margin-top:10px}
+.a .lede{margin:10px 0 0;opacity:.85}
+.a .choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.a .choice{display:flex;flex-direction:column;gap:12px}
+.a .choice .eyebrow{font-size:16px;color:var(--fg)}
+.a .choice p{margin:0;color:var(--muted)}
+.a .choice>div:last-child{margin-top:auto}
+.a .facts{display:flex;gap:18px;flex-wrap:wrap;margin-top:16px;color:var(--muted);font-size:13px}
+.a .facts b{display:block;font-family:var(--font-display);font-size:26px;color:var(--fg);line-height:1}
+
+/* ---- B: research brief ---- */
+.b .grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(320px,.9fr);gap:28px;align-items:start}
+@media (max-width:880px){.b .grid{grid-template-columns:1fr}}
+.b h1{font-size:46px}
+.b .q,.c .q{font-size:20px;line-height:1.35;margin:14px 0 0;color:var(--fg);text-wrap:balance}
+.b .q em,.c .q em{font-style:normal;color:var(--ai)}
+.b .abstract,.c .abstract{margin:16px 0 0;color:var(--muted);max-width:62ch}
+.b .steps,.c .steps{counter-reset:s;list-style:none;padding:0;margin:22px 0 0;display:grid;gap:10px}
+.b .steps li,.c .steps li{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start}
+.b .steps li>b,.b .steps li>span,.c .steps li>b,.c .steps li>span{grid-column:2}
+.b .steps li::before,.c .steps li::before{grid-row:1/3;counter-increment:s;content:counter(s);font-family:var(--font-display);font-weight:600;font-size:20px;color:var(--ai);border:1px solid var(--line);border-radius:8px;width:34px;height:34px;display:grid;place-items:center}
+.b .steps b,.c .steps b{display:block;font-weight:600}
+.b .steps span,.c .steps span{color:var(--muted)}
+.b .conds,.c .conds{margin-top:22px;border-top:1px solid var(--line)}
+.b .conds div,.c .conds div{display:grid;grid-template-columns:150px 1fr;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+.b .conds b,.c .conds b{font-family:var(--font-display);font-size:15px;letter-spacing:.04em}
+.b .conds span,.c .conds span{color:var(--muted)}
+/* C: method block under the console */
+.c .method[hidden]{display:none}
+.c .method{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(300px,1fr);gap:14px 40px;align-items:start;margin-top:-40px;padding-top:28px;border-top:1px solid var(--line)}
+@media (max-width:880px){.c .method{grid-template-columns:1fr}}
+.c .method .q{font-size:24px;margin:6px 0 0}
+.c .method .eyebrow{font-size:13px}
+.c .method .conds{margin-top:0}
+.c .method .steps{margin-top:18px}
+.b .entry{position:sticky;top:60px}
+.b .tabs{display:flex;border-bottom:1px solid var(--line);margin:-16px -16px 16px;padding:0 8px}
+.b .tabs button{font:inherit;font-family:var(--font-display);font-size:17px;letter-spacing:.04em;text-transform:uppercase;background:none;border:0;color:var(--muted);padding:14px 10px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.b .tabs button[aria-pressed="true"]{color:var(--fg);border-bottom-color:var(--ai)}
+.b .entry .f{display:grid;gap:14px}
+.b .entry .hint{color:var(--muted);font-size:13px;margin:0}
+.b .entry .alt{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+.b .entry .alt a{color:var(--own)}
+
+/* ---- C: console first ---- */
+.c .stage{position:relative;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--plot);display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,.85fr)}
+@media (max-width:880px){.c .stage{grid-template-columns:1fr}}
+.c .plot{position:relative;min-height:520px}
+.c .plot svg{position:absolute;inset:0;width:100%;height:100%}
+.c .fade{position:absolute;inset:0;background:linear-gradient(90deg,transparent 55%,var(--panel) 100%)}
+@media (max-width:880px){.c .fade{background:linear-gradient(180deg,transparent 40%,var(--panel) 100%)}}
+.c .over{position:absolute;left:18px;top:16px;right:18px}
+.c .tag{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ai);font-weight:600}
+.c .adv{font-family:var(--font-display);font-size:26px;font-weight:600;line-height:1.1;margin-top:4px}
+.c .sim{position:absolute;left:18px;bottom:14px;color:var(--muted);font-size:12px}
+.c .panel{background:var(--panel);padding:28px 26px;display:flex;flex-direction:column;gap:16px}
+.c h1{font-size:40px}
+.c .sub{font-size:15px}
+.c .doors{display:grid;gap:10px;margin-top:6px}
+.c .door{display:grid;grid-template-columns:1fr auto;gap:4px 14px;align-items:center;text-align:left;font:inherit;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;cursor:pointer}
+.c .door:hover{border-color:var(--own)}
+.c .door b{grid-column:1;grid-row:1;font-family:var(--font-display);font-size:20px;font-weight:600;letter-spacing:.02em}
+.c .door span{grid-column:1;grid-row:2;color:var(--muted);font-size:13px}
+.c .door i{grid-column:2;grid-row:1/3;font-style:normal;font-size:22px;color:var(--own)}
+.c .door.primary{border-color:var(--good)}
+.c .meta{display:flex;gap:16px;flex-wrap:wrap;color:var(--muted);font-size:12px;margin-top:auto}
+.c .meta b{color:var(--fg);font-weight:600}
+
+/* ---- D: one question ---- */
+.d .col{max-width:720px;margin:0 auto;padding:40px 0 20px;text-align:center}
+.d .kicker{font-family:var(--font-display);letter-spacing:.12em;text-transform:uppercase;font-size:13px;color:var(--muted)}
+.d h1{font-size:34px;margin-top:10px;font-weight:500;color:var(--muted)}
+.d .q{font-family:var(--font-display);font-size:42px;font-weight:600;line-height:1.08;margin:18px auto 0;max-width:20ch;text-wrap:balance}
+.d .q em{font-style:normal;color:var(--ai)}
+.d .nums{display:flex;justify-content:center;gap:34px;margin:28px 0 0;flex-wrap:wrap}
+.d .nums div{text-align:center}
+.d .nums b{display:block;font-family:var(--font-display);font-size:34px;font-weight:600;line-height:1}
+.d .nums span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.d .cta{display:flex;justify-content:center;gap:12px;margin-top:34px;flex-wrap:wrap}
+.d .cta .btn{padding:12px 22px;font-size:15px}
+.d .fine{margin-top:14px;color:var(--muted);font-size:13px}
+.d .table{margin:40px auto 80px;text-align:left;border-top:1px solid var(--line)}
+.d .table div{display:grid;grid-template-columns:34px 1fr auto;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);align-items:center}
+.d .table .n{font-family:var(--font-mono);color:var(--muted)}
+.d .table .w{color:var(--muted);font-size:13px}
+.d footer{text-align:left}
+</style>
+
+<div class="switch">
+  <b>Start page</b>
+  <button data-v="a" aria-pressed="true">A · Two doors</button>
+  <button data-v="b" aria-pressed="false">B · Research brief</button>
+  <button data-v="c" aria-pressed="false">C · Console first</button>
+  <button data-v="d" aria-pressed="false">D · One question</button>
+  <span class="sp"></span>
+  <button id="theme">Light / dark</button>
+</div>
+
+<!-- ============ A ============ -->
+<section class="variant a on" id="v-a">
+  <p class="rationale"><b>A · Two doors.</b> Текущая структура, доведённая: заголовок и вопрос, три числа как якорь, две равноправные карточки. Плюс: всё на одном экране, форма study видна сразу. Минус: два равных входа, нет явного «начни отсюда».</p>
+  <div class="wrap">
+    <header class="hero">
+      <h1>Shore Control Reliance Lab</h1>
+      <p class="sub">Research prototype: how should an AI collision-avoidance advisory be presented so that a remote operator relies on it when it is right and intervenes when it is wrong?</p>
+      <p class="lede">An operator in a shore control centre supervises an autonomous vessel that meets another vessel. The AI proposes a manoeuvre and the operator has 45 seconds to accept it or choose another action. Sensor data is one click away, and the prototype records whether it was checked before deciding.</p>
+      <div class="facts"><div><b>8</b>encounters</div><div><b>3</b>with wrong advice</div><div><b>3</b>presentation conditions</div><div><b>45 s</b>per decision</div></div>
+    </header>
+    <div class="choices">
+      <section class="card choice">
+        <p class="eyebrow">Explore</p>
+        <p>Pick any encounter and presentation condition, make a decision and reveal the ground truth. For demos and walkthroughs.</p>
+        <label class="field">Encounter <select><option>1. Crossing, target on starboard bow · correct</option></select></label>
+        <div class="field"><span>Presentation</span><span class="seg"><button aria-pressed="false">A · Advice</button><button aria-pressed="false">B · + Confidence</button><button aria-pressed="true">C · + Evidence</button></span></div>
+        <div><button class="btn primary">Open encounter</button></div>
+      </section>
+      <section class="card choice">
+        <p class="eyebrow">Study mode</p>
+        <p>Eight encounters in random order, 45 seconds each. If time runs out, the vessel executes the AI advice. Sensor data starts collapsed. Some advice is correct, some clearly wrong, some wrong in a plausible way.</p>
+        <label class="field">Participant code <input type="text" value="P01" style="width:120px"></label>
+        <div class="field"><span>Presentation condition</span><span class="seg"><button aria-pressed="false">A · Advice only</button><button aria-pressed="false">B · + Confidence</button><button aria-pressed="true">C · + Evidence</button></span></div>
+        <div><button class="btn primary">Start 8 trials</button></div>
+      </section>
+    </div>
+    <footer>Research prototype by Anastasiia Ilina, for the PhD application “Human-AI Teaming for Maritime Operations” (NTNU). Encounters are fictional; geometry and COLREG logic are simplified. Not for navigation.</footer>
+  </div>
+</section>
+
+<!-- ============ B ============ -->
+<section class="variant b" id="v-b">
+  <p class="rationale"><b>B · Research brief.</b> Читается как абстракт: вопрос, три шага «как это работает», таблица условий. Справа одна панель входа с вкладками Explore / Study, под ней ссылка на второй режим. Плюс: комиссия понимает метод, не открывая прототип; один primary CTA. Минус: текста больше, экран длиннее.</p>
+  <div class="wrap grid">
+    <div>
+      <h1>Shore Control Reliance Lab</h1>
+      <p class="q">How should an AI collision-avoidance advisory be presented so that a remote operator <em>relies on it when it is right</em> and <em>intervenes when it is wrong</em>?</p>
+      <p class="abstract">A research prototype for the study of appropriate reliance in shore control centres. The AI is scripted with known accuracy, so every operator decision can be compared against ground truth. Three ways of presenting the same advice are compared.</p>
+      <ol class="steps">
+        <li><b>The AI proposes a manoeuvre</b><span>for example “Alter course 30° to starboard”, with or without confidence and evidence.</span></li>
+        <li><b>The operator decides in 45 seconds</b><span>accept, or reject and choose one of five alternatives. Doing nothing executes the advice.</span></li>
+        <li><b>The prototype records the checking behaviour</b><span>whether sensor data was opened, for how long, and which evidence was clicked.</span></li>
+      </ol>
+      <div class="conds">
+        <div><b>A · ADVICE</b><span>The manoeuvre and the type of encounter. Baseline reliance on bare advice.</span></div>
+        <div><b>B · + CONFIDENCE</b><span>Adds a confidence percentage. Does a number calibrate trust or lull people into accepting?</span></div>
+        <div><b>C · + EVIDENCE</b><span>Graded confidence, data basis, predicted CPA, COLREG rule and clickable evidence chips. Explanation as an invitation to check.</span></div>
+      </div>
+    </div>
+    <aside class="card entry">
+      <div class="tabs"><button aria-pressed="true">Explore</button><button aria-pressed="false">Study session</button></div>
+      <div class="f">
+        <p class="hint">Walk through any encounter, decide, and reveal whether the AI was right.</p>
+        <label class="field">Encounter <select><option>5. Crossing, target on starboard bow · plausibly wrong</option></select></label>
+        <div class="field"><span>Presentation</span><span class="seg"><button aria-pressed="false">A</button><button aria-pressed="false">B</button><button aria-pressed="true">C · + Evidence</button></span></div>
+        <button class="btn primary" style="justify-self:start">Open encounter</button>
+      </div>
+      <p class="alt">Running a participant? <a href="#">Start a study session</a>: eight trials in random order, data collapsed, results exportable as JSON.</p>
+    </aside>
+  </div>
+  <div class="wrap"><footer>Research prototype by Anastasiia Ilina, for the PhD application “Human-AI Teaming for Maritime Operations” (NTNU). Not for navigation.</footer></div>
+</section>
+
+<!-- ============ C ============ -->
+<section class="variant c" id="v-c">
+  <p class="rationale"><b>C · Console first + method.</b> Первый экран показывает сам продукт: радар с ситуацией 5 (устаревший AIS) и совет ИИ, справа заголовок и входы списком. Ниже, по скроллу, блок метода из варианта B: вопрос исследования, три шага и таблица условий. Кнопка «About the method» ведёт к нему. Минус: формы выбора спрятаны за кликом (шаг 2).</p>
+  <div class="wrap">
+    <div class="stage">
+      <div class="plot">
+        <svg viewBox="0 0 640 560" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <g fill="none" stroke="var(--ring)" stroke-width="1">
+            <circle cx="320" cy="320" r="60"/><circle cx="320" cy="320" r="120"/><circle cx="320" cy="320" r="180"/><circle cx="320" cy="320" r="240"/><circle cx="320" cy="320" r="300"/>
+            <line x1="320" y1="0" x2="320" y2="560"/><line x1="0" y1="320" x2="640" y2="320"/>
+          </g>
+          <g font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ringLabel)"><text x="324" y="272">1 nm</text><text x="324" y="212">2 nm</text><text x="324" y="152">3 nm</text><text x="324" y="92">4 nm</text></g>
+          <circle cx="320" cy="320" r="30" fill="none" stroke="var(--bad)" stroke-dasharray="3 4" opacity=".6"/>
+          <!-- relative track and CPA -->
+          <line x1="447" y1="193" x2="300" y2="310" stroke="var(--muted)" stroke-dasharray="2 4"/>
+          <circle cx="316" cy="298" r="4" fill="var(--muted)"/><text x="324" y="294" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--muted)">CPA 0.1 nm</text>
+          <!-- own vector -->
+          <line x1="320" y1="320" x2="320" y2="248" stroke="var(--own)" stroke-width="2"/>
+          <polygon points="320,306 326,322 320,318 314,322" fill="var(--own)"/>
+          <!-- target radar (turned to 270) -->
+          <line x1="447" y1="193" x2="387" y2="193" stroke="var(--target)" stroke-width="2"/>
+          <polygon points="447,184 452,197 447,194 442,197" transform="rotate(270 447 193)" fill="var(--target)"/>
+          <text x="458" y="197" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--target)">TGT</text>
+          <!-- target AIS (stale, heading away) -->
+          <line x1="447" y1="193" x2="427" y2="248" stroke="var(--target)" stroke-width="2" stroke-dasharray="5 4" opacity=".7"/>
+          <text x="432" y="262" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--target)" opacity=".7">AIS · 3 min old</text>
+          <text x="8" y="548" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--muted)">HDG 000°  12 kn</text>
+        </svg>
+        <div class="fade"></div>
+        <div class="over">
+          <div class="tag">AI advisory · collision avoidance</div>
+          <div class="adv">No action needed: hold course and speed</div>
+        </div>
+        <div class="sim mono">T+01:12 · encounter 5 of 8</div>
+      </div>
+      <div class="panel">
+        <div>
+          <h1>Shore Control Reliance Lab</h1>
+          <p class="sub" style="margin-top:10px">A research prototype on appropriate reliance: when should a remote operator trust an AI collision-avoidance advisory, and when should they check it?</p>
+        </div>
+        <div class="doors">
+          <button class="door primary"><b>Explore an encounter</b><span>Any of 8 encounters, any of 3 presentations, ground truth on demand.</span><i>→</i></button>
+          <button class="door"><b>Run a study session</b><span>8 trials in random order, 45 s each, checking behaviour recorded.</span><i>→</i></button>
+          <button class="door" id="methodBtn" type="button" aria-expanded="false" aria-controls="method-c"><b>About the method</b><span>Research question, three steps, three presentation conditions.</span><i>↓</i></button>
+        </div>
+        <div class="meta"><span><b>8</b> encounters</span><span><b>3</b> wrong, 2 plausibly</span><span><b>A · B · C</b> presentations</span><span><b>45 s</b> per decision</span></div>
+      </div>
+    </div>
+    <section class="method" id="method-c" hidden>
+      <div>
+        <p class="eyebrow" style="display:flex;justify-content:space-between;gap:8px;align-items:center">Research question <button class="btn ghost" id="methodClose" type="button" style="font-size:12px;padding:5px 10px">Close ↑</button></p>
+        <p class="q">How should an AI collision-avoidance advisory be presented so that a remote operator <em>relies on it when it is right</em> and <em>intervenes when it is wrong</em>?</p>
+        <p class="abstract">A research prototype for the study of appropriate reliance in shore control centres. The AI is scripted with known accuracy, so every operator decision can be compared against ground truth. Three ways of presenting the same advice are compared.</p>
+        <ol class="steps">
+          <li><b>The AI proposes a manoeuvre</b><span>for example “Alter course 30° to starboard”, with or without confidence and evidence.</span></li>
+          <li><b>The operator decides in 45 seconds</b><span>accept, or reject and choose one of five alternatives. Doing nothing executes the advice.</span></li>
+          <li><b>The prototype records the checking behaviour</b><span>whether sensor data was opened, for how long, and which evidence was clicked.</span></li>
+        </ol>
+      </div>
+      <div>
+        <p class="eyebrow">Three presentation conditions</p>
+        <div class="conds">
+          <div><b>A · ADVICE</b><span>The manoeuvre and the type of encounter. Baseline reliance on bare advice.</span></div>
+          <div><b>B · + CONFIDENCE</b><span>Adds a confidence percentage. Does a number calibrate trust or lull people into accepting?</span></div>
+          <div><b>C · + EVIDENCE</b><span>Graded confidence, data basis, predicted CPA, COLREG rule and clickable evidence chips. Explanation as an invitation to check.</span></div>
+        </div>
+      </div>
+    </section>
+    <footer>Research prototype by Anastasiia Ilina, for the PhD application “Human-AI Teaming for Maritime Operations” (NTNU). Encounters are fictional; geometry and COLREG logic are simplified. Not for navigation.</footer>
+  </div>
+</section>
+
+<!-- ============ D ============ -->
+<section class="variant d" id="v-d">
+  <p class="rationale"><b>D · One question.</b> Академический минимализм: вопрос исследования как заголовок, три числа, две кнопки. Настройки (сценарий, условие, код участника) запрашиваются вторым шагом. Внизу список восьми ситуаций как содержание. Плюс: ничего лишнего, сильный типографический акцент. Минус: лишний шаг до работы, меньше контекста для новичка.</p>
+  <div class="col">
+    <div class="kicker">Shore Control Reliance Lab · research prototype</div>
+    <p class="q">How should an AI advisory be presented so that an operator <em>relies on it when it is right</em> and <em>intervenes when it is wrong</em>?</p>
+    <div class="nums"><div><b>8</b><span>encounters</span></div><div><b>3</b><span>wrong advisories</span></div><div><b>2</b><span>plausibly wrong</span></div><div><b>A·B·C</b><span>presentations</span></div><div><b>45 s</b><span>to decide</span></div></div>
+    <div class="cta"><button class="btn primary">Explore the prototype</button><button class="btn ghost">Run a study session</button></div>
+    <p class="fine">Remote operator, autonomous vessel, one target. Sensor data is one click away and the prototype records whether it was checked. The AI is scripted with known accuracy.</p>
+    <div class="table">
+      <div><span class="n">01</span><span>Crossing, target on starboard bow</span><span class="pill ok">correct</span></div>
+      <div><span class="n">02</span><span>Head-on</span><span class="pill ok">correct</span></div>
+      <div><span class="n">03</span><span>Crossing, target on port bow</span><span class="pill ok">correct</span></div>
+      <div><span class="n">04</span><span>Crossing, target on starboard bow · turn to port <span class="w">crosses the target's bow</span></span><span class="pill no">clearly wrong</span></div>
+      <div><span class="n">05</span><span>Crossing, stale AIS report <span class="w">radar shows the target has turned</span></span><span class="pill no">plausibly wrong</span></div>
+      <div><span class="n">06</span><span>Overtaking a slower vessel</span><span class="pill ok">correct</span></div>
+      <div><span class="n">07</span><span>Close-quarters crossing, low visibility <span class="w">right direction, too small</span></span><span class="pill no">plausibly wrong</span></div>
+      <div><span class="n">08</span><span>Being overtaken from starboard quarter</span><span class="pill ok">correct</span></div>
+    </div>
+    <footer>Research prototype by Anastasiia Ilina, for the PhD application “Human-AI Teaming for Maritime Operations” (NTNU). Not for navigation.</footer>
+  </div>
+</section>
+
+<script>
+document.querySelectorAll('.switch [data-v]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.switch [data-v]').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  document.querySelectorAll('.variant').forEach(v=>v.classList.toggle('on',v.id==='v-'+b.dataset.v));
+  location.hash=b.dataset.v; window.scrollTo(0,0);
+}));
+function fromHash(){const h=location.hash.slice(1); if(h){const b=document.querySelector('.switch [data-v="'+h+'"]'); if(b&&b.getAttribute('aria-pressed')!=='true')b.click()}}
+fromHash(); addEventListener('hashchange',fromHash);
+// C: the method block opens only from its card
+const mBtn=document.getElementById('methodBtn'),mSec=document.getElementById('method-c');
+function setMethod(open){mSec.hidden=!open;mBtn.setAttribute('aria-expanded',open);mBtn.querySelector('i').textContent=open?'↑':'↓';
+  if(open)mSec.scrollIntoView({behavior:'smooth',block:'start'});else mBtn.scrollIntoView({behavior:'smooth',block:'center'})}
+mBtn.addEventListener('click',()=>setMethod(mSec.hidden));
+document.getElementById('methodClose').addEventListener('click',()=>setMethod(false));
+document.getElementById('theme').addEventListener('click',()=>{const r=document.documentElement;r.dataset.theme=r.dataset.theme==='light'?'':'light'});
+</script>
+</html>

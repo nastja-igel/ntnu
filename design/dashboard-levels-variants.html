@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard levels variants</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#081014; --panel:#0e1b21; --panel2:#12232b; --line:#21404b; --fg:#d6e6ea; --muted:#86a2ab; --own:#59c9e0; --ai:#f3b23f; --aiSoft:#3a2c10; --good:#5cc28a; --goodSoft:#123323; --bad:#ef6a5e; --badSoft:#3a1714; --accent:#4fc1b4;
+  --font-display:'Barlow Condensed',sans-serif; --font-body:'IBM Plex Sans',system-ui,sans-serif; --font-mono:'IBM Plex Mono',monospace; color-scheme:dark}
+:root[data-theme="light"]{--bg:#eef3f4; --panel:#fff; --panel2:#f3f7f8; --line:#c9d9de; --fg:#0f2228; --muted:#4f6b73; --own:#0b7f97; --ai:#a95f00; --aiSoft:#fbe9cf; --good:#1f8a52; --goodSoft:#dff1e6; --bad:#c43d32; --badSoft:#f8e0dd; --accent:#0d8784; color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:14px;line-height:1.45}
+.switch{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.switch b{font-family:var(--font-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px;color:var(--muted);margin:0 6px 0 10px}
+.switch b:first-child{margin-left:0}
+.switch button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:8px;padding:6px 12px;cursor:pointer}
+.switch button[aria-pressed="true"]{background:var(--panel2);color:var(--fg);font-weight:600;border-color:var(--own)}
+.switch .sp{flex:1}
+.variant{display:none}.variant.on{display:block}
+.rationale{margin:0;padding:10px 16px;border-bottom:1px dashed var(--line);color:var(--muted);font-size:13px}
+.rationale b{color:var(--fg)}
+.screen{min-height:calc(100vh - 50px - 62px);background:var(--bg);padding:16px}
+.wrap{max-width:1220px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.note{font-size:12px;color:var(--muted)}
+.eyebrow{font-family:var(--font-display);font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+h1{font-family:var(--font-display);font-size:30px;font-weight:600;margin:0;line-height:1;letter-spacing:.02em}
+h1 small{font-family:var(--font-body);font-size:14px;font-weight:400;color:var(--muted);letter-spacing:0;margin-left:8px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.btn{font:inherit;font-weight:600;font-size:14px;border-radius:8px;padding:9px 14px;cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--fg)}
+.btn.ghost{background:transparent;color:var(--muted)}
+.btn.small{font-size:12px;font-weight:500;padding:5px 10px}
+.btn:disabled{opacity:.4}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;letter-spacing:.03em;white-space:nowrap}
+.pill.ok{background:var(--goodSoft);color:var(--good)} .pill.over{background:var(--badSoft);color:var(--bad)} .pill.under{background:var(--aiSoft);color:var(--ai)} .pill.n{background:var(--panel2);color:var(--muted)}
+.ctag{display:inline-block;font-family:var(--font-display);font-size:13px;letter-spacing:.06em;border:1px solid var(--line);border-radius:4px;padding:0 6px;color:var(--muted)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{color:var(--muted);font-weight:500;font-size:12px}
+.dhead{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap}
+.dhead .meta{color:var(--muted);font-size:13px;margin-top:4px}
+.dhead .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.back{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;text-decoration:none}
+.flag{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--ai);border:1px solid color-mix(in srgb,var(--ai) 50%,var(--line));border-radius:999px;padding:2px 9px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:6px}
+.ghost{min-height:96px;border:1px dashed var(--line);border-radius:10px;display:grid;place-items:center;color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:14px;text-align:center}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+/* outcome dots and cells, shared */
+.dots{display:inline-flex;gap:3px}
+.dots i{width:12px;height:6px;border-radius:1px;background:var(--line)}
+.dots i.ok{background:var(--good)} .dots i.over{background:var(--bad)} .dots i.under{background:var(--ai)}
+.cells{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px}
+.cell{height:40px;border-radius:8px;display:grid;place-items:center;font-size:12px;font-weight:600;border:1px solid var(--line);background:var(--panel2);letter-spacing:.03em}
+.cell.ok{color:var(--good);border-color:color-mix(in srgb,var(--good) 55%,var(--line))}
+.cell.over{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 60%,var(--line))}
+.cell.under{color:var(--ai);border-color:color-mix(in srgb,var(--ai) 55%,var(--line))}
+/* rate bars, shared */
+.rate{display:grid;gap:10px}
+.rate .r{display:grid;grid-template-columns:120px 1fr 48px;gap:10px;align-items:center;font-size:13px}
+.rate .k{color:var(--muted)} .rate .k b{display:block;color:var(--fg);font-weight:500}
+.rate .bar{height:10px;background:var(--line);border-radius:3px;overflow:hidden;display:flex}
+.rate .bar i{height:100%;background:var(--muted)}
+.rate .bar i.a{background:var(--muted)} .rate .bar i.b{background:var(--ai)} .rate .bar i.c{background:var(--own)}
+.rate .v{font-family:var(--font-mono);font-size:12px;text-align:right}
+/* timelines, shared */
+.tl{display:grid;grid-template-columns:26px 1fr;gap:8px 12px;align-items:center}
+.tl .n{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.track{position:relative;height:22px;background:var(--panel2);border-radius:4px;border:1px solid var(--line)}
+.track .open{position:absolute;top:4px;bottom:4px;background:color-mix(in srgb,var(--own) 55%,transparent);border-radius:2px}
+.track .click{position:absolute;top:2px;bottom:2px;width:2px;background:var(--ai)}
+.track .dec{position:absolute;top:-3px;width:12px;height:28px;transform:translateX(-50%);display:grid;place-items:center;font-size:11px;font-weight:700}
+.track .dec.ok{color:var(--good)}.track .dec.over{color:var(--bad)}.track .dec.under{color:var(--ai)}
+.axis{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-family:var(--font-mono);grid-column:2}
+textarea{width:100%;min-height:60px;font:inherit;font-size:13px;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px}
+
+/* O1: three condition columns */
+.o1 .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.o1 .col{display:flex;flex-direction:column;gap:14px}
+.o1 .col h2{font-family:var(--font-display);font-size:22px;font-weight:600;margin:0;letter-spacing:.04em;display:flex;justify-content:space-between;align-items:baseline}
+.o1 .col h2 small{font-family:var(--font-mono);font-size:12px;color:var(--muted);font-weight:400}
+.o1 .big{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.o1 .big div{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--panel2)}
+.o1 .big b{display:block;font-family:var(--font-display);font-size:30px;line-height:1;font-weight:600}
+.o1 .big span{font-size:11px;color:var(--muted)}
+.o1 .big .over b{color:var(--bad)} .o1 .big .under b{color:var(--ai)}
+.o1 .chips{display:flex;flex-wrap:wrap;gap:8px}
+.o1 .chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:4px 10px 4px 12px;font-size:13px;background:var(--panel2);cursor:pointer;color:var(--fg)}
+.o1 .chip:hover{border-color:var(--own)}
+.o1 .chip .code{font-family:var(--font-mono);font-weight:600}
+.o1 .chip .s{font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+
+/* O2: session cards */
+.o2 .filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.o2 .filters .f{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:999px;padding:5px 12px;cursor:pointer}
+.o2 .filters .f[aria-pressed="true"]{background:var(--panel2);color:var(--fg);border-color:var(--own);font-weight:600}
+.o2 .strip{display:flex;gap:24px;flex-wrap:wrap;font-size:13px;color:var(--muted);padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.o2 .strip b{font-family:var(--font-mono);color:var(--fg);font-weight:500}
+.o2 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.o2 .sc{display:flex;flex-direction:column;gap:10px;cursor:pointer}
+.o2 .sc:hover{border-color:var(--own)}
+.o2 .sc .top{display:flex;justify-content:space-between;align-items:baseline}
+.o2 .sc .code{font-family:var(--font-display);font-size:26px;font-weight:600;letter-spacing:.04em}
+.o2 .sc .when{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.o2 .sc .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:11px;color:var(--muted)}
+.o2 .sc .nums b{display:block;font-family:var(--font-display);font-size:20px;color:var(--fg);line-height:1}
+.o2 .sc .notes{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px;min-height:1.2em}
+.o2 .sc .go{color:var(--own);font-size:12px;text-align:right}
+
+/* O3: by research question */
+.o3 .q{display:grid;grid-template-columns:minmax(260px,1fr) 2fr;gap:24px;align-items:start}
+.o3 .q h2{font-family:var(--font-display);font-size:22px;font-weight:600;margin:0 0 6px;line-height:1.1}
+.o3 .q p{margin:0;font-size:13px;color:var(--muted)}
+.o3 .q .verdict{margin-top:10px;font-size:13px;color:var(--fg);border-left:3px solid var(--line);padding-left:10px}
+.o3 .q .verdict b{color:var(--own)}
+.o3 .cmp{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.o3 .cmp div{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--panel2)}
+.o3 .cmp h3{font-family:var(--font-display);font-size:14px;margin:0 0 6px;letter-spacing:.06em;color:var(--muted);font-weight:500}
+.o3 .cmp b{display:block;font-family:var(--font-display);font-size:30px;line-height:1;font-weight:600}
+.o3 .cmp span{font-size:11px;color:var(--muted)}
+.o3 .cmp .bar{height:8px;background:var(--line);border-radius:3px;margin:8px 0 4px;overflow:hidden}
+.o3 .cmp .bar i{display:block;height:100%;background:var(--own)}
+.o3 .cmp .bad b{color:var(--bad)} .o3 .cmp .bad .bar i{background:var(--bad)}
+.o3 .drift{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.o3 .drift div{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--panel2);font-family:var(--font-mono);font-size:13px}
+.o3 .drift h3{font-family:var(--font-display);font-size:14px;margin:0 0 6px;letter-spacing:.06em;color:var(--muted);font-weight:500}
+.o3 .drift em{font-style:normal;color:var(--ai)}
+.o3 .allrow{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+
+/* S2: timeline first */
+.s2 .trow{display:grid;grid-template-columns:26px 2.2fr 1fr 3fr 60px 60px;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.s2 .trow.h{font-size:12px;color:var(--muted);border-bottom:1px solid var(--line);padding:0 0 6px}
+.s2 .trow .enc b{display:block;font-weight:500}
+.s2 .trow .enc span{color:var(--muted);font-size:12px}
+.s2 .trow .v{font-family:var(--font-mono);text-align:right;color:var(--muted)}
+.s2 .trow .v.w{color:var(--own)}
+
+/* S3: trial-by-trial review */
+.s3 .verdict{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.s3 .verdict p{margin:0;font-size:13px;color:var(--muted)}
+.s3 .verdict b{display:block;font-family:var(--font-display);font-size:30px;font-weight:600;color:var(--fg);line-height:1;margin-bottom:4px}
+.s3 .verdict .over b{color:var(--bad)} .s3 .verdict .under b{color:var(--ai)}
+.s3 .tgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.s3 .tc{display:grid;grid-template-columns:40px 1fr;gap:6px 14px}
+.s3 .tc .num{grid-row:1/6;font-family:var(--font-display);font-size:34px;font-weight:600;color:var(--muted);line-height:1}
+.s3 .tc h3{margin:0;font-size:15px;font-weight:600;display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.s3 .tc .adv{font-size:13px;color:var(--muted)}
+.s3 .tc .adv b{color:var(--fg);font-weight:500}
+.s3 .tc .line{display:flex;gap:16px;font-size:12px;color:var(--muted);font-family:var(--font-mono)}
+.s3 .tc textarea{min-height:40px;margin-top:4px}
+.s3 .tc.warn{border-color:color-mix(in srgb,var(--bad) 45%,var(--line))}
+/* narrow pane: everything in one column, as the prototype does under 880px */
+@media (max-width:900px){
+  .three,.o1 .cols,.o3 .q,.s3 .tgrid{grid-template-columns:1fr}
+  .o1 .big{grid-template-columns:repeat(3,1fr)}
+  .s2 .trow{grid-template-columns:22px 1.4fr 1fr 2fr 52px 52px;gap:8px;font-size:12px}
+  .o2 .grid{grid-template-columns:1fr}
+}
+</style>
+
+<div class="switch">
+  <b>Overview</b>
+  <button data-v="o1" aria-pressed="true">O1 · Condition columns</button>
+  <button data-v="o2" aria-pressed="false">O2 · Session cards</button>
+  <button data-v="o3" aria-pressed="false">O3 · By research question</button>
+  <b>One session</b>
+  <button data-v="s1" aria-pressed="false">S1 · Current, with back link</button>
+  <button data-v="s2" aria-pressed="false">S2 · Timeline first</button>
+  <button data-v="s3" aria-pressed="false">S3 · Trial-by-trial review</button>
+  <span class="sp"></span><button id="theme">Light / dark</button>
+</div>
+
+<!-- ========= O1 ========= -->
+<section class="variant o1 on" id="v-o1">
+  <p class="rationale"><b>O1 · Три колонки по условиям.</b> Главный экран отвечает на вопрос исследования напрямую: A, B и C стоят рядом, в каждой колонке средние по сессиям, принятие по типу совета и участники этого условия как чипы. Сравнение условий считывается одним взглядом, а чип ведёт на экран участника. Хорош, когда сессий по 2–5 на условие; при десятках чипы придётся сворачивать.</p>
+  <div class="screen"><div class="wrap">
+    <div class="dhead">
+      <div><h1>Sessions<small>7 on this device · 15–16 Nov 2026</small></h1><div class="meta">Means per condition. Eight trials per person, a handful of people per condition: read as a pilot, not as evidence.</div></div>
+      <div class="acts"><button class="btn">Download all ▾</button><button class="btn ghost">Start page</button></div>
+    </div>
+    <div class="cols">
+      <section class="card col"><h2>A · Advice<small>2 sessions</small></h2>
+        <div class="big"><div><b>4.5</b><span>appropriate / 8</span></div><div class="over"><b>1.5</b><span>over-reliance</span></div><div class="under"><b>2.0</b><span>under-reliance</span></div></div>
+        <div class="rate"><div class="r"><span class="k"><b>Correct</b>accepted</span><span class="bar"><i class="a" style="width:60%"></i></span><span class="v">60%</span></div><div class="r"><span class="k"><b>Clearly wrong</b>accepted</span><span class="bar"><i class="a" style="width:50%"></i></span><span class="v">50%</span></div><div class="r"><span class="k"><b>Plausibly wrong</b>accepted</span><span class="bar"><i class="a" style="width:75%"></i></span><span class="v">75%</span></div></div>
+        <p class="note" style="margin:0">Data checked 2.5 / 8 · mean decision 9.0 s</p>
+        <div class="chips"><span class="chip"><span class="code">P05</span><span class="s">5 / 8</span>→</span><span class="chip"><span class="code">P02</span><span class="s">4 / 8</span>→</span></div>
+      </section>
+      <section class="card col"><h2>B · + Confidence<small>3 sessions</small></h2>
+        <div class="big"><div><b>5.0</b><span>appropriate / 8</span></div><div class="over"><b>1.7</b><span>over-reliance</span></div><div class="under"><b>1.3</b><span>under-reliance</span></div></div>
+        <div class="rate"><div class="r"><span class="k"><b>Correct</b>accepted</span><span class="bar"><i class="b" style="width:73%"></i></span><span class="v">73%</span></div><div class="r"><span class="k"><b>Clearly wrong</b>accepted</span><span class="bar"><i class="b" style="width:33%"></i></span><span class="v">33%</span></div><div class="r"><span class="k"><b>Plausibly wrong</b>accepted</span><span class="bar"><i class="b" style="width:67%"></i></span><span class="v">67%</span></div></div>
+        <p class="note" style="margin:0">Data checked 2.3 / 8 · mean decision 12.6 s</p>
+        <div class="chips"><span class="chip"><span class="code">P07</span><span class="s">4 / 8</span>→</span><span class="chip"><span class="code">P04</span><span class="s">5 / 8</span>→</span><span class="chip"><span class="code">P01</span><span class="s">6 / 8</span>→</span></div>
+      </section>
+      <section class="card col"><h2>C · + Evidence<small>2 sessions</small></h2>
+        <div class="big"><div><b>6.5</b><span>appropriate / 8</span></div><div class="over"><b>0.5</b><span>over-reliance</span></div><div class="under"><b>1.0</b><span>under-reliance</span></div></div>
+        <div class="rate"><div class="r"><span class="k"><b>Correct</b>accepted</span><span class="bar"><i class="c" style="width:80%"></i></span><span class="v">80%</span></div><div class="r"><span class="k"><b>Clearly wrong</b>accepted</span><span class="bar"><i class="c" style="width:0%"></i></span><span class="v">0%</span></div><div class="r"><span class="k"><b>Plausibly wrong</b>accepted</span><span class="bar"><i class="c" style="width:25%"></i></span><span class="v">25%</span></div></div>
+        <p class="note" style="margin:0">Data checked 5.5 / 8 · mean decision 20.1 s</p>
+        <div class="chips"><span class="chip"><span class="code">P06</span><span class="s">6 / 8</span>→</span><span class="chip"><span class="code">P03</span><span class="s">7 / 8</span>→</span></div>
+      </section>
+    </div>
+    <section class="card">
+      <p class="eyebrow"><span>All sessions</span><span class="note">newest first · a row opens the participant</span></p>
+      <table><thead><tr><th>Code</th><th>Cond.</th><th>Date</th><th>Outcomes</th><th>Appropriate</th><th>Data checked</th><th>Mean time</th><th>Notes</th></tr></thead><tbody>
+        <tr><td class="mono">P07</td><td><span class="ctag">B</span></td><td class="mono">16 Nov 14:32</td><td><span class="dots"><i class="under"></i><i class="ok"></i><i class="ok"></i><i class="ok"></i><i class="over"></i><i class="ok"></i><i class="under"></i><i class="under"></i></span></td><td class="mono">4 / 8</td><td class="mono">1 / 8</td><td class="mono">12.7 s</td><td class="note">Thought aloud…</td></tr>
+        <tr><td class="mono">P06</td><td><span class="ctag">C</span></td><td class="mono">16 Nov 13:50</td><td><span class="dots"><i class="ok"></i><i class="ok"></i><i class="under"></i><i class="ok"></i><i class="over"></i><i class="ok"></i><i class="ok"></i><i class="ok"></i></span></td><td class="mono">6 / 8</td><td class="mono">5 / 8</td><td class="mono">18.9 s</td><td class="note"></td></tr>
+        <tr><td class="mono">P05</td><td><span class="ctag">A</span></td><td class="mono">16 Nov 13:05</td><td><span class="dots"><i class="ok"></i><i class="over"></i><i class="ok"></i><i class="under"></i><i class="over"></i><i class="ok"></i><i class="ok"></i><i class="ok"></i></span></td><td class="mono">5 / 8</td><td class="mono">2 / 8</td><td class="mono">9.8 s</td><td class="note">Interrupted at trial 5</td></tr>
+        <tr><td colspan="8" class="note">… 4 more</td></tr>
+      </tbody></table>
+    </section>
+  </div></div>
+</section>
+
+<!-- ========= O2 ========= -->
+<section class="variant o2" id="v-o2">
+  <p class="rationale"><b>O2 · Карточки сессий.</b> Главный экран — каталог участников: карточка на сессию с кодом, условием, восемью исходами в ряд, тремя числами и первой строкой заметок. Фильтр по условию сверху, средние одной строкой. Сравнение условий здесь вторично, зато каждый человек виден как человек, а не как строка. Удобно на пилоте, когда исследователь помнит участников в лицо.</p>
+  <div class="screen"><div class="wrap">
+    <div class="dhead">
+      <div><h1>Sessions<small>7 on this device</small></h1></div>
+      <div class="acts"><div class="filters"><button class="f" aria-pressed="true">All · 7</button><button class="f" aria-pressed="false">A · 2</button><button class="f" aria-pressed="false">B · 3</button><button class="f" aria-pressed="false">C · 2</button></div><button class="btn">Download all ▾</button></div>
+    </div>
+    <div class="strip"><span>Appropriate / 8, mean · <b>A 4.5</b> · <b>B 5.0</b> · <b>C 6.5</b></span><span>Data checked / 8 · <b>A 2.5</b> · <b>B 2.3</b> · <b>C 5.5</b></span><span>Plausible caught / 2 · <b>A 0.5</b> · <b>B 0.3</b> · <b>C 1.5</b></span><span class="note">Means over a handful of people; open a card for the person.</span></div>
+    <div class="grid">
+      <section class="card sc"><div class="top"><span class="code">P07 <span class="ctag">B</span></span><span class="when">16 Nov 14:32</span></div><div class="cells"><div class="cell under">▲</div><div class="cell ok">✓</div><div class="cell ok">✓</div><div class="cell ok">✓</div><div class="cell over">●</div><div class="cell ok">✓</div><div class="cell under">▲</div><div class="cell under">▲</div></div><div class="nums"><span><b>4 / 8</b>appropriate</span><span><b>1 / 8</b>data checked</span><span><b>12.7 s</b>mean decision</span></div><div class="notes">Thought aloud throughout. Did not notice the AIS age in trial 5.</div><div class="go">Open →</div></section>
+      <section class="card sc"><div class="top"><span class="code">P06 <span class="ctag">C</span></span><span class="when">16 Nov 13:50</span></div><div class="cells"><div class="cell ok">✓</div><div class="cell ok">✓</div><div class="cell under">▲</div><div class="cell ok">✓</div><div class="cell over">●</div><div class="cell ok">✓</div><div class="cell ok">✓</div><div class="cell ok">✓</div></div><div class="nums"><span><b>6 / 8</b>appropriate</span><span><b>5 / 8</b>data checked</span><span><b>18.9 s</b>mean decision</span></div><div class="notes"></div><div class="go">Open →</div></section>
+      <section class="card sc"><div class="top"><span class="code">P05 <span class="ctag">A</span></span><span class="when">16 Nov 13:05</span></div><div class="cells"><div class="cell ok">✓</div><div class="cell over">●</div><div class="cell ok">✓</div><div class="cell under">▲</div><div class="cell over">●</div><div class="cell ok">✓</div><div class="cell ok">✓</div><div class="cell ok">✓</div></div><div class="nums"><span><b>5 / 8</b>appropriate</span><span><b>2 / 8</b>data checked</span><span><b>9.8 s</b>mean decision</span></div><div class="notes">Interrupted at trial 5 by a phone call.</div><div class="go">Open →</div></section>
+      <section class="card sc"><div class="top"><span class="code">P04 <span class="ctag">B</span></span><span class="when">15 Nov 16:20</span></div><div class="cells"><div class="cell ok">✓</div><div class="cell over">●</div><div class="cell ok">✓</div><div class="cell ok">✓</div><div class="cell over">●</div><div class="cell ok">✓</div><div class="cell under">▲</div><div class="cell ok">✓</div></div><div class="nums"><span><b>5 / 8</b>appropriate</span><span><b>3 / 8</b>data checked</span><span><b>11.1 s</b>mean decision</span></div><div class="notes"></div><div class="go">Open →</div></section>
+      <section class="card sc"><div class="top"><span class="code">P03 <span class="ctag">C</span></span><span class="when">15 Nov 15:40</span></div><div class="cells"><div class="cell ok">✓</div><div class="cell ok">✓</div><div class="cell ok">✓</div><div class="cell ok">✓</div><div class="cell ok">✓</div><div class="cell under">▲</div><div class="cell ok">✓</div><div class="cell ok">✓</div></div><div class="nums"><span><b>7 / 8</b>appropriate</span><span><b>6 / 8</b>data checked</span><span><b>21.4 s</b>mean decision</span></div><div class="notes"></div><div class="go">Open →</div></section>
+      <section class="card sc"><div class="top"><span class="code">P02 <span class="ctag">A</span></span><span class="when">15 Nov 15:02</span></div><div class="cells"><div class="cell under">▲</div><div class="cell ok">✓</div><div class="cell under">▲</div><div class="cell ok">✓</div><div class="cell over">●</div><div class="cell ok">✓</div><div class="cell under">▲</div><div class="cell ok">✓</div></div><div class="nums"><span><b>4 / 8</b>appropriate</span><span><b>3 / 8</b>data checked</span><span><b>8.2 s</b>mean decision</span></div><div class="notes"></div><div class="go">Open →</div></section>
+    </div>
+  </div></div>
+</section>
+
+<!-- ========= O3 ========= -->
+<section class="variant o3" id="v-o3">
+  <p class="rationale"><b>O3 · По вопросам исследования.</b> Главный экран построен не вокруг таблиц, а вокруг трёх вопросов из project outline: усыпляет ли число уверенности, помогают ли основания ловить правдоподобные ошибки, дрейфует ли проверка внутри сессии. На каждый вопрос — одна строка: формулировка, сравнение A/B/C и осторожный вывод. Это экран для разговора с комиссией; список сессий ниже, свёрнут. Самый «исследовательский», но и самый далёкий от сырых данных.</p>
+  <div class="screen"><div class="wrap">
+    <div class="dhead">
+      <div><h1>What the pilot says so far<small>7 sessions · A 2 · B 3 · C 2</small></h1><div class="meta">Each row is one question from the project outline, answered by the sessions stored on this device.</div></div>
+      <div class="acts"><button class="btn">Download all ▾</button><button class="btn ghost">Start page</button></div>
+    </div>
+    <section class="card q">
+      <div><h2>Does a confidence number lull people into accepting?</h2><p>Share of <b>wrong</b> advisories accepted, by condition. Lower is better. Compares B against A.</p><div class="verdict">B accepts wrong advice about as often as A: <b>the number does not calibrate</b>, at least in two and three people.</div></div>
+      <div class="cmp"><div class="bad"><h3>A · ADVICE</h3><b>67%</b><div class="bar"><i style="width:67%"></i></div><span>4 of 6 wrong advisories accepted</span></div><div class="bad"><h3>B · + CONFIDENCE</h3><b>56%</b><div class="bar"><i style="width:56%"></i></div><span>5 of 9</span></div><div class="bad"><h3>C · + EVIDENCE</h3><b>17%</b><div class="bar"><i style="width:17%"></i></div><span>1 of 6</span></div></div>
+    </section>
+    <section class="card q">
+      <div><h2>Do evidence claims help catch plausible errors?</h2><p>Plausibly wrong advisories rejected, out of two per person. Encounter 5 (stale AIS) can only be caught by opening the data.</p><div class="verdict">C catches <b>1.5 of 2</b> against 0.5 and 0.3. The claims that point at the data seem to work as an invitation to check.</div></div>
+      <div class="cmp"><div><h3>A · ADVICE</h3><b>0.5 / 2</b><div class="bar"><i style="width:25%"></i></div><span>encounter 5 caught by 0 of 2</span></div><div><h3>B · + CONFIDENCE</h3><b>0.3 / 2</b><div class="bar"><i style="width:17%"></i></div><span>encounter 5 caught by 0 of 3</span></div><div><h3>C · + EVIDENCE</h3><b>1.5 / 2</b><div class="bar"><i style="width:75%"></i></div><span>encounter 5 caught by 2 of 2</span></div></div>
+    </section>
+    <section class="card q">
+      <div><h2>Does checking drift within a session?</h2><p>Trials with the sensor data opened, first four against last four. Links to Study 1 on attention drift; eight trials only hint at it.</p><div class="verdict">Checking falls in A and B and <b>holds in C</b>. Worth a longer session with eye tracking before believing it.</div></div>
+      <div class="drift"><div><h3>A · ADVICE</h3>38% → <em>25%</em><br><span class="note">first half → second half</span></div><div><h3>B · + CONFIDENCE</h3>33% → <em>25%</em><br><span class="note">first half → second half</span></div><div><h3>C · + EVIDENCE</h3>69% → 69%<br><span class="note">first half → second half</span></div></div>
+    </section>
+    <section class="card allrow"><span><b>All 7 sessions</b> <span class="note">· table with outcomes, data checked, notes · each row opens the participant</span></span><button class="btn small">Show sessions ↓</button></section>
+  </div></div>
+</section>
+
+<!-- ========= S1 ========= -->
+<section class="variant s1" id="v-s1">
+  <p class="rationale"><b>S1 · Текущий экран с возвратом.</b> Дашборд одной сессии остаётся как есть: последовательность попыток, три карточки, таймлайны, таблица, заметки. Меняется только шапка: «← All sessions» вместо выпадающего списка, стрелки к соседям остаются, карточка «Sessions on this device» переезжает на главный экран. Минимум изменений, уже проверенный набор измерений.</p>
+  <div class="screen"><div class="wrap">
+    <a class="back" href="#s1">← All sessions</a>
+    <div class="dhead">
+      <div><h1>P07<small>condition B</small></h1><div class="meta mono">16 Nov 2026 14:32 · 8 trials in 6 min 12 s · order 4 2 3 7 5 6 1 8</div></div>
+      <div class="acts"><span class="flag">⚑ 2 decisions under 2 s</span><button class="btn small">← P06</button><button class="btn small" disabled>P08 →</button><button class="btn">Download ▾</button><button class="btn ghost">New session</button></div>
+    </div>
+    <section class="card"><p class="eyebrow"><span>Trial sequence</span><span class="legend"><span><i style="background:var(--good)"></i>appropriate</span><span><i style="background:var(--bad)"></i>over-reliance</span><span><i style="background:var(--ai)"></i>under-reliance</span></span></p>
+      <div class="cells"><div class="cell under">under</div><div class="cell ok">ok</div><div class="cell ok">ok</div><div class="cell ok">ok</div><div class="cell over">over</div><div class="cell ok">ok</div><div class="cell under">under</div><div class="cell under">under</div></div>
+      <div class="ghost" style="margin-top:12px">decision time · data open · encounter rows · summary</div></section>
+    <div class="three"><div class="ghost">reliance matrix</div><div class="ghost">acceptance by advice type</div><div class="ghost">checking behaviour</div></div>
+    <div class="ghost">what happened inside each trial · timelines</div>
+    <div class="ghost">trials table</div>
+    <div class="ghost" style="min-height:70px">researcher notes</div>
+  </div></div>
+</section>
+
+<!-- ========= S2 ========= -->
+<section class="variant s2" id="v-s2">
+  <p class="rationale"><b>S2 · Таймлайн во главе.</b> Экран участника начинается с того, что в нём уникально: восемь строк, в каждой ситуация и совет, исход, дорожка 0–45 с с открытием данных, кликами и моментом решения, время и секунды в данных. Всё поведение одной сессии на одном экране без прокрутки; агрегаты и таблица уходят ниже. Для разбора конкретного человека это самый быстрый экран, для сравнения людей он хуже.</p>
+  <div class="screen"><div class="wrap">
+    <a class="back" href="#s2">← All sessions</a>
+    <div class="dhead">
+      <div><h1>P07<small>condition B</small></h1><div class="meta mono">16 Nov 2026 14:32 · 4 / 8 appropriate · 1 over · 3 under · 1 / 2 plausible caught · 12.7 s mean</div></div>
+      <div class="acts"><button class="btn small">← P06</button><button class="btn small" disabled>P08 →</button><button class="btn">Download ▾</button></div>
+    </div>
+    <section class="card">
+      <p class="eyebrow"><span>Eight trials, in order</span><span class="legend"><span><i style="background:color-mix(in srgb,var(--own) 55%,transparent)"></i>data open</span><span><i style="background:var(--ai);width:3px"></i>claim clicked</span><span>✓ ● ▲ decision</span></span></p>
+      <div class="trow h"><span>#</span><span>Encounter · AI advice</span><span>Outcome</span><span>0 s · 15 · 30 · 45 s</span><span style="text-align:right">Time</span><span style="text-align:right">In data</span></div>
+      <div class="trow"><span class="mono n">1</span><span class="enc"><b>Crossing, target stbd</b><span>30° to starboard · correct</span></span><span><span class="pill under">▲ under</span></span><div class="track"><span class="dec under" style="left:36%">▲</span></div><span class="v">16.3 s</span><span class="v">—</span></div>
+      <div class="trow"><span class="mono n">2</span><span class="enc"><b>Crossing, target stbd</b><span>25° to port · clearly wrong</span></span><span><span class="pill ok">✓ ok</span></span><div class="track"><span class="dec ok" style="left:37%">✓</span></div><span class="v">16.7 s</span><span class="v">—</span></div>
+      <div class="trow"><span class="mono n">3</span><span class="enc"><b>Crossing, target port</b><span>stand on · correct</span></span><span><span class="pill ok">✓ ok</span></span><div class="track"><span class="dec ok" style="left:10%">✓</span></div><span class="v">4.6 s</span><span class="v">—</span></div>
+      <div class="trow"><span class="mono n">4</span><span class="enc"><b>Close-quarters</b><span>10° to starboard · plausibly wrong</span></span><span><span class="pill ok">✓ ok</span></span><div class="track"><span class="dec ok" style="left:24%">✓</span></div><span class="v">10.6 s</span><span class="v">—</span></div>
+      <div class="trow"><span class="mono n">5</span><span class="enc"><b>Crossing, stale AIS</b><span>no action · plausibly wrong</span></span><span><span class="pill over">● over</span></span><div class="track"><span class="dec over" style="left:10%">●</span></div><span class="v">4.7 s</span><span class="v">—</span></div>
+      <div class="trow"><span class="mono n">6</span><span class="enc"><b>Being overtaken</b><span>stand on · correct</span></span><span><span class="pill ok">✓ ok</span></span><div class="track"><span class="dec ok" style="left:30%">✓</span></div><span class="v">13.4 s</span><span class="v">—</span></div>
+      <div class="trow"><span class="mono n">7</span><span class="enc"><b>Head-on</b><span>20° to starboard · correct</span></span><span><span class="pill under">▲ under</span></span><div class="track"><span class="dec under" style="left:16%">▲</span></div><span class="v">7.4 s</span><span class="v">—</span></div>
+      <div class="trow"><span class="mono n">8</span><span class="enc"><b>Overtaking</b><span>15° to starboard · correct</span></span><span><span class="pill under">▲ under</span></span><div class="track"><span class="open" style="left:14%;width:36%"></span><span class="click" style="left:14%"></span><span class="click" style="left:31%"></span><span class="dec under" style="left:62%">▲</span></div><span class="v">27.9 s</span><span class="v w">16.2 s</span></div>
+    </section>
+    <div class="three"><div class="ghost">reliance matrix</div><div class="ghost">acceptance by advice type</div><div class="ghost">checking behaviour</div></div>
+    <div class="ghost" style="min-height:70px">researcher notes</div>
+  </div></div>
+</section>
+
+<!-- ========= S3 ========= -->
+<section class="variant s3" id="v-s3">
+  <p class="rationale"><b>S3 · Разбор по попыткам.</b> Экран для дебрифинга сразу после сессии: наверху вердикт в пяти числах, дальше восемь карточек по попыткам, в каждой ситуация, совет и правда о нём, решение участника, мини-таймлайн и поле для заметки именно к этой попытке. Карточки с over-reliance подсвечены: с них начинают разговор. Заметки перестают быть одним общим полем и привязываются к событиям. Длиннее остальных, зато готов к интервью.</p>
+  <div class="screen"><div class="wrap">
+    <a class="back" href="#s3">← All sessions</a>
+    <div class="dhead">
+      <div><h1>P07<small>condition B</small></h1><div class="meta mono">16 Nov 2026 14:32 · 8 trials in 6 min 12 s</div></div>
+      <div class="acts"><button class="btn small">← P06</button><button class="btn small" disabled>P08 →</button><button class="btn">Download ▾</button></div>
+    </div>
+    <section class="card verdict"><p><b>4 / 8</b>appropriate</p><p class="over"><b>1</b>over-reliance · trial 5</p><p class="under"><b>3</b>under-reliance · trials 1, 7, 8</p><p><b>1 / 2</b>plausibly wrong caught</p><p><b>1 / 8</b>decisions after checking data</p><p><b>12.7 s</b>mean decision time</p></section>
+    <div class="tgrid">
+      <section class="card tc"><span class="num">1</span><h3>Crossing, target on starboard bow<span class="pill under">▲ under-reliance</span></h3><div class="adv">AI: <b>Alter course 30° to starboard</b> · correct. Participant: <b>hold course and speed</b> after 16.3 s, data not opened.</div><div class="track"><span class="dec under" style="left:36%">▲</span></div><div class="line"><span>0 claims</span><span>alternatives opened at 12.0 s</span></div><textarea placeholder="Ask: why did the starboard turn look unnecessary?"></textarea></section>
+      <section class="card tc"><span class="num">2</span><h3>Crossing, target on starboard bow<span class="pill ok">✓ appropriate</span></h3><div class="adv">AI: <b>Alter course 25° to port</b> · clearly wrong. Participant: <b>hold course and speed</b> after 16.7 s.</div><div class="track"><span class="dec ok" style="left:37%">✓</span></div><div class="line"><span>0 claims</span><span>alternatives opened at 14.1 s</span></div><textarea placeholder="Note"></textarea></section>
+      <section class="card tc"><span class="num">3</span><h3>Crossing, target on port bow<span class="pill ok">✓ appropriate</span></h3><div class="adv">AI: <b>Stand on</b> · correct. Participant: <b>accepted</b> after 4.6 s.</div><div class="track"><span class="dec ok" style="left:10%">✓</span></div><div class="line"><span>0 claims</span></div><textarea placeholder="Note"></textarea></section>
+      <section class="card tc"><span class="num">4</span><h3>Close-quarters crossing<span class="pill ok">✓ appropriate</span></h3><div class="adv">AI: <b>Alter course 10° to starboard</b> · plausibly wrong. Participant: <b>hold course and speed</b> after 10.6 s.</div><div class="track"><span class="dec ok" style="left:24%">✓</span></div><div class="line"><span>0 claims</span></div><textarea>Said the 10° “felt too small” before rejecting it.</textarea></section>
+      <section class="card tc warn"><span class="num">5</span><h3>Crossing, stale AIS<span class="pill over">● over-reliance</span></h3><div class="adv">AI: <b>No action needed</b> · plausibly wrong, based on a 3-min-old AIS report. Participant: <b>accepted</b> after 4.7 s, data not opened.</div><div class="track"><span class="dec over" style="left:10%">●</span></div><div class="line"><span>0 claims</span><span class="mono" style="color:var(--bad)">wrong advice accepted without checking</span></div><textarea>Did not notice the AIS age. Ask what “no action needed” signalled.</textarea></section>
+      <section class="card tc"><span class="num">6</span><h3>Being overtaken from starboard quarter<span class="pill ok">✓ appropriate</span></h3><div class="adv">AI: <b>Stand on</b> · correct. Participant: <b>accepted</b> after 13.4 s.</div><div class="track"><span class="dec ok" style="left:30%">✓</span></div><div class="line"><span>0 claims</span></div><textarea placeholder="Note"></textarea></section>
+      <section class="card tc"><span class="num">7</span><h3>Head-on<span class="pill under">▲ under-reliance</span></h3><div class="adv">AI: <b>Alter course 20° to starboard</b> · correct. Participant: <b>hold course and speed</b> after 7.4 s.</div><div class="track"><span class="dec under" style="left:16%">▲</span></div><div class="line"><span>0 claims</span></div><textarea placeholder="Note"></textarea></section>
+      <section class="card tc"><span class="num">8</span><h3>Overtaking a slower vessel<span class="pill under">▲ under-reliance</span></h3><div class="adv">AI: <b>Alter course 15° to starboard</b> · correct. Participant: <b>reduce speed</b> after 27.9 s, data open 16.2 s, 2 claims clicked.</div><div class="track"><span class="open" style="left:14%;width:36%"></span><span class="click" style="left:14%"></span><span class="click" style="left:31%"></span><span class="dec under" style="left:62%">▲</span></div><div class="line"><span>2 claims</span><span>data open 6.3–22.5 s</span></div><textarea placeholder="Note"></textarea></section>
+    </div>
+  </div></div>
+</section>
+
+<script>
+document.querySelectorAll('.switch [data-v]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.switch [data-v]').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  document.querySelectorAll('.variant').forEach(v=>v.classList.toggle('on',v.id==='v-'+b.dataset.v));
+  history.replaceState(null,'','#'+b.dataset.v); window.scrollTo(0,0);
+}));
+function fromHash(){const h=location.hash.slice(1);const b=h&&document.querySelector('.switch [data-v="'+h+'"]');if(b&&b.getAttribute('aria-pressed')!=='true')b.click()}
+fromHash(); addEventListener('hashchange',fromHash);
+document.getElementById('theme').addEventListener('click',()=>{const r=document.documentElement;r.dataset.theme=r.dataset.theme==='light'?'':'light'});
+</script>
+</html>

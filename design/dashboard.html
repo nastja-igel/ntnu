@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Researcher dashboard</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#081014; --panel:#0e1b21; --panel2:#12232b; --line:#21404b; --fg:#d6e6ea; --muted:#86a2ab; --own:#59c9e0; --ai:#f3b23f; --aiSoft:#3a2c10; --good:#5cc28a; --goodSoft:#123323; --bad:#ef6a5e; --badSoft:#3a1714; --accent:#4fc1b4;
+  --font-display:'Barlow Condensed',sans-serif; --font-body:'IBM Plex Sans',system-ui,sans-serif; --font-mono:'IBM Plex Mono',monospace; color-scheme:dark}
+:root[data-theme="light"]{--bg:#eef3f4; --panel:#fff; --panel2:#f3f7f8; --line:#c9d9de; --fg:#0f2228; --muted:#4f6b73; --own:#0b7f97; --ai:#a95f00; --aiSoft:#fbe9cf; --good:#1f8a52; --goodSoft:#dff1e6; --bad:#c43d32; --badSoft:#f8e0dd; --accent:#0d8784; color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:14px;line-height:1.45;padding:16px}
+.wrap{max-width:1220px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.note{font-size:12px;color:var(--muted)}
+.eyebrow{font-family:var(--font-display);font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.btn{font:inherit;font-weight:600;font-size:14px;border-radius:8px;padding:9px 14px;cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--fg)}
+.btn.ghost{background:transparent;color:var(--muted)}
+.btn.small{font-size:12px;font-weight:500;padding:5px 10px}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;letter-spacing:.03em;white-space:nowrap}
+.pill.ok{background:var(--goodSoft);color:var(--good)} .pill.over{background:var(--badSoft);color:var(--bad)} .pill.under{background:var(--aiSoft);color:var(--ai)} .pill.n{background:var(--panel2);color:var(--muted)}
+.pill i{font-style:normal;font-size:10px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{color:var(--muted);font-weight:500;font-size:12px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:6px}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap}
+.head h1{font-family:var(--font-display);font-size:30px;font-weight:600;margin:0;line-height:1}
+.head .meta{color:var(--muted);font-size:13px;margin-top:4px}
+.head .acts{display:flex;gap:8px;flex-wrap:wrap}
+/* split download button: one control, the icon names the action, each half picks the format */
+.split{display:inline-flex;align-items:stretch;border:1px solid var(--line);border-radius:8px;background:var(--panel2);overflow:hidden}
+.split .ic{display:grid;place-items:center;padding:0 8px 0 11px;color:var(--muted)}
+.split button{font:inherit;font-weight:600;font-size:14px;border:0;background:transparent;color:var(--fg);padding:9px 13px;cursor:pointer;border-left:1px solid var(--line)}
+.split button:first-of-type{border-left:0;padding-left:4px}
+.split button:hover{background:color-mix(in srgb,var(--own) 12%,transparent)}
+.picker{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.btn.sel{display:inline-flex;align-items:baseline;gap:8px;padding:7px 12px}
+.btn.sel b{font-size:16px}
+.btn.sel .cond{font-weight:500;color:var(--muted);font-size:13px}
+.navses{display:inline-flex;gap:4px}
+.navses .btn{padding:5px 9px}
+.navses .btn:disabled{opacity:.4;cursor:default}
+.menu .mhead{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:6px 10px 8px}
+.menu.wide button[role=menuitem]{grid-template-columns:52px 1fr auto;display:grid;align-items:baseline;gap:10px}
+.menu.wide button[aria-current="true"]{background:var(--panel2);box-shadow:inset 2px 0 0 var(--own)}
+.menu.wide em{text-align:right}
+.dd{position:relative}
+.menu{position:absolute;left:0;top:calc(100% + 6px);}
+.dd[data-align="right"] .menu{left:auto;right:0}
+.menu{min-width:300px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:3;display:none}
+.dd[data-open="true"] .menu,.dd:focus-within .menu{display:block}
+.menu button{display:grid;width:100%;text-align:left;font:inherit;background:none;border:0;color:var(--fg);padding:9px 10px;border-radius:7px;cursor:pointer;gap:2px}
+.menu button:hover{background:var(--panel2)}
+.menu b{font-weight:600}
+.menu span{font-size:12px;color:var(--muted)}
+.menu em{font-style:normal;font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+.menu .sep{height:1px;background:var(--line);margin:6px 4px}
+.menu .quiet{font-size:12px;color:var(--muted)}
+.flag{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--ai);border:1px solid color-mix(in srgb,var(--ai) 50%,var(--line));border-radius:999px;padding:2px 9px}
+/* figure (B2) */
+.rows{display:grid;grid-template-columns:120px 1fr;gap:22px 18px;align-items:center}
+.rl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;line-height:1.25;align-self:end;padding-bottom:4px}
+.rl b{display:block;font-family:var(--font-display);font-size:15px;color:var(--fg);letter-spacing:.04em}
+.cells{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px}
+.cell{height:44px;border-radius:8px;display:grid;place-items:center;font-size:12px;font-weight:600;border:1px solid var(--line);background:var(--panel2);letter-spacing:.03em}
+.cell.ok{color:var(--good);border-color:color-mix(in srgb,var(--good) 55%,var(--line))}
+.cell.over{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 60%,var(--line))}
+.cell.under{color:var(--ai);border-color:color-mix(in srgb,var(--ai) 55%,var(--line))}
+.hb{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px;align-items:end;height:116px;padding-top:20px;border-bottom:1px solid var(--line)}
+.hb div{background:var(--own);border-radius:4px 4px 0 0;min-height:2px;width:56%;justify-self:center;position:relative}
+.hb div.zero{background:var(--line);height:2px!important}
+.hb div span{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+.hb.t div{background:var(--muted)}
+.enc{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px;font-size:11px;color:var(--muted);line-height:1.3}
+.enc span b{display:block;color:var(--fg);font-weight:500}
+.summary{border-top:1px solid var(--line);padding-top:16px;margin-top:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px 24px}
+.summary p{margin:0;font-size:13px;color:var(--muted)}
+.summary b{display:block;font-family:var(--font-display);font-size:30px;font-weight:600;color:var(--fg);line-height:1;margin-bottom:4px}
+/* row of three */
+.three{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.matrix{display:grid;grid-template-columns:90px 1fr 1fr;gap:6px;font-size:12px}
+.matrix .h{color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-size:10px;display:grid;place-items:center;text-align:center;line-height:1.2}
+.matrix .q{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--panel2);min-height:74px;display:flex;flex-direction:column;justify-content:space-between}
+.matrix .q b{font-family:var(--font-display);font-size:28px;font-weight:600;line-height:1}
+.matrix .q span{font-size:11px;color:var(--muted)}
+.matrix .q.ok{border-color:color-mix(in srgb,var(--good) 55%,var(--line))}.matrix .q.ok b{color:var(--good)}
+.matrix .q.over{border-color:color-mix(in srgb,var(--bad) 60%,var(--line))}.matrix .q.over b{color:var(--bad)}
+.matrix .q.under{border-color:color-mix(in srgb,var(--ai) 55%,var(--line))}.matrix .q.under b{color:var(--ai)}
+.rate{display:grid;gap:12px}
+.rate .r{display:grid;grid-template-columns:140px 1fr 52px;gap:10px;align-items:center;font-size:13px}
+.rate .r .k{color:var(--muted)}
+.rate .r .k b{display:block;color:var(--fg);font-weight:500}
+.rate .bar{height:10px;background:var(--line);border-radius:3px;overflow:hidden;display:flex}
+.rate .bar i{height:100%;background:var(--muted)}
+.rate .v{font-family:var(--font-mono);font-size:12px;text-align:right}
+.kv{display:grid;grid-template-columns:1fr auto;gap:8px 12px;font-size:13px;margin:0}
+.kv dt{color:var(--muted)}.kv dd{margin:0;font-family:var(--font-mono);text-align:right}
+.kv dd.warn{color:var(--ai)}
+/* event timelines */
+.tl{display:grid;grid-template-columns:26px 1fr;gap:8px 12px;align-items:center}
+.tl .n{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.tl .track{position:relative;height:22px;background:var(--panel2);border-radius:4px;border:1px solid var(--line)}
+.tl .open{position:absolute;top:4px;bottom:4px;background:color-mix(in srgb,var(--own) 55%,transparent);border-radius:2px}
+.tl .click{position:absolute;top:2px;bottom:2px;width:2px;background:var(--ai)}
+.tl .dec{position:absolute;top:-3px;width:12px;height:28px;transform:translateX(-50%);display:grid;place-items:center;font-size:11px;font-weight:700}
+.tl .dec.ok{color:var(--good)}.tl .dec.over{color:var(--bad)}.tl .dec.under{color:var(--ai)}
+.tl .to{position:absolute;right:-1px;top:-1px;bottom:-1px;width:3px;background:var(--bad);border-radius:0 4px 4px 0}
+.axis{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-family:var(--font-mono);grid-column:2;margin-top:-2px}
+/* sessions */
+.agg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.agg .c{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--panel2)}
+.agg .c b{font-family:var(--font-display);font-size:16px;letter-spacing:.04em}
+.agg .c .nums{display:flex;gap:14px;margin-top:6px;font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.agg .c .nums span b{display:block;font-family:var(--font-display);font-size:22px;color:var(--fg);letter-spacing:0}
+textarea{width:100%;min-height:72px;font:inherit;font-size:13px;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px}
+footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
+</style>
+
+<div class="wrap">
+  <div class="head">
+    <div>
+      <div class="picker">
+        <h1>Session results</h1>
+        <div class="dd dd2"><button class="btn sel" id="ses" aria-haspopup="menu" aria-expanded="false"><b class="mono">P07</b><span class="cond">condition B</span> ▾</button>
+          <div class="menu wide" role="menu">
+            <div class="mhead">Sessions on this device · 7</div>
+            <button role="menuitem" aria-current="true"><b class="mono">P07</b><span>condition B · 16 Nov 14:32</span><em>4 / 8 appropriate</em></button>
+            <button role="menuitem"><b class="mono">P06</b><span>condition C · 16 Nov 13:50</span><em>6 / 8 appropriate</em></button>
+            <button role="menuitem"><b class="mono">P05</b><span>condition A · 16 Nov 13:05</span><em>5 / 8 appropriate</em></button>
+            <button role="menuitem"><b class="mono">P04</b><span>condition B · 15 Nov 16:20</span><em>5 / 8 appropriate</em></button>
+            <div class="sep"></div>
+            <button role="menuitem" class="quiet">Overview of all sessions →</button>
+          </div>
+        </div>
+        <span class="navses"><button class="btn small" title="Previous session">←</button><button class="btn small" title="Next session" disabled>→</button></span>
+      </div>
+      <div class="meta mono">16 Nov 2026 14:32 · 8 trials in 6 min 12 s · order 4 2 3 7 5 6 1 8</div>
+    </div>
+    <div class="acts"><span class="flag">⚑ 2 decisions under 2 s</span>
+      <div class="dd"><button class="btn" id="dl" aria-haspopup="menu" aria-expanded="true">Download ▾</button>
+        <div class="menu" role="menu">
+          <button role="menuitem"><b>Session · JSON</b><span>everything: meta, trials, events, notes</span><em>scrl_P07_B_2026-11-16.json</em></button>
+          <button role="menuitem"><b>Trials · CSV</b><span>one row per trial, for R or Python</span><em>scrl_P07_B_2026-11-16.csv</em></button>
+          <button role="menuitem"><b>All sessions on this device · CSV</b><span>7 sessions, codes only</span><em>scrl_sessions.csv</em></button>
+          <div class="sep"></div>
+          <button role="menuitem" class="quiet">Copy session JSON to clipboard</button>
+        </div>
+      </div>
+      <button class="btn ghost">New session</button></div>
+  </div>
+
+  <!-- 1. trial sequence figure (B2) -->
+  <section class="card">
+    <p class="eyebrow"><span>Trial sequence</span><span class="legend"><span><i style="background:var(--good)"></i>appropriate</span><span><i style="background:var(--bad)"></i>over-reliance</span><span><i style="background:var(--ai)"></i>under-reliance</span><span><i style="background:var(--muted)"></i>decision time</span><span><i style="background:var(--own)"></i>sensor data open</span></span></p>
+    <div class="rows">
+      <div class="rl"><b>Outcome</b>reliance</div>
+      <div class="cells"><div class="cell under">under</div><div class="cell ok">ok</div><div class="cell ok">ok</div><div class="cell ok">ok</div><div class="cell over">over</div><div class="cell ok">ok</div><div class="cell under">under</div><div class="cell under">under</div></div>
+      <div class="rl"><b>Decision</b>seconds</div>
+      <div class="hb t"><div style="height:58%"><span>16.3</span></div><div style="height:60%"><span>16.7</span></div><div style="height:16%"><span>4.6</span></div><div style="height:38%"><span>10.6</span></div><div style="height:17%"><span>4.7</span></div><div style="height:48%"><span>13.4</span></div><div style="height:26%"><span>7.4</span></div><div style="height:100%"><span>27.9</span></div></div>
+      <div class="rl"><b>Data open</b>seconds</div>
+      <div class="hb"><div class="zero"></div><div class="zero"></div><div class="zero"></div><div class="zero"></div><div class="zero"></div><div class="zero"></div><div class="zero"></div><div style="height:100%"><span>16.2</span></div></div>
+      <div class="rl"><b>Trial</b>encounter · advice</div>
+      <div class="enc"><span><b>1 · Crossing, target stbd</b>30° to starboard · correct</span><span><b>2 · Crossing, target stbd</b>25° to port · clearly wrong</span><span><b>3 · Crossing, target port</b>stand on · correct</span><span><b>4 · Close-quarters</b>10° to starboard · plausibly wrong</span><span><b>5 · Crossing, stale AIS</b>no action · plausibly wrong</span><span><b>6 · Being overtaken</b>stand on · correct</span><span><b>7 · Head-on</b>20° to starboard · correct</span><span><b>8 · Overtaking</b>15° to starboard · correct</span></div>
+    </div>
+    <div class="summary">
+      <p><b>4 / 8</b>decisions were appropriate</p>
+      <p><b>1</b>over-reliance · trial 5, stale AIS, accepted in 4.7 s without data</p>
+      <p><b>3</b>under-reliance · correct advice rejected in trials 1, 7, 8</p>
+      <p><b>1 / 2</b>plausibly wrong advisories caught</p>
+      <p><b>0</b>timeouts · no decision executed by default</p>
+      <p><b>12.7 s</b>mean decision time</p>
+    </div>
+  </section>
+
+  <!-- 2. three analytic cards -->
+  <div class="three">
+    <section class="card">
+      <p class="eyebrow"><span>Reliance matrix</span><span class="note">advice × decision</span></p>
+      <div class="matrix">
+        <div></div><div class="h">Accepted</div><div class="h">Rejected</div>
+        <div class="h">Advice correct<br>(5)</div><div class="q ok"><b>2</b><span>appropriate · hit</span></div><div class="q under"><b>3</b><span>under-reliance · miss</span></div>
+        <div class="h">Advice wrong<br>(3)</div><div class="q over"><b>1</b><span>over-reliance · false alarm</span></div><div class="q ok"><b>2</b><span>appropriate · correct rejection</span></div>
+      </div>
+      <p class="note" style="margin:10px 0 0">Signal-detection framing: hits and correct rejections are appropriate reliance. Eight trials describe one person, not a population.</p>
+    </section>
+    <section class="card">
+      <p class="eyebrow"><span>Acceptance by advice type</span></p>
+      <div class="rate">
+        <div class="r"><span class="k"><b>Correct</b>5 trials</span><span class="bar"><i style="width:40%"></i></span><span class="v">2 / 5</span></div>
+        <div class="r"><span class="k"><b>Clearly wrong</b>1 trial</span><span class="bar"><i style="width:0%"></i></span><span class="v">0 / 1</span></div>
+        <div class="r"><span class="k"><b>Plausibly wrong</b>2 trials</span><span class="bar"><i style="width:50%"></i></span><span class="v">1 / 2</span></div>
+      </div>
+      <p class="note" style="margin:14px 0 0">The curve the study is about: ideally high on the first row, zero on the other two. Here acceptance is low across the board — a cautious participant.</p>
+    </section>
+    <section class="card">
+      <p class="eyebrow"><span>Checking behaviour</span></p>
+      <dl class="kv">
+        <dt>Decisions preceded by opening sensor data</dt><dd>1 / 8</dd>
+        <dt>Mean time in data when opened</dt><dd>16.2 s</dd>
+        <dt>Evidence claims clicked</dt><dd>0</dd>
+        <dt>Wrong advice accepted without checking</dt><dd class="warn">1</dd>
+        <dt>Checked and still accepted wrong advice</dt><dd>0</dd>
+        <dt>Data checked, first half → second half</dt><dd>0% → 25%</dd>
+        <dt>Decisions under 2 s</dt><dd class="warn">2</dd>
+      </dl>
+    </section>
+  </div>
+
+  <!-- 3. event timelines -->
+  <section class="card">
+    <p class="eyebrow"><span>What happened inside each trial</span><span class="legend"><span><i style="background:color-mix(in srgb,var(--own) 55%,transparent)"></i>sensor data open</span><span><i style="background:var(--ai);width:3px"></i>claim clicked</span><span>✓ ● ▲ decision (ok · over · under)</span><span><i style="background:var(--bad);width:3px"></i>timeout</span></span></p>
+    <div class="tl">
+      <span class="n">1</span><div class="track"><span class="dec under" style="left:36%">▲</span></div>
+      <span class="n">2</span><div class="track"><span class="dec ok" style="left:37%">✓</span></div>
+      <span class="n">3</span><div class="track"><span class="dec ok" style="left:10%">✓</span></div>
+      <span class="n">4</span><div class="track"><span class="dec ok" style="left:24%">✓</span></div>
+      <span class="n">5</span><div class="track"><span class="dec over" style="left:10%">●</span></div>
+      <span class="n">6</span><div class="track"><span class="dec ok" style="left:30%">✓</span></div>
+      <span class="n">7</span><div class="track"><span class="dec ok" style="left:16%">▲</span></div>
+      <span class="n">8</span><div class="track"><span class="open" style="left:14%;width:36%"></span><span class="click" style="left:14%"></span><span class="click" style="left:31%"></span><span class="dec under" style="left:62%">▲</span></div>
+      <div class="axis"><span>0 s</span><span>15 s</span><span>30 s</span><span>45 s</span></div>
+    </div>
+    <p class="note" style="margin:10px 0 0">Requires event timestamps in the log (open, close, claim click, decision). Currently only totals are stored.</p>
+  </section>
+
+  <!-- 4. trial table -->
+  <section class="card">
+    <p class="eyebrow"><span>Trials</span><span class="note">8 rows · order as shown</span></p>
+    <table><thead><tr><th>#</th><th>Encounter</th><th>AI advice</th><th>Advice was</th><th>Decision</th><th>Time</th><th>Data open</th><th>Claims</th><th>Reliance</th></tr></thead><tbody>
+      <tr><td class="mono">1</td><td>Crossing, target on starboard bow</td><td>Alter course 30° to starboard</td><td>Correct</td><td>Hold course and speed</td><td class="mono">16.3 s</td><td class="mono">—</td><td class="mono">0</td><td><span class="pill under"><i>▲</i>under-reliance</span></td></tr>
+      <tr><td class="mono">2</td><td>Crossing, target on starboard bow</td><td>Alter course 25° to port</td><td>Clearly wrong</td><td>Hold course and speed</td><td class="mono">16.7 s</td><td class="mono">—</td><td class="mono">0</td><td><span class="pill ok"><i>✓</i>appropriate</span></td></tr>
+      <tr><td class="mono">3</td><td>Crossing, target on port bow</td><td>Stand on</td><td>Correct</td><td>Accepted</td><td class="mono">4.6 s</td><td class="mono">—</td><td class="mono">0</td><td><span class="pill ok"><i>✓</i>appropriate</span></td></tr>
+      <tr><td class="mono">4</td><td>Close-quarters crossing</td><td>Alter course 10° to starboard</td><td>Plausibly wrong</td><td>Hold course and speed</td><td class="mono">10.6 s</td><td class="mono">—</td><td class="mono">0</td><td><span class="pill ok"><i>✓</i>appropriate</span></td></tr>
+      <tr><td class="mono">5</td><td>Crossing, target on starboard bow</td><td>No action needed</td><td>Plausibly wrong</td><td>Accepted</td><td class="mono">4.7 s</td><td class="mono">—</td><td class="mono">0</td><td><span class="pill over"><i>●</i>over-reliance</span></td></tr>
+      <tr><td class="mono">6</td><td>Being overtaken from starboard quarter</td><td>Stand on</td><td>Correct</td><td>Accepted</td><td class="mono">13.4 s</td><td class="mono">—</td><td class="mono">0</td><td><span class="pill ok"><i>✓</i>appropriate</span></td></tr>
+      <tr><td class="mono">7</td><td>Head-on</td><td>Alter course 20° to starboard</td><td>Correct</td><td>Hold course and speed</td><td class="mono">7.4 s</td><td class="mono">—</td><td class="mono">0</td><td><span class="pill under"><i>▲</i>under-reliance</span></td></tr>
+      <tr><td class="mono">8</td><td>Overtaking a slower vessel</td><td>Alter course 15° to starboard</td><td>Correct</td><td>Reduce speed</td><td class="mono">27.9 s</td><td class="mono">16.2 s</td><td class="mono">2</td><td><span class="pill under"><i>▲</i>under-reliance</span></td></tr>
+    </tbody></table>
+  </section>
+
+  <!-- 5. sessions on this device -->
+  <section class="card">
+    <p class="eyebrow"><span>Sessions on this device</span><span class="note">stored locally · codes only · <button class="btn small">Export all CSV</button></span></p>
+    <div class="agg">
+      <div class="c"><b>A · ADVICE</b><div class="nums"><span><b>2</b>sessions</span><span><b>4.5</b>appropriate / 8</span><span><b>1.5</b>over</span><span><b>2.0</b>under</span></div></div>
+      <div class="c"><b>B · + CONFIDENCE</b><div class="nums"><span><b>3</b>sessions</span><span><b>4.7</b>appropriate / 8</span><span><b>1.7</b>over</span><span><b>1.7</b>under</span></div></div>
+      <div class="c"><b>C · + EVIDENCE</b><div class="nums"><span><b>2</b>sessions</span><span><b>6.0</b>appropriate / 8</span><span><b>0.5</b>over</span><span><b>1.5</b>under</span></div></div>
+    </div>
+    <table><thead><tr><th>Code</th><th>Condition</th><th>Date</th><th>Appropriate</th><th>Over</th><th>Under</th><th>Plausible caught</th><th>Data checked</th><th>Mean time</th><th></th></tr></thead><tbody>
+      <tr><td class="mono">P07</td><td>B</td><td class="mono">16 Nov 14:32</td><td class="mono">4 / 8</td><td class="mono">1</td><td class="mono">3</td><td class="mono">1 / 2</td><td class="mono">1 / 8</td><td class="mono">12.7 s</td><td><span class="pill n">current</span></td></tr>
+      <tr><td class="mono">P06</td><td>C</td><td class="mono">16 Nov 13:50</td><td class="mono">6 / 8</td><td class="mono">1</td><td class="mono">1</td><td class="mono">1 / 2</td><td class="mono">5 / 8</td><td class="mono">18.9 s</td><td></td></tr>
+      <tr><td class="mono">P05</td><td>A</td><td class="mono">16 Nov 13:05</td><td class="mono">5 / 8</td><td class="mono">2</td><td class="mono">1</td><td class="mono">0 / 2</td><td class="mono">2 / 8</td><td class="mono">9.8 s</td><td></td></tr>
+      <tr><td class="mono">P04</td><td>B</td><td class="mono">15 Nov 16:20</td><td class="mono">5 / 8</td><td class="mono">2</td><td class="mono">1</td><td class="mono">0 / 2</td><td class="mono">3 / 8</td><td class="mono">11.1 s</td><td></td></tr>
+      <tr><td colspan="10" class="note">… 3 more sessions</td></tr>
+    </tbody></table>
+  </section>
+
+  <!-- 6. notes -->
+  <section class="card">
+    <p class="eyebrow"><span>Researcher notes</span><span class="note">saved with the session JSON</span></p>
+    <textarea placeholder="Observations: thinking aloud, interruptions, questions the participant asked…">Thought aloud throughout. Said the 10° advice in trial 4 “felt too small” before rejecting it. Did not notice the AIS age in trial 5.</textarea>
+  </section>
+
+  <script>
+  // both dropdowns: click toggles, click outside closes; the download menu starts open for the mockup
+  document.querySelectorAll('.dd').forEach(dd=>{const b=dd.querySelector('button');
+    const align=()=>{const r=b.getBoundingClientRect();dd.dataset.align=(r.left+320>innerWidth)?'right':'left'};align();addEventListener('resize',align);
+    b.addEventListener('click',e=>{e.stopPropagation();const open=dd.dataset.open!=='true';document.querySelectorAll('.dd').forEach(o=>{o.dataset.open='false';o.querySelector('button').setAttribute('aria-expanded','false')});dd.dataset.open=open;b.setAttribute('aria-expanded',open);align()})});
+  addEventListener('click',()=>document.querySelectorAll('.dd').forEach(o=>{o.dataset.open='false';o.querySelector('button').setAttribute('aria-expanded','false')}));
+  const dl=document.querySelector('#dl').closest('.dd');dl.dataset.open='true';
+  </script>
+  <footer>Research prototype by Anastasiia Ilina, for the PhD application “Human-AI Teaming for Maritime Operations” (NTNU). Encounters are fictional; the AI is scripted with controlled accuracy (Wizard-of-Oz). Not for navigation.</footer>
+</div>
+</html>

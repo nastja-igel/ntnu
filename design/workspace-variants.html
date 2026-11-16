@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Workspace variants</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#081014; --panel:#0e1b21; --panel2:#12232b; --line:#21404b; --fg:#d6e6ea; --muted:#86a2ab;
+  --own:#59c9e0; --target:#b9a6ff; --ai:#f3b23f; --aiSoft:#3a2c10; --good:#5cc28a; --bad:#ef6a5e; --goodSoft:#123323; --badSoft:#3a1714;
+  --plot:#061015; --ring:#183641; --ringLabel:#4f7380;
+  --font-display:'Barlow Condensed','Arial Narrow',sans-serif; --font-body:'IBM Plex Sans',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+  --fs-xs:11px; --fs-s:12px; --fs-m:13px; --fs-base:14px; --fs-l:15px; --fs-xl:18px; --fs-2xl:20px; --fs-3xl:24px; --fs-4xl:26px; --fs-5xl:28px; --fs-6xl:32px;
+  --sp-0:2px; --sp-1:4px; --sp-2:6px; --sp-3:8px; --sp-4:10px; --sp-5:12px; --sp-6:14px; --sp-7:16px; --sp-8:20px; --sp-9:24px; --sp-10:32px; --sp-11:40px;
+  --r-xs:3px; --r-s:6px; --r-m:8px; --r-l:10px; --r-xl:12px; --r-pill:999px; --border:1px solid var(--line); color-scheme:dark;
+}
+:root[data-theme="light"]{--bg:#eef3f4; --panel:#ffffff; --panel2:#f3f7f8; --line:#c9d9de; --fg:#0f2228; --muted:#4f6b73; --own:#0b7f97; --target:#6a4fd1; --ai:#a95f00; --aiSoft:#fbe9cf; --good:#1f8a52; --bad:#c43d32; --goodSoft:#dff1e6; --badSoft:#f8e0dd; --plot:#f7fbfc; --ring:#c6d8de; --ringLabel:#6b8890; color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:var(--fs-base);line-height:1.45}
+.switch{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(6px);border-bottom:var(--border)}
+.switch b{font-family:var(--font-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px;color:var(--muted);margin-right:6px}
+.switch button{font:inherit;font-size:13px;border:var(--border);background:var(--panel);color:var(--muted);border-radius:8px;padding:6px 12px;cursor:pointer}
+.switch button[aria-pressed="true"]{background:var(--panel2);color:var(--fg);font-weight:600;border-color:var(--own)}
+.switch .sp{flex:1}
+.variant{display:none}
+.variant.on{display:block}
+.rationale{margin:0;padding:10px 16px;border-bottom:1px dashed var(--line);color:var(--muted);font-size:13px}
+.rationale b{color:var(--fg)}
+.screen{height:calc(100vh - 50px - 62px);min-height:620px;position:relative;overflow:hidden;background:var(--bg)}
+/* primitives */
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.eyebrow{font-family:var(--font-display);font-size:var(--fs-base);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 var(--sp-3);display:flex;justify-content:space-between;gap:8px}
+.btn{font:inherit;font-weight:600;font-size:var(--fs-base);border-radius:var(--r-m);padding:9px 14px;cursor:pointer;border:var(--border);background:var(--panel2);color:var(--fg)}
+.btn.primary{background:var(--good);border-color:var(--good);color:var(--panel)}
+.btn.danger{border-color:var(--bad);color:var(--bad);background:transparent}
+.btn.ghost{background:transparent;color:var(--muted)}
+.btn.big{font-family:var(--font-display);font-size:var(--fs-2xl);letter-spacing:.06em;text-transform:uppercase;padding:12px 18px}
+.chip{display:inline-block;font-size:var(--fs-s);border:var(--border);background:var(--panel);color:var(--fg);border-radius:var(--r-pill);padding:3px 9px}
+.chips{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
+.card{background:var(--panel);border:var(--border);border-radius:var(--r-l);padding:var(--sp-5);min-width:0}
+.advice{border:1px solid var(--ai);background:var(--aiSoft);border-radius:var(--r-l);padding:var(--sp-5);display:flex;flex-direction:column;gap:var(--sp-4)}
+.advice .tag{font-size:var(--fs-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--ai);font-weight:600}
+.advice .act{font-family:var(--font-display);font-size:var(--fs-4xl);font-weight:600;line-height:1.1}
+.conf{display:flex;align-items:center;gap:var(--sp-4);font-size:var(--fs-m)}
+.meter{display:flex;gap:2px}.meter i{width:22px;height:10px;border-radius:2px;background:var(--line)}.meter i.on{background:var(--ai)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:var(--fs-m);margin:0}.kv dt{color:var(--muted)}.kv dd{margin:0}
+.hint{font-size:var(--fs-s);color:var(--muted)}
+table{border-collapse:collapse;width:100%;font-size:var(--fs-m)}
+th,td{text-align:left;padding:5px 6px;border-bottom:var(--border)}
+th{color:var(--muted);font-weight:500;font-size:var(--fs-s)}
+.timer{height:6px;border-radius:var(--r-xs);background:var(--line);overflow:hidden}.timer i{display:block;height:100%;width:58%;background:var(--ai)}
+.plotbg{position:absolute;inset:0;background:var(--plot)}
+.plotbg svg{position:absolute;inset:0;width:100%;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:var(--fs-s);color:var(--muted)}
+.legend i{display:inline-block;width:18px;height:0;border-top:2px solid;vertical-align:middle;margin-right:5px}
+.ghostnote{position:absolute;font-size:11px;color:var(--own);border:1px dashed var(--own);border-radius:6px;padding:3px 7px;background:color-mix(in srgb,var(--bg) 80%,transparent);opacity:.9;pointer-events:none}
+
+/* A: console, start-page layout applied */
+.a .screen{display:grid;grid-template-columns:minmax(0,1fr) clamp(380px,38vw,560px)}
+.a .plotarea{position:relative}
+.a .hud{position:absolute;left:18px;top:14px;display:flex;gap:14px;align-items:center;font-size:var(--fs-s);color:var(--muted)}
+.a .hud .back{font:inherit;font-size:var(--fs-s);color:var(--muted);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
+.a .hud .brand{font-family:var(--font-display);font-size:var(--fs-l);color:var(--fg);letter-spacing:.02em}
+.a .clock{position:absolute;left:18px;bottom:16px;font-size:var(--fs-s);color:var(--muted)}
+.a .legend{position:absolute;right:18px;bottom:16px}
+.a .side{background:var(--panel);border-left:var(--border);display:flex;flex-direction:column;gap:var(--sp-5);padding:var(--sp-6) var(--sp-7);overflow:auto}
+.a .trialbar{display:grid;grid-template-columns:auto 1fr auto;gap:var(--sp-5);align-items:center;font-size:var(--fs-m)}
+.a .decision .row{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3)}
+.a .drawer{border:var(--border);border-radius:var(--r-l);background:var(--panel2);padding:var(--sp-4) var(--sp-5);display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.a .drawer b{font-family:var(--font-display);font-size:var(--fs-xl);letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+
+/* B: bridge overlay */
+.b .screen{}
+.b .topline{position:absolute;left:0;right:0;top:0;height:4px;background:var(--line)}
+.b .topline i{display:block;height:100%;width:58%;background:var(--ai)}
+.b .hud{position:absolute;left:18px;top:16px;display:flex;gap:14px;align-items:center;font-size:var(--fs-s);color:var(--muted)}
+.b .hud .brand{font-family:var(--font-display);font-size:var(--fs-l);color:var(--fg)}
+.b .hud .back{font:inherit;font-size:var(--fs-s);color:var(--muted);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
+.b .trial{position:absolute;right:18px;top:14px;display:flex;gap:12px;align-items:center;font-size:var(--fs-m)}
+.b .trial .t{font-family:var(--font-display);font-size:var(--fs-3xl);font-weight:600;color:var(--ai)}
+.b .float{position:absolute;right:18px;top:60px;width:min(440px,42vw)}
+.b .float .advice{box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.b .deck{position:absolute;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--panel) 92%,transparent);backdrop-filter:blur(8px);border-top:var(--border);padding:var(--sp-6) var(--sp-8);display:grid;grid-template-columns:auto auto 1fr auto;gap:var(--sp-5);align-items:center}
+.b .deck .alts{display:flex;gap:6px;flex-wrap:wrap}
+.b .deck .btn.data{justify-self:end}
+.b .clock{position:absolute;left:18px;bottom:88px;font-size:var(--fs-s);color:var(--muted)}
+.b .side{position:absolute;right:0;top:0;bottom:0;width:360px;background:var(--panel);border-left:var(--border);transform:translateX(100%);padding:var(--sp-6);opacity:.0}
+
+/* C: instrument panel, three columns */
+.c .screen{display:grid;grid-template-rows:4px 1fr;grid-template-columns:56px 0 minmax(0,1fr) clamp(360px,34vw,480px);transition:grid-template-columns .25s}
+.c .screen.open{grid-template-columns:56px 320px minmax(0,1fr) clamp(360px,34vw,480px)}
+.c .datapane{background:var(--panel);border-right:var(--border);overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.c .screen:not(.open) .datapane{border-right:0}
+.c .datapane .inner{width:320px;padding:var(--sp-6);display:flex;flex-direction:column;gap:var(--sp-4)}
+.c .datapane .eyebrow{margin:0}
+.c .datapane th{font-weight:400;color:var(--muted);width:58%}
+.c .datapane tr.hl th,.c .datapane tr.hl td{background:var(--aiSoft)}
+.c .datapane .src{font-size:var(--fs-xs);color:var(--muted);margin-top:var(--sp-2)}
+.c .rail .vtab.on{border-color:var(--own);color:var(--fg)}
+.c .topline{grid-column:1/-1;background:var(--line)}.c .topline i{display:block;height:100%;width:58%;background:var(--ai)}
+.c .rail{background:var(--panel);border-right:var(--border);display:flex;flex-direction:column;align-items:center;padding:var(--sp-5) 0;gap:var(--sp-5)}
+.c .rail .vtab{writing-mode:vertical-rl;transform:rotate(180deg);font-family:var(--font-display);font-size:var(--fs-l);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border:var(--border);border-radius:var(--r-m);padding:12px 8px;background:var(--panel2);cursor:pointer}
+.c .rail .back{font-size:16px;color:var(--muted);background:none;border:var(--border);border-radius:50%;width:34px;height:34px;cursor:pointer}
+.c .plotarea{position:relative}
+.c .hud{position:absolute;left:14px;top:12px;font-size:var(--fs-s);color:var(--muted)}
+.c .clock{position:absolute;left:14px;bottom:12px;font-size:var(--fs-s);color:var(--muted)}
+.c .legend{position:absolute;right:14px;bottom:12px;max-width:50%}
+.c .side{background:var(--panel);border-left:var(--border);display:flex;flex-direction:column;gap:var(--sp-5);padding:var(--sp-6)}
+.c .trialbar{display:flex;justify-content:space-between;align-items:baseline}
+.c .trialbar .t{font-family:var(--font-display);font-size:var(--fs-3xl);font-weight:600}
+.c .trialbar .left{font-family:var(--font-mono);font-size:var(--fs-2xl);color:var(--ai)}
+.c .decision .btn{width:100%}
+.c .decision .row{display:grid;gap:var(--sp-3)}
+
+/* E: C layout after Reject — manoeuvre options on the radar itself */
+.e .screen{display:grid;grid-template-rows:4px 1fr;grid-template-columns:56px minmax(0,1fr) clamp(360px,34vw,480px)}
+.e .topline{grid-column:1/-1;background:var(--line)}.e .topline i{display:block;height:100%;width:58%;background:var(--ai)}
+.e .rail{background:var(--panel);border-right:var(--border);display:flex;flex-direction:column;align-items:center;padding:var(--sp-5) 0;gap:var(--sp-5)}
+.e .rail .vtab{writing-mode:vertical-rl;transform:rotate(180deg);font-family:var(--font-display);font-size:var(--fs-l);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border:var(--border);border-radius:var(--r-m);padding:12px 8px;background:var(--panel2)}
+.e .rail .back{font-size:16px;color:var(--muted);background:none;border:var(--border);border-radius:50%;width:34px;height:34px}
+.e .plotarea{position:relative}
+.e .hud{position:absolute;left:14px;top:12px;font-size:var(--fs-s);color:var(--muted)}
+.e .clock{position:absolute;left:14px;bottom:12px;font-size:var(--fs-s);color:var(--muted)}
+.e .legend{position:absolute;right:14px;bottom:12px;max-width:50%}
+.e .hb{position:absolute;transform:translate(-50%,-50%);font:inherit;font-size:13px;font-weight:600;min-width:48px;min-height:48px;padding:6px 10px;border-radius:999px;border:1px solid var(--own);background:color-mix(in srgb,var(--panel) 88%,transparent);color:var(--fg);cursor:pointer;display:grid;place-items:center;line-height:1.05;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.e .hb small{display:block;font-size:9px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.06em}
+.e .hb.port{border-color:var(--bad)}
+.e .hb:hover{background:var(--panel2)}
+.e .side{background:var(--panel);border-left:var(--border);display:flex;flex-direction:column;gap:var(--sp-5);padding:var(--sp-6)}
+.e .trialbar{display:flex;justify-content:space-between;align-items:baseline}
+.e .trialbar .t{font-family:var(--font-display);font-size:var(--fs-3xl);font-weight:600}
+.e .trialbar .left{font-family:var(--font-mono);font-size:var(--fs-2xl);color:var(--ai)}
+.e .hero .act{font-family:var(--font-display);font-size:var(--fs-6xl);font-weight:600;line-height:1.02}
+.e .confbar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:6px}.e .confbar i{display:block;height:100%;width:79%;background:var(--ai)}
+.e .confrow{display:flex;justify-content:space-between;font-size:var(--fs-s);color:var(--muted);margin-top:8px}
+.e .claims{display:flex;flex-direction:column;border-top:var(--border);margin-top:8px}
+.e .claim{display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:var(--border);font-size:var(--fs-m)}
+.e .claim .val{font-family:var(--font-mono);color:var(--muted)}
+.e .claim a{color:var(--own);font-size:var(--fs-s);text-decoration:none}
+.e .decision{margin-top:auto;border-top:var(--border);padding-top:var(--sp-5);display:flex;flex-direction:column;gap:var(--sp-3)}
+.e .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.e .group{display:grid;grid-template-columns:90px 1fr;gap:10px;align-items:center}
+.e .group .g{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;line-height:1.2}
+.e .group .g b{display:block;color:var(--fg);font-family:var(--font-display);font-size:15px;letter-spacing:.04em}
+.e .segbig{display:flex;border:var(--border);border-radius:8px;overflow:hidden;background:var(--panel2)}
+.e .segbig span{flex:1;font-size:14px;font-weight:500;min-height:46px;display:grid;place-items:center;padding:8px 10px}
+.e .segbig span+span{border-left:var(--border)}
+.e .segbig span.hov{background:color-mix(in srgb,var(--own) 14%,transparent)}
+.e .pair{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);border-top:var(--border);padding-top:var(--sp-3)}
+.e .pair .rej{border-color:var(--own)}
+
+/* D: current structure, polished and full-bleed */
+.d .screen{display:flex;flex-direction:column}
+.d .bar{display:flex;align-items:center;gap:var(--sp-7);padding:var(--sp-4) var(--sp-7);border-bottom:var(--border);background:var(--panel)}
+.d .bar .brand{font-family:var(--font-display);font-size:var(--fs-xl);letter-spacing:.02em}
+.d .bar .timer{flex:1}
+.d .body{flex:1;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:var(--sp-6);padding:var(--sp-6) var(--sp-7);min-height:0}
+.d .plotcard{position:relative;border:var(--border);border-radius:var(--r-l);overflow:hidden;background:var(--plot)}
+.d .plotcard .hud{position:absolute;left:12px;top:10px;font-size:var(--fs-s);color:var(--muted)}
+.d .plotcard .clock{position:absolute;right:12px;top:10px;font-size:var(--fs-s);color:var(--muted)}
+.d .plotcard .legend{position:absolute;left:12px;bottom:10px}
+.d .side{display:flex;flex-direction:column;gap:var(--sp-5);min-height:0;overflow:auto}
+.d .decision .row{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3)}
+.d .drawer{border:var(--border);border-radius:var(--r-l);background:var(--panel);padding:var(--sp-4) var(--sp-5);display:flex;justify-content:space-between;align-items:center}
+.d .drawer b{font-family:var(--font-display);font-size:var(--fs-base);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+</style>
+
+<div class="switch"><b>Workspace</b>
+  <button data-v="a" aria-pressed="true">A · Console</button>
+  <button data-v="b" aria-pressed="false">B · Bridge overlay</button>
+  <button data-v="c" aria-pressed="false">C · Instrument panel</button>
+  <button data-v="d" aria-pressed="false">D · Polished current</button>
+  <button data-v="e" aria-pressed="false">E · Helm on radar</button>
+  <span class="sp"></span><button id="theme">Light / dark</button>
+</div>
+
+<template id="radar">
+  <svg viewBox="0 0 900 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <g fill="none" stroke="var(--ring)" stroke-width="1">
+      <circle cx="450" cy="390" r="70"/><circle cx="450" cy="390" r="140"/><circle cx="450" cy="390" r="210"/><circle cx="450" cy="390" r="280"/><circle cx="450" cy="390" r="350"/>
+      <line x1="450" y1="0" x2="450" y2="700"/><line x1="0" y1="390" x2="900" y2="390"/>
+    </g>
+    <g font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ringLabel)"><text x="454" y="332">1 nm</text><text x="454" y="262">2 nm</text><text x="454" y="192">3 nm</text><text x="454" y="122">4 nm</text><text x="454" y="52">5 nm</text></g>
+    <circle cx="450" cy="390" r="35" fill="none" stroke="var(--bad)" stroke-dasharray="3 4" opacity=".6"/>
+    <line x1="520" y1="300" x2="330" y2="690" stroke="var(--muted)" stroke-dasharray="2 4"/>
+    <circle cx="462" cy="372" r="4" fill="var(--muted)"/><text x="470" y="368" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--muted)">CPA</text>
+    <line x1="450" y1="390" x2="450" y2="306" stroke="var(--own)" stroke-width="2"/>
+    <polygon points="450,374 457,394 450,389 443,394" fill="var(--own)"/>
+    <line x1="450" y1="390" x2="478" y2="236" stroke="var(--ai)" stroke-width="2" stroke-dasharray="6 5"/>
+    <text x="484" y="232" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ai)">AI +10°</text>
+    <line x1="520" y1="300" x2="458" y2="322" stroke="var(--target)" stroke-width="2"/>
+    <polygon points="520,291 525,304 520,301 515,304" transform="rotate(250 520 300)" fill="var(--target)"/>
+    <text x="530" y="304" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--target)">TGT</text>
+  </svg>
+</template>
+
+<!-- ================= A ================= -->
+<section class="variant a on" id="v-a">
+  <p class="rationale"><b>A · Console.</b> Та же логика, что на стартовой: радар во весь левый край без рамок, справа панель фиксированной ширины. Служебное (назад, название, часы, легенда) ушло в тихие подписи поверх радара. В панели сверху строка трайла с таймером, затем совет, решение, и таблица данных как свёрнутый ящик. В Explore в строку трайла встают селектор сценария и переключатель A/B/C.</p>
+  <div class="screen">
+    <div class="plotarea"><div class="plotbg" data-radar></div>
+      <div class="hud"><button class="back">← Start page</button><span class="brand">Shore Control Reliance Lab</span><span>· relative motion · head-up · rings 1 nm</span></div>
+      <div class="clock mono">T+01:56 · HDG 000° · 12 kn</div>
+      <div class="legend"><span><i style="border-color:var(--own)"></i>Own</span><span><i style="border-color:var(--target)"></i>Target</span><span><i style="border-color:var(--ai);border-top-style:dashed"></i>AI heading</span><span><i style="border-color:var(--muted);border-top-style:dotted"></i>Rel. track</span></div>
+    </div>
+    <aside class="side">
+      <div class="trialbar"><span class="mono">Trial 1 / 8</span><span class="timer"><i></i></span><span class="mono">00:26</span></div>
+      <section class="advice">
+        <div class="tag">AI advisory · collision avoidance</div><div class="act">Alter course 10° to starboard</div>
+        <div class="conf">Confidence <span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><b>Moderate</b></div>
+        <dl class="kv"><dt>Data basis</dt><dd>Radar and AIS fused</dd><dt>Predicted CPA after action</dt><dd class="mono">0.18 nm (limit 0.5 nm)</dd><dt>Rule</dt><dd>Rule 15, crossing: own vessel is the give-way vessel.</dd></dl>
+        <div><div class="hint">Based on (select to check in sensor data):</div><div class="chips" style="margin-top:6px"><span class="chip">Target on starboard bow</span><span class="chip">CPA about 0.0 nm</span><span class="chip">About 7 min to CPA</span></div></div>
+      </section>
+      <section class="card decision"><p class="eyebrow">Operator decision</p><div class="row"><button class="btn primary">Accept advice</button><button class="btn danger">Reject, choose action</button></div></section>
+      <div class="drawer"><b>Sensor data</b><span class="btn">Check sensor data</span></div>
+    </aside>
+  </div>
+</section>
+
+<!-- ================= B ================= -->
+<section class="variant b" id="v-b">
+  <p class="rationale"><b>B · Bridge overlay.</b> Радар на весь экран, как на ECDIS. Совет ИИ плавает карточкой поверх радара справа сверху, таймер — тонкая линия по самому верху экрана, номер трайла крупно в углу. Решение живёт в нижней «палубе»: принять, отклонить, альтернативы в ряд и кнопка данных справа. Данные выезжают ящиком справа и закрывают совет, пока открыты. Максимальное погружение, но плотнее и требует аккуратности на маленьких экранах.</p>
+  <div class="screen">
+    <div class="plotbg" data-radar></div>
+    <div class="topline"><i></i></div>
+    <div class="hud"><button class="back">← Start page</button><span class="brand">Shore Control Reliance Lab</span><span>· relative motion · head-up · rings 1 nm</span></div>
+    <div class="trial"><span class="mono" style="color:var(--muted)">Trial 1 / 8</span><span class="t mono">00:26</span></div>
+    <div class="float"><section class="advice">
+      <div class="tag">AI advisory · collision avoidance</div><div class="act">Alter course 10° to starboard</div>
+      <div class="conf">Confidence <span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><b>Moderate</b></div>
+      <dl class="kv"><dt>Data basis</dt><dd>Radar and AIS fused</dd><dt>Predicted CPA after action</dt><dd class="mono">0.18 nm (limit 0.5 nm)</dd><dt>Rule</dt><dd>Rule 15, crossing: own vessel is the give-way vessel.</dd></dl>
+      <div><div class="hint">Based on (select to check in sensor data):</div><div class="chips" style="margin-top:6px"><span class="chip">Target on starboard bow</span><span class="chip">CPA about 0.0 nm</span><span class="chip">About 7 min to CPA</span></div></div>
+    </section></div>
+    <div class="clock mono">T+01:56 · HDG 000° · 12 kn</div>
+    <div class="deck">
+      <button class="btn primary big">Accept advice</button>
+      <button class="btn danger big">Reject</button>
+      <div class="alts"><span class="chip">Alter 30° starboard</span><span class="chip">Alter 45° starboard</span><span class="chip">Alter 20° port</span><span class="chip">Hold course and speed</span><span class="chip">Reduce speed</span></div>
+      <button class="btn data">Sensor data ↗</button>
+    </div>
+    <div class="ghostnote" style="right:18px;top:62%">sensor data: drawer slides in from the right</div>
+  </div>
+</section>
+
+<!-- ================= C ================= -->
+<section class="variant c" id="v-c">
+  <p class="rationale"><b>C · Instrument panel.</b> Три зоны как на пульте: слева узкая рейка с вертикальной вкладкой «Sensor data» и кнопкой назад, в центре радар, справа панель совета и решения. Таймер тонкой линией по верху, номер трайла и остаток времени крупно в панели. Данные открываются из рейки и раздвигают радар, а не закрывают совет. Чёткое разделение «смотреть, проверять, решать».</p>
+  <div class="screen open" id="cScreen">
+    <div class="topline"><i></i></div>
+    <div class="rail"><button class="back" title="Start page">←</button><button class="vtab on" id="cTab">Sensor data</button></div>
+    <div class="datapane"><div class="inner">
+      <p class="eyebrow"><span>Sensor data</span><span class="mono" style="color:var(--muted)">T+01:56</span></p>
+      <table><tbody>
+        <tr class="hl"><th scope="row">Target bearing (relative)</th><td class="mono">030°</td></tr>
+        <tr><th scope="row">Range</th><td class="mono">1.72 nm</td></tr>
+        <tr><th scope="row">CPA, radar track</th><td class="mono">0.02 nm</td></tr>
+        <tr><th scope="row">TCPA, radar track</th><td class="mono">5.1 min</td></tr>
+        <tr><th scope="row">Target COG / SOG, radar</th><td class="mono">250° / 9 kn</td></tr>
+        <tr><th scope="row">Target COG / SOG, AIS</th><td class="mono">250° / 9 kn</td></tr>
+        <tr><th scope="row">CPA, AIS track</th><td class="mono">0.02 nm</td></tr>
+        <tr><th scope="row">AIS report age</th><td class="mono">2 min 3 s</td></tr>
+        <tr><th scope="row">Visibility</th><td class="mono">2.5 nm</td></tr>
+        <tr><th scope="row">Own COG / SOG</th><td class="mono">000° / 12 kn</td></tr>
+      </tbody></table>
+      <div class="src">Highlighted row: opened from the evidence chip “Target on starboard bow”. Opening and dwell time are recorded.</div>
+    </div></div>
+    <div class="plotarea"><div class="plotbg" data-radar></div>
+      <div class="hud">Relative motion · head-up · rings 1 nm</div>
+      <div class="clock mono">T+01:56 · HDG 000° · 12 kn</div>
+      <div class="legend"><span><i style="border-color:var(--own)"></i>Own</span><span><i style="border-color:var(--target)"></i>Target</span><span><i style="border-color:var(--ai);border-top-style:dashed"></i>AI heading</span></div>
+    </div>
+    <aside class="side">
+      <div class="trialbar"><span class="t">Trial 1 <span style="color:var(--muted);font-weight:500">/ 8</span></span><span class="left">00:26</span></div>
+      <section class="advice">
+        <div class="tag">AI advisory · collision avoidance</div><div class="act">Alter course 10° to starboard</div>
+        <div class="conf">Confidence <span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><b>Moderate</b></div>
+        <dl class="kv"><dt>Data basis</dt><dd>Radar and AIS fused</dd><dt>Predicted CPA after action</dt><dd class="mono">0.18 nm (limit 0.5 nm)</dd><dt>Rule</dt><dd>Rule 15, crossing: own vessel is the give-way vessel.</dd></dl>
+        <div><div class="hint">Based on (select to check in sensor data):</div><div class="chips" style="margin-top:6px"><span class="chip">Target on starboard bow</span><span class="chip">CPA about 0.0 nm</span><span class="chip">About 7 min to CPA</span></div></div>
+      </section>
+      <section class="card decision"><p class="eyebrow">Operator decision</p><div class="row"><button class="btn primary big">Accept advice</button><button class="btn danger">Reject, choose action</button></div></section>
+    </aside>
+  </div>
+</section>
+
+<!-- ================= D ================= -->
+<section class="variant d" id="v-d">
+  <p class="rationale"><b>D · Polished current.</b> Нынешняя структура, доведённая до стандарта стартовой: без полей страницы и футера, тулбар во всю ширину с таймером, сетка двух колонок на всю высоту, подписи радара переехали внутрь плоскости, таблица данных как ящик. Минимальный риск, узнаваемая схема, меньше погружения.</p>
+  <div class="screen">
+    <div class="bar"><button class="btn ghost">← Start page</button><span class="brand">Shore Control Reliance Lab</span><span class="mono">Trial 1 / 8</span><span class="timer"><i></i></span><span class="mono">00:26</span></div>
+    <div class="body">
+      <div class="plotcard"><div class="plotbg" data-radar></div>
+        <div class="hud">RELATIVE-MOTION PLOT · HEAD-UP · RINGS 1 NM</div><div class="clock mono">T+01:56</div>
+        <div class="legend"><span><i style="border-color:var(--own)"></i>Own vessel</span><span><i style="border-color:var(--target)"></i>Target</span><span><i style="border-color:var(--ai);border-top-style:dashed"></i>AI heading</span><span><i style="border-color:var(--muted);border-top-style:dotted"></i>Relative track and CPA</span></div>
+      </div>
+      <aside class="side">
+        <section class="advice">
+          <div class="tag">AI advisory · collision avoidance</div><div class="act">Alter course 10° to starboard</div>
+          <div class="conf">Confidence <span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><b>Moderate</b></div>
+          <dl class="kv"><dt>Data basis</dt><dd>Radar and AIS fused</dd><dt>Predicted CPA after action</dt><dd class="mono">0.18 nm (limit 0.5 nm)</dd><dt>Rule</dt><dd>Rule 15, crossing: own vessel is the give-way vessel.</dd></dl>
+          <div><div class="hint">Based on (select to check in sensor data):</div><div class="chips" style="margin-top:6px"><span class="chip">Target on starboard bow</span><span class="chip">CPA about 0.0 nm</span><span class="chip">About 7 min to CPA</span></div></div>
+        </section>
+        <section class="card decision"><p class="eyebrow">Operator decision</p><div class="row"><button class="btn primary">Accept advice</button><button class="btn danger">Reject, choose action</button></div></section>
+        <div class="drawer"><b>Sensor data</b><span class="btn">Check sensor data</span></div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ================= E ================= -->
+<section class="variant e" id="v-e">
+  <p class="rationale"><b>E · Helm on radar.</b> Раскладка C после нажатия Reject. На радаре появляются призрачные линии курса для каждого варианта и круглые кнопки на их концах: 20° влево, 30° и 45° вправо (разнесены по радиусу, чтобы не слипались), Hold на конце собственного вектора, Reduce speed под своим судном. Список в панели раскрыт как зеркало: наведение на кнопку радара подсвечивает сегмент в списке (здесь 45°). Прогноз CPA по вариантам не показывается намеренно.</p>
+  <div class="screen">
+    <div class="topline"><i></i></div>
+    <div class="rail"><button class="back" title="Start page">←</button><button class="vtab">Sensor data</button></div>
+    <div class="plotarea">
+      <div class="plotbg">
+        <svg viewBox="0 0 900 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <g fill="none" stroke="var(--ring)" stroke-width="1">
+            <circle cx="450" cy="390" r="70"/><circle cx="450" cy="390" r="140"/><circle cx="450" cy="390" r="210"/><circle cx="450" cy="390" r="280"/><circle cx="450" cy="390" r="350"/>
+            <line x1="450" y1="0" x2="450" y2="700"/><line x1="0" y1="390" x2="900" y2="390"/>
+          </g>
+          <g font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ringLabel)"><text x="454" y="332">1 nm</text><text x="454" y="262">2 nm</text><text x="454" y="192">3 nm</text><text x="454" y="122">4 nm</text></g>
+          <circle cx="450" cy="390" r="35" fill="none" stroke="var(--bad)" stroke-dasharray="3 4" opacity=".6"/>
+          <line x1="520" y1="300" x2="330" y2="690" stroke="var(--muted)" stroke-dasharray="2 4"/>
+          <circle cx="462" cy="372" r="4" fill="var(--muted)"/><text x="470" y="368" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--muted)">CPA</text>
+          <!-- ghost options -->
+          <g stroke="var(--own)" stroke-width="1.5" stroke-dasharray="4 5" opacity=".55" fill="none">
+            <line x1="450" y1="390" x2="365" y2="156"/>   <!-- 20° port, r≈250 -->
+            <line x1="450" y1="390" x2="555" y2="208"/>   <!-- 30° stbd, r≈210 -->
+            <line x1="450" y1="390" x2="648" y2="192"/>   <!-- 45° stbd, r≈280 -->
+          </g>
+          <line x1="450" y1="390" x2="450" y2="306" stroke="var(--own)" stroke-width="2"/>
+          <polygon points="450,374 457,394 450,389 443,394" fill="var(--own)"/>
+          <line x1="450" y1="390" x2="478" y2="236" stroke="var(--ai)" stroke-width="2" stroke-dasharray="6 5" opacity=".6"/>
+          <text x="484" y="232" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ai)" opacity=".7">AI +10° · rejected</text>
+          <line x1="520" y1="300" x2="458" y2="322" stroke="var(--target)" stroke-width="2"/>
+          <polygon points="520,291 525,304 520,301 515,304" transform="rotate(250 520 300)" fill="var(--target)"/>
+          <text x="530" y="304" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--target)">TGT</text>
+          <!-- option buttons, drawn in plot space so they stay on the line ends at any size -->
+          <g font-family="IBM Plex Sans, sans-serif" text-anchor="middle" style="cursor:pointer">
+            <g><circle cx="365" cy="156" r="26" fill="var(--panel)" stroke="var(--bad)" stroke-width="1.5"/><text x="365" y="154" font-size="14" font-weight="600" fill="var(--fg)">20°</text><text x="365" y="167" font-size="8.5" fill="var(--muted)" letter-spacing=".5">PORT</text></g>
+            <g><circle cx="450" cy="262" r="26" fill="var(--panel)" stroke="var(--own)" stroke-width="1.5"/><text x="450" y="260" font-size="13" font-weight="600" fill="var(--fg)">Hold</text><text x="450" y="273" font-size="8" fill="var(--muted)" letter-spacing=".4">COURSE · SPEED</text></g>
+            <g><circle cx="555" cy="208" r="26" fill="var(--panel)" stroke="var(--own)" stroke-width="1.5"/><text x="555" y="206" font-size="14" font-weight="600" fill="var(--fg)">30°</text><text x="555" y="219" font-size="8.5" fill="var(--muted)" letter-spacing=".5">STBD</text></g>
+            <g><circle cx="648" cy="192" r="26" fill="var(--panel2)" stroke="var(--own)" stroke-width="2.5"/><text x="648" y="190" font-size="14" font-weight="600" fill="var(--fg)">45°</text><text x="648" y="203" font-size="8.5" fill="var(--muted)" letter-spacing=".5">STBD</text></g>
+            <g><circle cx="450" cy="470" r="26" fill="var(--panel)" stroke="var(--own)" stroke-width="1.5"/><text x="450" y="468" font-size="12" font-weight="600" fill="var(--fg)">Reduce</text><text x="450" y="481" font-size="8.5" fill="var(--muted)" letter-spacing=".5">SPEED</text></g>
+          </g>
+        </svg>
+      </div>
+      <div class="hud">Relative motion · head-up · rings 1 nm</div>
+      <div class="clock mono">T+01:56 · HDG 000° · 12 kn</div>
+      <div class="legend"><span><i style="border-color:var(--own)"></i>Own</span><span><i style="border-color:var(--target)"></i>Target</span><span><i style="border-color:var(--own);border-top-style:dashed"></i>Your options</span></div>
+    </div>
+    <aside class="side">
+      <div class="trialbar"><span class="t">Trial 1 <span style="color:var(--muted);font-weight:500">/ 8</span></span><span class="left">00:19</span></div>
+      <div class="hero"><div class="tag" style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ai);font-weight:600">AI advisory · collision avoidance</div><div class="act">Alter course 10° to starboard</div>
+        <div class="confrow"><span>Confidence · <b style="color:var(--fg)">moderate</b></span><span>Radar and AIS fused</span></div><div class="confbar"><i></i></div></div>
+      <div class="claims">
+        <div class="claim"><span>Target on starboard bow</span><span><span class="val">030°</span> <a href="#">check →</a></span></div>
+        <div class="claim"><span>CPA about 0.0 nm</span><span><span class="val">0.02 nm</span> <a href="#">check →</a></span></div>
+        <div class="claim"><span>About 7 min to CPA</span><span><span class="val">5.1 min</span> <a href="#">check →</a></span></div>
+      </div>
+      <div class="decision">
+        <p class="eyebrow" style="margin:0"><span>Operator decision</span></p>
+        <div class="lbl">Choose another action · on the radar or here</div>
+        <div class="group"><span class="g"><b>Starboard</b>alter course</span><div class="segbig"><span>30°</span><span class="hov">45°</span></div></div>
+        <div class="group"><span class="g"><b>Port</b>alter course</span><div class="segbig"><span>20°</span></div></div>
+        <div class="group"><span class="g"><b>Speed</b>course unchanged</span><div class="segbig"><span>Hold course and speed</span><span>Reduce speed</span></div></div>
+        <div class="pair"><button class="btn big" style="font-family:var(--font-display);font-size:20px;letter-spacing:.06em;text-transform:uppercase">Accept advice</button><button class="btn big rej" style="font-family:var(--font-display);font-size:20px;letter-spacing:.06em;text-transform:uppercase">Reject</button></div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<script>
+const tpl=document.getElementById('radar');document.querySelectorAll('[data-radar]').forEach(el=>el.appendChild(tpl.content.cloneNode(true)));
+document.querySelectorAll('.switch [data-v]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.switch [data-v]').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  document.querySelectorAll('.variant').forEach(v=>v.classList.toggle('on',v.id==='v-'+b.dataset.v));
+  history.replaceState(null,'','#'+b.dataset.v); window.scrollTo(0,0);
+}));
+document.getElementById('cTab').addEventListener('click',()=>{const s=document.getElementById('cScreen');s.classList.toggle('open');document.getElementById('cTab').classList.toggle('on',s.classList.contains('open'))});
+function fromHash(){const h=location.hash.slice(1);const b=h&&document.querySelector('.switch [data-v="'+h+'"]');if(b&&b.getAttribute('aria-pressed')!=='true')b.click()}
+fromHash(); addEventListener('hashchange',fromHash);
+// ?notes=0 — hide the switcher and rationale, screen fills the viewport (for screenshots)
+if(new URLSearchParams(location.search).get('notes')==='0'){document.querySelector('.switch').style.display='none';document.querySelectorAll('.rationale').forEach(r=>r.style.display='none');document.querySelectorAll('.screen').forEach(s=>{s.style.height='100vh'})}
+document.getElementById('theme').addEventListener('click',()=>{const r=document.documentElement;r.dataset.theme=r.dataset.theme==='light'?'':'light'});
+</script>
+</html>

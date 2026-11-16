@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session complete variants</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#081014; --panel:#0e1b21; --panel2:#12232b; --line:#21404b; --fg:#d6e6ea; --muted:#86a2ab; --own:#59c9e0; --target:#b9a6ff; --ai:#f3b23f; --good:#5cc28a; --accent:#4fc1b4; --plot:#061015; --ring:#183641; --ringLabel:#4f7380;
+  --font-display:'Barlow Condensed',sans-serif; --font-body:'IBM Plex Sans',system-ui,sans-serif; --font-mono:'IBM Plex Mono',monospace; color-scheme:dark}
+:root[data-theme="light"]{--bg:#eef3f4; --panel:#fff; --panel2:#f3f7f8; --line:#c9d9de; --fg:#0f2228; --muted:#4f6b73; --own:#0b7f97; --target:#6a4fd1; --ai:#a95f00; --good:#1f8a52; --accent:#0d8784; --plot:#f7fbfc; --ring:#c6d8de; --ringLabel:#6b8890; color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:14px;line-height:1.45}
+.switch{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.switch b{font-family:var(--font-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px;color:var(--muted);margin-right:6px}
+.switch button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:8px;padding:6px 12px;cursor:pointer}
+.switch button[aria-pressed="true"]{background:var(--panel2);color:var(--fg);font-weight:600;border-color:var(--own)}
+.switch .sp{flex:1}
+.variant{display:none}.variant.on{display:block}
+.rationale{margin:0;padding:10px 16px;border-bottom:1px dashed var(--line);color:var(--muted);font-size:13px}
+.rationale b{color:var(--fg)}
+.screen{height:calc(100vh - 50px - 62px);min-height:560px;position:relative;overflow:hidden;background:var(--bg)}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.linkbtn{font:inherit;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:none;border:0;padding:0;cursor:pointer;opacity:.7;text-decoration:underline dotted;text-underline-offset:3px}
+.corner{position:absolute;right:22px;bottom:18px}
+.eyebrow{font-family:var(--font-display);font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0}
+
+/* A: console fades */
+.a .plotbg{position:absolute;inset:0;background:var(--plot);opacity:.55}
+.a .plotbg svg{position:absolute;inset:0;width:100%;height:100%}
+.a .veil{position:absolute;inset:0;background:radial-gradient(ellipse at center,color-mix(in srgb,var(--bg) 92%,transparent) 0 28%,transparent 70%)}
+.a .msg{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.a h1{font-family:var(--font-display);font-weight:600;font-size:56px;letter-spacing:.02em;margin:0;line-height:1}
+.a .sub{color:var(--muted);font-size:16px;margin:12px 0 0}
+.a .code{display:inline-block;margin-top:22px;font-family:var(--font-mono);font-size:22px;letter-spacing:.16em;padding:8px 18px;border:1px solid var(--line);border-radius:999px;background:color-mix(in srgb,var(--panel) 80%,transparent)}
+.a .hint{color:var(--muted);font-size:13px;margin-top:26px}
+
+/* B: logbook */
+.b .screen{display:grid;place-items:center}
+.b .log{width:min(720px,92%);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:28px 0;display:grid;grid-template-columns:auto 1fr auto;gap:10px 28px;align-items:baseline;font-family:var(--font-mono);font-size:14px;color:var(--muted)}
+.b .log .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.b .log .v{color:var(--fg)}
+.b .log .big{grid-column:1/-1;font-family:var(--font-display);font-size:40px;font-weight:600;color:var(--fg);letter-spacing:.02em;line-height:1;padding-bottom:10px;border-bottom:1px dashed var(--line);margin-bottom:8px}
+.b .stamp{grid-column:3;grid-row:2/5;align-self:center;border:2px solid var(--accent);color:var(--accent);border-radius:8px;padding:10px 14px;font-family:var(--font-display);font-size:18px;letter-spacing:.14em;text-transform:uppercase;transform:rotate(-6deg);opacity:.85}
+.b .hint{grid-column:1/-1;font-family:var(--font-body);font-size:13px;margin-top:10px}
+
+/* C: typographic */
+.c .screen{display:grid;place-items:center;text-align:center}
+.c h1{font-family:var(--font-display);font-weight:500;font-size:clamp(72px,12vw,140px);letter-spacing:.01em;margin:0;line-height:.95;color:var(--fg)}
+.c h1 em{font-style:normal;color:var(--own)}
+.c p{margin:18px 0 0;color:var(--muted);font-size:16px}
+.c .code{font-family:var(--font-mono);color:var(--fg);letter-spacing:.14em}
+
+/* D: closing checklist with ring */
+.d .screen{display:grid;place-items:center}
+.d .card{width:min(560px,92%);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:32px;display:grid;grid-template-columns:120px 1fr;gap:24px;align-items:center}
+.d .ring{width:120px;height:120px;position:relative}
+.d .ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.d .ring .n{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--font-display);font-size:30px;font-weight:600}
+.d .ring .n small{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-family:var(--font-body);font-weight:500;text-align:center}
+.d h2{font-family:var(--font-display);font-size:30px;font-weight:600;margin:0 0 10px;line-height:1.05}
+.d ul{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.d li{display:grid;grid-template-columns:20px 1fr;gap:10px;align-items:baseline;color:var(--muted)}
+.d li b{color:var(--fg);font-weight:500}
+.d li i{font-style:normal;color:var(--accent);font-weight:600}
+</style>
+
+<div class="switch"><b>Session complete</b>
+  <button data-v="a" aria-pressed="true">A · Console fades</button>
+  <button data-v="b" aria-pressed="false">B · Logbook</button>
+  <button data-v="c" aria-pressed="false">C · Typographic</button>
+  <button data-v="d" aria-pressed="false">D · Closing checklist</button>
+  <span class="sp"></span><button id="theme">Light / dark</button>
+</div>
+
+<section class="variant a on" id="v-a">
+  <p class="rationale"><b>A · Console fades.</b> Рабочий экран не исчезает, а гаснет: радар с трафиком остаётся приглушённым фоном, по центру тихое «Session complete», код в капсуле и просьба передать экран. Закрытие ощущается как конец вахты, а не как переход на другой сайт. Ссылка исследователя в нижнем углу.</p>
+  <div class="screen">
+    <div class="plotbg"><svg viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <g fill="none" stroke="var(--ring)"><circle cx="600" cy="380" r="80"/><circle cx="600" cy="380" r="160"/><circle cx="600" cy="380" r="240"/><circle cx="600" cy="380" r="320"/><circle cx="600" cy="380" r="400"/><line x1="600" y1="0" x2="600" y2="700"/><line x1="0" y1="380" x2="1200" y2="380"/></g>
+      <g stroke="var(--muted)" stroke-width="1.5" opacity=".5"><line x1="300" y1="200" x2="300" y2="150"/><line x1="340" y1="520" x2="340" y2="470"/><line x1="900" y1="260" x2="860" y2="265"/><line x1="820" y1="560" x2="790" y2="585"/></g>
+      <line x1="600" y1="380" x2="600" y2="300" stroke="var(--own)" stroke-width="2"/><polygon points="600,366 607,386 600,381 593,386" fill="var(--own)"/>
+    </svg></div>
+    <div class="veil"></div>
+    <div class="msg"><div>
+      <p class="eyebrow">Study session</p>
+      <h1>Session complete</h1>
+      <p class="sub">Thank you. Your eight decisions have been recorded.</p>
+      <span class="code">P07</span>
+      <p class="hint">Please hand the screen back to the researcher.</p>
+    </div></div>
+    <button class="linkbtn corner">Researcher · results ↩</button>
+  </div>
+</section>
+
+<section class="variant b" id="v-b">
+  <p class="rationale"><b>B · Logbook.</b> Запись в судовом журнале: дата и время, код, число решений, штамп «Recorded». Моноширинный набор, линии как в журнале. Очень морской и очень сдержанный, без карточек. Намекает, что данные уже лежат в журнале, а не в голове у исследователя.</p>
+  <div class="screen">
+    <div class="log">
+      <div class="big">Session complete</div>
+      <span class="k">Date</span><span class="v">16 Nov 2026 · 14:32</span>
+      <span class="stamp">Recorded</span>
+      <span class="k">Participant</span><span class="v">P07</span>
+      <span class="k">Entries</span><span class="v">8 decisions · 6 min 12 s</span>
+      <div class="hint">Thank you. Please hand the screen back to the researcher.</div>
+    </div>
+    <button class="linkbtn corner">Researcher · results ↩</button>
+  </div>
+</section>
+
+<section class="variant c" id="v-c">
+  <p class="rationale"><b>C · Typographic.</b> Только слова: огромное «Thank you.» дисплейным шрифтом, под ним одна строка с кодом. Ни карточки, ни рамок. Самый спокойный вариант, хорошо смотрится на большом мониторе в лаборатории и ничего не отвлекает.</p>
+  <div class="screen">
+    <div>
+      <h1>Thank <em>you.</em></h1>
+      <p>Eight decisions recorded under code <span class="code">P07</span>. Please hand the screen back to the researcher.</p>
+    </div>
+    <button class="linkbtn corner">Researcher · results ↩</button>
+  </div>
+</section>
+
+<section class="variant d" id="v-d">
+  <p class="rationale"><b>D · Closing checklist.</b> Кольцо 8 из 8 и три короткие строки: решения записаны, сохранено под кодом, передать экран. Даёт ощущение завершённости без оценки: число 8 говорит о полноте, а не о качестве. Ближе к текущему экрану, но с визуальным якорем.</p>
+  <div class="screen">
+    <div class="card">
+      <div class="ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="var(--line)" stroke-width="6"/><circle cx="60" cy="60" r="52" fill="none" stroke="var(--accent)" stroke-width="6" stroke-linecap="round" stroke-dasharray="326.7 326.7"/></svg><div class="n">8 / 8<small>trials</small></div></div>
+      <div>
+        <h2>Session complete</h2>
+        <ul>
+          <li><i>✓</i><span><b>Eight decisions recorded.</b></span></li>
+          <li><i>✓</i><span>Saved under code <b class="mono">P07</b>, nothing else is stored.</span></li>
+          <li><i>→</i><span>Please hand the screen back to the researcher.</span></li>
+        </ul>
+      </div>
+    </div>
+    <button class="linkbtn corner">Researcher · results ↩</button>
+  </div>
+</section>
+
+<script>
+document.querySelectorAll('.switch [data-v]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.switch [data-v]').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  document.querySelectorAll('.variant').forEach(v=>v.classList.toggle('on',v.id==='v-'+b.dataset.v));
+  history.replaceState(null,'','#'+b.dataset.v); window.scrollTo(0,0);
+}));
+function fromHash(){const h=location.hash.slice(1);const b=h&&document.querySelector('.switch [data-v="'+h+'"]');if(b&&b.getAttribute('aria-pressed')!=='true')b.click()}
+fromHash(); addEventListener('hashchange',fromHash);
+document.getElementById('theme').addEventListener('click',()=>{const r=document.documentElement;r.dataset.theme=r.dataset.theme==='light'?'':'light'});
+</script>
+</html>

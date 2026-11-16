@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Type variants</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Source+Sans+3:wght@400;500;600&family=Source+Code+Pro:wght@400;500&family=Rajdhani:wght@500;600;700&family=Work+Sans:wght@400;500;600&family=Roboto+Mono:wght@400;500&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Archivo+Narrow:wght@500;600;700&family=Archivo:wght@400;500;600&family=Azeret+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#081014; --panel:#0e1b21; --panel2:#12232b; --line:#21404b; --fg:#d6e6ea; --muted:#86a2ab;
+  --own:#59c9e0; --target:#b9a6ff; --ai:#f3b23f; --aiSoft:#3a2c10; --good:#5cc28a; --bad:#ef6a5e; --goodSoft:#123323; --badSoft:#3a1714;
+  --plot:#061015; --ring:#183641; --ringLabel:#4f7380; color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#eef3f4; --panel:#ffffff; --panel2:#f3f7f8; --line:#c9d9de; --fg:#0f2228; --muted:#4f6b73;
+  --own:#0b7f97; --target:#6a4fd1; --ai:#a95f00; --aiSoft:#fbe9cf; --good:#1f8a52; --bad:#c43d32; --goodSoft:#dff1e6; --badSoft:#f8e0dd;
+  --plot:#f7fbfc; --ring:#c6d8de; --ringLabel:#6b8890; color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;line-height:1.45}
+.nav{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.nav b{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:6px}
+.nav a,.nav button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:8px;padding:6px 12px;text-decoration:none;cursor:pointer}
+.nav .sp{flex:1}
+.spec{padding:22px 16px 30px;border-bottom:1px solid var(--line);scroll-margin-top:52px}
+.spec:nth-child(even){background:color-mix(in srgb,var(--panel) 40%,var(--bg))}
+.meta{max-width:1220px;margin:0 auto 14px;display:grid;grid-template-columns:auto 1fr;gap:4px 18px;align-items:baseline;font-family:'IBM Plex Sans',sans-serif}
+.meta b{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ai)}
+.meta .fam{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--fg)}
+.meta .note{grid-column:2;color:var(--muted);font-size:13px;max-width:90ch}
+/* ---- specimen: the prototype's own styles, fonts come from the section's variables ---- */
+.ui{max-width:1220px;margin:0 auto;display:flex;flex-direction:column;gap:12px;font-family:var(--font-body);font-size:14px}
+.ui h1{font-family:var(--font-display);font-weight:var(--w-display,600);font-size:var(--s-h1,40px);letter-spacing:var(--ls-display,.02em);margin:0;line-height:1.05;text-wrap:balance}
+.ui .sub{color:var(--muted);margin:6px 0 0;max-width:66ch;font-size:15px}
+.ui .bar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.ui .bar label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:8px}
+.ui .brand{font-family:var(--font-display);font-weight:var(--w-display,600);font-size:var(--s-brand,18px);letter-spacing:var(--ls-display,.02em)}
+.ui select{font:inherit;font-size:13px;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+.ui .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
+.ui .seg span{font-size:13px;color:var(--muted);padding:7px 12px;white-space:nowrap}
+.ui .seg span.on{background:var(--panel2);color:var(--fg);font-weight:600}
+.ui .seg span+span{border-left:1px solid var(--line)}
+.ui .btn{font:inherit;font-weight:600;font-size:14px;border-radius:8px;padding:9px 14px;border:1px solid var(--line);background:var(--panel2);color:var(--fg)}
+.ui .btn.primary{background:var(--good);border-color:var(--good);color:var(--panel)}
+.ui .btn.danger{border-color:var(--bad);color:var(--bad);background:transparent}
+.ui .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:start}
+.ui .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}
+.ui .eyebrow{font-family:var(--font-display);font-size:var(--s-eyebrow,14px);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:var(--w-display,600)}
+.ui .advice{border:1px solid var(--ai);background:var(--aiSoft);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.ui .tag{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ai);font-weight:600}
+.ui .act{font-family:var(--font-display);font-size:var(--s-act,26px);font-weight:var(--w-display,600);line-height:1.1;letter-spacing:var(--ls-display,.02em)}
+.ui .conf{display:flex;align-items:center;gap:10px;font-size:13px}
+.ui .meter{display:flex;gap:3px}.ui .meter i{width:22px;height:10px;border-radius:2px;background:var(--line)}.ui .meter i.on{background:var(--ai)}
+.ui .kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:13px;margin:0}
+.ui .kv dt{color:var(--muted)}.ui .kv dd{margin:0}
+.ui .chips{display:flex;flex-wrap:wrap;gap:6px}
+.ui .chip{font-size:12px;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:999px;padding:3px 9px}
+.ui .mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.ui table{border-collapse:collapse;width:100%;font-size:13px}
+.ui th,.ui td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line)}
+.ui th{color:var(--muted);font-weight:500;font-size:12px}
+.ui tr.hl td,.ui tr.hl th{background:var(--aiSoft)}
+.ui .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.ui .stat{background:var(--panel2);border-radius:8px;padding:10px}
+.ui .stat b{display:block;font-family:var(--font-display);font-size:var(--s-stat,28px);font-weight:var(--w-display,600);line-height:1;letter-spacing:var(--ls-display,.02em)}
+.ui .stat span{font-size:12px;color:var(--muted)}
+.ui .pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;letter-spacing:.03em}
+.ui .pill.ok{background:var(--goodSoft);color:var(--good)} .ui .pill.no{background:var(--badSoft);color:var(--bad)}
+.ui .actions{display:flex;gap:8px;flex-wrap:wrap}
+.ui .note{font-size:12px;color:var(--muted)}
+</style>
+
+<div class="nav"><b>Type</b><span id="links"></span><span class="sp"></span><button id="theme">Light / dark</button></div>
+<div id="specs"></div>
+
+<script>
+const PAIRS=[
+ {id:'t1',name:'1 · Current',display:"'Barlow Condensed'",body:"'IBM Plex Sans'",mono:"'IBM Plex Mono'",
+  fam:'Barlow Condensed 600 · IBM Plex Sans · IBM Plex Mono',
+  note:'То, что сейчас. Узкий дисплейный гротеск даёт «табличку прибора», Plex ровный и технический. Хорошо работает, но Barlow Condensed встречается часто и немного «спортивный».'},
+ {id:'t2',name:'2 · Instrument',display:"'Space Grotesk'",body:"'Inter'",mono:"'JetBrains Mono'",vars:'--ls-display:-.01em;--s-h1:38px;--s-act:24px;--s-eyebrow:13px;--w-display:600',
+  fam:'Space Grotesk 600 · Inter · JetBrains Mono',
+  note:'Современный технологический набор. Space Grotesk с характерными формами в заголовках, Inter нейтральный в тексте, JetBrains Mono отлично читается в таблице данных. Ощущение «продукт стартапа», меньше «морской прибор».'},
+ {id:'t3',name:'3 · Academic',display:"'Newsreader'",body:"'Source Sans 3'",mono:"'Source Code Pro'",vars:'--ls-display:0;--s-h1:42px;--s-act:26px;--s-eyebrow:13px;--w-display:500',
+  fam:'Newsreader 500 (serif) · Source Sans 3 · Source Code Pro',
+  note:'Антиква в заголовках читается как научная публикация: подходит для заявки, где прототип стоит рядом с project outline. Source Sans спокойный, Source Code Pro строгий. Риск: антиква в совете ИИ выглядит менее «оперативно».'},
+ {id:'t4',name:'4 · Bridge display',display:"'Rajdhani'",body:"'Work Sans'",mono:"'Roboto Mono'",vars:'--ls-display:.03em;--s-h1:44px;--s-act:28px;--s-eyebrow:15px;--s-brand:20px;--w-display:600',
+  fam:'Rajdhani 600 · Work Sans · Roboto Mono',
+  note:'Rajdhani с квадратными формами напоминает экраны ECDIS и кокпитов. Самый «морской» вариант, сильный характер. Work Sans держит текст читаемым. Может показаться игровым, если переборщить с размером.'},
+ {id:'t5',name:'5 · One family',display:"'Geist'",body:"'Geist'",mono:"'Geist Mono'",vars:'--ls-display:-.02em;--s-h1:36px;--s-act:23px;--s-eyebrow:12px;--w-display:600',
+  fam:'Geist 600 · Geist · Geist Mono',
+  note:'Одно семейство на всё: заголовки отличаются только весом и размером. Самый тихий и системный вариант, удобен для дизайн-системы и FSD-переезда. Меньше индивидуальности, зато ничего не спорит с данными на радаре.'},
+ {id:'t6',name:'6 · Archive',display:"'Archivo Narrow'",body:"'Archivo'",mono:"'Azeret Mono'",vars:'--ls-display:.01em;--s-h1:40px;--s-act:26px;--s-eyebrow:14px;--w-display:600',
+  fam:'Archivo Narrow 600 · Archivo · Azeret Mono',
+  note:'Ближайшая замена текущей паре, но из одного семейства: узкий Archivo в заголовках, обычный в тексте. Крепче и суше, чем Barlow. Azeret Mono с характером в цифрах. Хороший компромисс между «прибором» и «документом».'}
+];
+const spec=p=>`
+<section class="spec" id="${p.id}" style="--font-display:${p.display},sans-serif;--font-body:${p.body},system-ui,sans-serif;--font-mono:${p.mono},monospace;${p.vars||''}">
+  <div class="meta"><b>${p.name}</b><span class="fam">${p.fam}</span><span class="note">${p.note}</span></div>
+  <div class="ui">
+    <header><h1>Shore Control Reliance Lab</h1><p class="sub">Research prototype: how should an AI collision-avoidance advisory be presented so that a remote operator relies on it when it is right and intervenes when it is wrong?</p></header>
+    <div class="bar"><span class="btn">← Start page</span><span class="brand">Shore Control Reliance Lab</span>
+      <label>Encounter <select><option>5. Crossing, target on starboard bow · plausibly wrong</option></select></label>
+      <label>Presentation <span class="seg"><span>A · Advice</span><span>B · + Confidence</span><span class="on">C · + Evidence</span></span></label></div>
+    <div class="grid">
+      <div class="advice">
+        <div class="tag">AI advisory · collision avoidance</div>
+        <div class="act">No action needed: hold course and speed</div>
+        <div class="conf">Confidence <span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><b>High</b></div>
+        <dl class="kv"><dt>Data basis</dt><dd>AIS track · report age 3 min 10 s</dd><dt>Predicted CPA after action</dt><dd class="mono">1.80 nm (limit 0.5 nm)</dd><dt>Rule</dt><dd>No risk of collision: predicted CPA above the limit.</dd></dl>
+        <div><span class="note">Based on (select to check in sensor data):</span><div class="chips" style="margin-top:6px"><span class="chip">Target heading away (AIS)</span><span class="chip">Predicted CPA 1.8 nm</span><span class="chip">Based on last AIS report</span></div></div>
+      </div>
+      <div class="card"><p class="eyebrow">Sensor data</p>
+        <table><tbody>
+          <tr><th scope="row">Target bearing (relative)</th><td class="mono">045°</td></tr>
+          <tr><th scope="row">Range</th><td class="mono">2.84 nm</td></tr>
+          <tr><th scope="row">CPA, radar track</th><td class="mono">0.13 nm</td></tr>
+          <tr><th scope="row">TCPA, radar track</th><td class="mono">10.2 min</td></tr>
+          <tr class="hl"><th scope="row">Target COG / SOG, radar</th><td class="mono">270° / 10 kn</td></tr>
+          <tr class="hl"><th scope="row">Target COG / SOG, AIS</th><td class="mono">200° / 10 kn</td></tr>
+          <tr><th scope="row">AIS report age</th><td class="mono">3 min 46 s</td></tr>
+          <tr><th scope="row">Own COG / SOG</th><td class="mono">000° / 12 kn</td></tr>
+        </tbody></table></div>
+      <div class="card"><p class="eyebrow">Operator decision</p>
+        <div class="actions"><span class="btn primary">Accept advice</span><span class="btn danger">Reject, choose action</span></div>
+        <div class="chips" style="margin-top:8px"><span class="chip">Alter 30° starboard</span><span class="chip">Alter 45° starboard</span><span class="chip">Alter 20° port</span><span class="chip">Hold course and speed</span><span class="chip">Reduce speed</span></div>
+        <div class="stats"><div class="stat"><b class="mono">7 / 8</b><span>appropriate reliance</span></div><div class="stat"><b class="mono">12.4 s</b><span>mean decision time</span></div><div class="stat"><b>1 / 2</b><span>plausibly wrong advice caught</span></div><div class="stat"><b>75% → 25%</b><span>data checked, first → second half</span></div></div>
+        <p class="note" style="margin:10px 0 0">Trial 5 · <span class="pill no">over-reliance</span> · Trial 6 · <span class="pill ok">appropriate</span></p>
+      </div>
+    </div>
+  </div>
+</section>`;
+document.getElementById('specs').innerHTML=PAIRS.map(spec).join('');
+document.getElementById('links').innerHTML=PAIRS.map(p=>`<a href="#${p.id}">${p.name}</a>`).join(' ');
+document.getElementById('theme').addEventListener('click',()=>{const r=document.documentElement;r.dataset.theme=r.dataset.theme==='light'?'':'light'});
+</script>
+</html>

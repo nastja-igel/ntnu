@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alternative actions variants</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#081014; --panel:#0e1b21; --panel2:#12232b; --line:#21404b; --fg:#d6e6ea; --muted:#86a2ab; --own:#59c9e0; --target:#b9a6ff; --ai:#f3b23f; --aiSoft:#3a2c10; --bad:#ef6a5e; --accent:#4fc1b4; --accentText:#07171a;
+  --font-display:'Barlow Condensed',sans-serif; --font-body:'IBM Plex Sans',system-ui,sans-serif; --font-mono:'IBM Plex Mono',monospace; color-scheme:dark}
+:root[data-theme="light"]{--bg:#eef3f4; --panel:#ffffff; --panel2:#f3f7f8; --line:#c9d9de; --fg:#0f2228; --muted:#4f6b73; --own:#0b7f97; --ai:#a95f00; --aiSoft:#fbe9cf; --bad:#c43d32; --accent:#0d8784; --accentText:#fff; color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:14px;line-height:1.45}
+.switch{position:sticky;top:0;z-index:5;display:flex;gap:8px;align-items:center;padding:10px 16px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.switch b{font-family:var(--font-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px;color:var(--muted)}
+.switch .sp{flex:1}
+.switch button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:8px;padding:6px 12px;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:18px;padding:18px 16px 40px}
+.v{display:flex;flex-direction:column;gap:10px}
+.rationale{margin:0;padding:10px 12px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);font-size:13px;min-height:110px}
+.rationale b{color:var(--fg)}
+.side{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.eyebrow{font-family:var(--font-display);font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0;display:flex;justify-content:space-between;align-items:center}
+.lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.btn{font:inherit;font-weight:600;font-size:14px;border-radius:8px;padding:11px 14px;cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--fg)}
+.btn.choice{font-family:var(--font-display);font-size:20px;letter-spacing:.06em;text-transform:uppercase;padding:12px 14px}
+.btn.accent{background:var(--accent);border-color:var(--accent);color:var(--accentText)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pair .rej{border-color:var(--own)}
+.tile{font:inherit;font-size:14px;font-weight:500;min-height:44px;padding:10px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--fg);text-align:left;cursor:pointer}
+.tile:hover{border-color:var(--own)}
+.mono{font-family:var(--font-mono)}
+
+/* 1 tiles */
+.v1 .alts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.v1 .alts .tile:last-child{grid-column:1/-1}
+
+/* 2 list + execute */
+.v2 .list{display:flex;flex-direction:column;gap:6px}
+.v2 .opt{display:grid;grid-template-columns:18px 1fr auto;gap:10px;align-items:center;min-height:46px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);cursor:pointer;font:inherit;color:var(--fg);text-align:left}
+.v2 .opt i{width:16px;height:16px;border-radius:50%;border:2px solid var(--line)}
+.v2 .opt.sel{border-color:var(--own)}.v2 .opt.sel i{border-color:var(--own);background:radial-gradient(circle,var(--own) 45%,transparent 50%)}
+.v2 .opt.ai{opacity:.55}.v2 .opt.ai .m{color:var(--ai);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.v2 .exec{width:100%;margin-top:4px}
+
+/* 3 grouped */
+.v3 .group{display:grid;grid-template-columns:96px 1fr;gap:10px;align-items:center}
+.v3 .seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel2)}
+.v3 .seg button{flex:1;font:inherit;font-size:14px;font-weight:500;min-height:46px;border:0;background:transparent;color:var(--fg);cursor:pointer;padding:8px 10px}
+.v3 .seg button+button{border-left:1px solid var(--line)}
+.v3 .seg button:hover{background:color-mix(in srgb,var(--own) 12%,transparent)}
+.v3 .g{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.v3 .g b{display:block;color:var(--fg);font-family:var(--font-display);font-size:16px;letter-spacing:.04em}
+
+/* 4 helm */
+.v4 .helm{position:relative;height:200px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);overflow:hidden}
+.v4 .helm svg{position:absolute;inset:0;width:100%;height:100%}
+.v4 .hb{position:absolute;font:inherit;font-size:13px;font-weight:600;min-width:44px;min-height:44px;padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer;display:grid;place-items:center;line-height:1.1;text-align:center}
+.v4 .hb:hover{border-color:var(--own)}
+.v4 .hb small{display:block;font-size:10px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.06em}
+.v4 .hb.port{border-color:color-mix(in srgb,var(--bad) 50%,var(--line))}
+.v4 .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+</style>
+
+<div class="switch"><b>After Reject · choose another action</b><span class="sp"></span><button id="theme">Light / dark</button></div>
+<div class="grid">
+
+<div class="v v1">
+  <p class="rationale"><b>1 · Tiles (current).</b> Плитки в две колонки, нажатие исполняет сразу. Быстро, два шага до манёвра: Reject, плитка. Минус: нет подтверждения, случайное касание на планшете исполняется; порядок плиток произвольный, направление не читается.</p>
+  <div class="side">
+    <p class="eyebrow"><span>Operator decision</span></p>
+    <div class="pair"><button class="btn choice">Accept advice</button><button class="btn choice rej">Reject</button></div>
+    <div class="lbl">Choose another action</div>
+    <div class="alts"><button class="tile">Alter 30° starboard</button><button class="tile">Alter 45° starboard</button><button class="tile">Alter 20° port</button><button class="tile">Hold course and speed</button><button class="tile">Reduce speed</button></div>
+  </div>
+</div>
+
+<div class="v v2">
+  <p class="rationale"><b>2 · List and Execute.</b> Список с радиокнопками, предложение ИИ остаётся в списке приглушённым с пометкой «rejected», можно передумать и вернуться к нему. Исполняет отдельная кнопка Execute. Плюс: нет случайного срабатывания, видно весь набор. Минус: три шага, и Execute в акцентном цвете становится самой заметной кнопкой экрана.</p>
+  <div class="side">
+    <p class="eyebrow"><span>Operator decision</span></p>
+    <div class="pair"><button class="btn choice">Accept advice</button><button class="btn choice rej">Reject</button></div>
+    <div class="lbl">Choose another action</div>
+    <div class="list">
+      <button class="opt ai"><i></i><span>Alter course 10° to starboard</span><span class="m">AI · rejected</span></button>
+      <button class="opt sel"><i></i><span>Alter 30° to starboard</span><span class="mono" style="color:var(--muted);font-size:12px">CPA 0.8 nm</span></button>
+      <button class="opt"><i></i><span>Alter 45° to starboard</span><span class="mono" style="color:var(--muted);font-size:12px">CPA 1.1 nm</span></button>
+      <button class="opt"><i></i><span>Alter 20° to port</span><span class="mono" style="color:var(--muted);font-size:12px">CPA 0.1 nm</span></button>
+      <button class="opt"><i></i><span>Hold course and speed</span><span class="mono" style="color:var(--muted);font-size:12px">CPA 0.0 nm</span></button>
+      <button class="opt"><i></i><span>Reduce speed</span><span class="mono" style="color:var(--muted);font-size:12px">CPA 0.3 nm</span></button>
+    </div>
+    <button class="btn choice accent exec">Execute: 30° to starboard</button>
+  </div>
+</div>
+
+<div class="v v3">
+  <p class="rationale"><b>3 · Grouped by manoeuvre.</b> Три строки по смыслу: Starboard 30° | 45°, Port 20°, Speed hold | reduce. Подписи групп слева, сами варианты как сегменты высотой 46 px. Плюс: структура повторяет, как моряк думает о манёвре, направление очевидно, меньше чтения. Нажатие исполняет сразу, как в плитках.</p>
+  <div class="side">
+    <p class="eyebrow"><span>Operator decision</span></p>
+    <div class="pair"><button class="btn choice">Accept advice</button><button class="btn choice rej">Reject</button></div>
+    <div class="lbl">Choose another action</div>
+    <div class="group"><span class="g"><b>Starboard</b>alter course</span><div class="seg"><button>30°</button><button>45°</button></div></div>
+    <div class="group"><span class="g"><b>Port</b>alter course</span><div class="seg"><button>20°</button></div></div>
+    <div class="group"><span class="g"><b>Speed</b>course unchanged</span><div class="seg"><button>Hold course and speed</button><button>Reduce speed</button></div></div>
+  </div>
+</div>
+
+<div class="v v4">
+  <p class="rationale"><b>4 · Helm.</b> Пространственная раскладка: своё судно внизу по центру, кнопки поворота расставлены по дуге — порт слева, штирборт справа, углы растут к краям, «hold» прямо по курсу, «reduce speed» под судном. Плюс: мапится на радар и на интуицию «право / лево», удобно большим пальцем на планшете. Минус: сложнее в коде, при добавлении опций дуга переполняется.</p>
+  <div class="side">
+    <p class="eyebrow"><span>Operator decision</span></p>
+    <div class="pair"><button class="btn choice">Accept advice</button><button class="btn choice rej">Reject</button></div>
+    <div class="lbl">Choose another action</div>
+    <div class="helm">
+      <svg viewBox="0 0 400 200" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M40 180 A160 160 0 0 1 360 180" fill="none" stroke="var(--line)" stroke-dasharray="3 4"/>
+        <line x1="200" y1="180" x2="200" y2="40" stroke="var(--line)"/>
+        <line x1="200" y1="180" x2="120" y2="58" stroke="var(--line)" stroke-dasharray="2 4"/>
+        <line x1="200" y1="180" x2="300" y2="68" stroke="var(--line)" stroke-dasharray="2 4"/>
+        <line x1="200" y1="180" x2="330" y2="105" stroke="var(--line)" stroke-dasharray="2 4"/>
+        <polygon points="200,166 207,184 200,180 193,184" fill="var(--own)"/>
+        <text x="30" y="24" font-family="IBM Plex Mono" font-size="10" fill="var(--muted)">PORT</text>
+        <text x="332" y="24" font-family="IBM Plex Mono" font-size="10" fill="var(--muted)">STBD</text>
+      </svg>
+      <button class="hb port" style="left:18%;top:14%">20°<small>port</small></button>
+      <button class="hb" style="left:50%;top:8%;transform:translateX(-50%)">Hold<small>course · speed</small></button>
+      <button class="hb" style="left:64%;top:18%">30°<small>stbd</small></button>
+      <button class="hb" style="left:78%;top:40%">45°<small>stbd</small></button>
+      <button class="hb" style="left:50%;top:62%;transform:translateX(-50%)">Reduce<small>speed</small></button>
+    </div>
+  </div>
+</div>
+
+</div>
+<script>document.getElementById('theme').addEventListener('click',()=>{const r=document.documentElement;r.dataset.theme=r.dataset.theme==='light'?'':'light'});</script>
+</html>

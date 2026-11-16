@@ -1,0 +1,14 @@
+﻿# Personal notes (not for publication)
+*описание прототипа*.md
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Scratch
+*.log
+
+# Local tooling
+.claude/

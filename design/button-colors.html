@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Primary button colour</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#081014; --panel:#0e1b21; --panel2:#12232b; --line:#21404b; --fg:#d6e6ea; --muted:#86a2ab; --own:#59c9e0; --ai:#f3b23f; --good:#5cc28a; --bad:#ef6a5e;
+  --font-display:'Barlow Condensed',sans-serif; --font-body:'IBM Plex Sans',system-ui,sans-serif; --font-mono:'IBM Plex Mono',monospace; color-scheme:dark}
+.light{--bg:#eef3f4; --panel:#ffffff; --panel2:#f3f7f8; --line:#c9d9de; --fg:#0f2228; --muted:#4f6b73; --own:#0b7f97; --ai:#a95f00; --good:#1f8a52; --bad:#c43d32; color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:#000;color:var(--fg);font-family:var(--font-body);font-size:14px;line-height:1.45}
+.half{padding:20px 24px;background:var(--bg);color:var(--fg)}
+h2{font-family:var(--font-display);font-weight:600;font-size:22px;margin:0 0 4px;letter-spacing:.02em}
+.lead{color:var(--muted);margin:0 0 16px;font-size:13px;max-width:90ch}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.sample{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.sample .name{font-family:var(--font-display);font-size:16px;letter-spacing:.04em;text-transform:uppercase}
+.sample .hex{font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+.door{background:var(--panel2);border:1px solid var(--own);border-radius:10px;padding:10px 12px}
+.door b{display:block;font-family:var(--font-display);font-size:18px}
+.door span{color:var(--muted);font-size:12px}
+.panel{border-left:2px solid var(--line);margin-left:6px;padding:8px 0 4px 12px;display:flex;flex-direction:column;gap:8px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel);align-self:flex-start}
+.seg span{font-size:12px;color:var(--muted);padding:6px 10px}.seg span.on{background:var(--panel2);color:var(--fg);font-weight:600}.seg span+span{border-left:1px solid var(--line)}
+.btn{font:inherit;font-weight:600;font-size:14px;border-radius:8px;padding:9px 14px;border:1px solid var(--c);background:var(--c);color:var(--t);align-self:flex-start;margin-top:8px}
+.pair{display:flex;gap:8px;margin-top:6px}
+.pair .acc{background:var(--c);border-color:var(--c);color:var(--t)}
+.pair .rej{background:transparent;border-color:var(--bad);color:var(--bad)}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--good) 20%,transparent);color:var(--good);align-self:flex-start}
+.note{font-size:12px;color:var(--muted)}
+</style>
+
+<div class="half" id="dark"></div>
+<div class="half light" id="light"></div>
+
+<script>
+const C=[
+  {name:'0 · Current green',note:'Тот же цвет, что и у статуса «correct». Кнопка и смысл «верно» сливаются.',dark:['#5cc28a','#0e1b21'],light:['#1f8a52','#ffffff']},
+  {name:'1 · Teal',note:'Больше синего пигмента, но ещё читается как «вперёд». Отдельный токен --accent, --good остаётся за обратной связью.',dark:['#4fc1b4','#07171a'],light:['#108c80','#ffffff']},
+  {name:'2 · Deep teal',note:'Ещё синее и темнее, спокойнее на фоне янтарного совета.',dark:['#3aa8a4','#07171a'],light:['#0f7a78','#ffffff']},
+  {name:'3 · Own-vessel cyan',note:'Цвет своего судна. Связывает кнопку с палитрой радара, но занимает смысл «own».',dark:['#59c9e0','#07171a'],light:['#0b7f97','#ffffff']},
+  {name:'4 · Slate, outlined fill',note:'Нейтральная заливка цветом панели с голубой рамкой. Ничего не кричит; кнопка узнаётся по форме и месту.',dark:['#1a3a46','#d6e6ea'],light:['#d7e6ea','#0f2228']},
+];
+function render(id,theme){
+  const root=document.getElementById(id);
+  root.innerHTML=`<h2>${theme==='dark'?'Night':'Day'} theme</h2><p class="lead">Каждый образец: кнопка в контексте карточки на стартовой, пара Accept / Reject из рабочего экрана и пилюля статуса «appropriate», чтобы видеть, спорит ли кнопка со смыслом зелёного.</p><div class="row">${C.map(c=>{const [bg,fg]=c[theme];return `
+  <div class="sample" style="--c:${bg};--t:${fg}">
+    <div><div class="name">${c.name}</div><div class="hex">${bg}</div></div>
+    <div class="door"><b>Run a study session</b><span>8 trials in random order, 45 s each.</span></div>
+    <div class="panel"><div class="seg"><span>A</span><span>B</span><span class="on">C · + Evidence</span></div><button class="btn">Continue to participant screen</button></div>
+    <div class="pair"><button class="btn acc" style="margin:0">Accept advice</button><button class="btn rej" style="margin:0">Reject</button></div>
+    <span class="pill">appropriate</span>
+    <div class="note">${c.note}</div>
+  </div>`}).join('')}</div>`;
+}
+render('dark','dark');render('light','light');
+</script>
+</html>

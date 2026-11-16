@@ -1,0 +1,1447 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shore Control Reliance Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* ==========================================================================
+   Shore Control Reliance Lab — styles
+   Operator workstation: relative-motion radar on the left, AI advisory,
+   decision and sensor data stacked on the right. Night palette first
+   (bridge at night), day palette for light viewers.
+
+   STRUCTURE
+   1. Tokens        colour (two themes), type, spacing, radius, borders
+   2. Base          reset, body, focus
+   3. Components    one block per component, states via aria/data attributes
+   4. Screens       start console, participant briefing, workspace, results
+   5. Responsive    one breakpoint at 880px, one at 820px tall
+
+   COMPONENT INVENTORY (names = class names)
+   btn        .btn  .primary .danger .small  :disabled
+   seg        .seg > button[aria-pressed]           segmented switch
+   chip       .chip                                  evidence / alternative action
+   pill       .pill .ok .no .n                       status label
+   card       .card                                  generic panel
+   eyebrow    .eyebrow                               small caps section label
+   field      .field > select | input | .seg         labelled form control
+   bar        .bar .barset .brand                    toolbar
+   timer      .timer > div                           countdown bar
+   advice     .advice .tag .act .conf .meter .kv .why   AI advisory
+   datatable  table th td tr.hl .tablewrap .datahead   sensor data
+   truth      .truth .correct .wrong .plausible      ground-truth callout
+   dashboard  .dash .dhead .picker .menu .flag       researcher results screen
+              .rows .cells .tbars .encs .summary     trial sequence figure
+              .matrix .rate .kvl .tl .agg .notes     analytic cards, timelines, sessions
+   toast/note .toast .note .fine                     feedback and small print
+   legend     .legend .sw-*                          plot legend swatches
+   door       .door[aria-expanded] .doorpanel        start-page entry card
+   steps      .steps                                 numbered steps
+   conds      .conds                                 condition table
+   fab        .themeBtn .toTop                       floating round buttons
+   ========================================================================== */
+
+/* ---------- 1. Tokens ---------- */
+:root{
+  /* colour: day */
+  --bg:#eef3f4; --panel:#ffffff; --panel2:#f3f7f8; --line:#c9d9de; --fg:#0f2228; --muted:#4f6b73;
+  --own:#0b7f97; --target:#6a4fd1; --ai:#a95f00; --aiSoft:#fbe9cf; --good:#1f8a52; --bad:#c43d32; --goodSoft:#dff1e6; --badSoft:#f8e0dd;
+  --plot:#f7fbfc; --ring:#c6d8de; --ringLabel:#6b8890;
+  --accent:#0d8784; --accentText:#ffffff; /* action buttons; --good stays for feedback only */
+  color-scheme:light;
+  /* type */
+  --font-display:'Barlow Condensed','Arial Narrow',sans-serif; --font-body:'IBM Plex Sans',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+  --fs-xs:11px; --fs-s:12px; --fs-m:13px; --fs-base:14px; --fs-l:15px; --fs-xl:18px; --fs-2xl:20px; --fs-3xl:24px; --fs-4xl:26px; --fs-5xl:28px; --fs-6xl:32px; --fs-7xl:40px; --fs-8xl:48px;
+  --lh-tight:1.05; --lh-snug:1.3; --lh-base:1.45;
+  --ls-display:.02em; --ls-wide:.04em; --ls-caps-s:.06em; --ls-caps:.08em;
+  /* spacing scale */
+  --sp-0:2px; --sp-1:4px; --sp-2:6px; --sp-3:8px; --sp-4:10px; --sp-5:12px; --sp-6:14px; --sp-7:16px; --sp-8:20px; --sp-9:24px; --sp-10:32px; --sp-11:40px; --sp-12:48px; --sp-13:64px; --sp-14:80px;
+  /* radius */
+  --r-2xs:2px; --r-xs:3px; --r-s:6px; --r-m:8px; --r-l:10px; --r-xl:12px; --r-pill:999px;
+  /* borders, shadow, motion, layout */
+  --border:1px solid var(--line);
+  --shadow-fab:0 2px 10px rgba(0,0,0,.25);
+  --dur:.2s;
+  --content-max:1220px;
+  --page-pad:16px;
+  /* component tokens */
+  --pad-btn:9px 14px; --pad-btn-small:5px 10px; --pad-seg:7px 12px; --pad-chip:3px 9px; --pad-input:6px 8px; --pad-cell:5px 6px;
+  --size-fab:38px; --size-step:34px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#081014; --panel:#0e1b21; --panel2:#12232b; --line:#21404b; --fg:#d6e6ea; --muted:#86a2ab;
+  --own:#59c9e0; --target:#b9a6ff; --ai:#f3b23f; --aiSoft:#3a2c10; --good:#5cc28a; --bad:#ef6a5e; --goodSoft:#123323; --badSoft:#3a1714;
+  --plot:#061015; --ring:#183641; --ringLabel:#4f7380; --accent:#4fc1b4; --accentText:#07171a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#081014; --panel:#0e1b21; --panel2:#12232b; --line:#21404b; --fg:#d6e6ea; --muted:#86a2ab;
+  --own:#59c9e0; --target:#b9a6ff; --ai:#f3b23f; --aiSoft:#3a2c10; --good:#5cc28a; --bad:#ef6a5e; --goodSoft:#123323; --badSoft:#3a1714;
+  --plot:#061015; --ring:#183641; --ringLabel:#4f7380; --accent:#4fc1b4; --accentText:#07171a; color-scheme:dark}
+
+/* ---------- 2. Base ---------- */
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:var(--fs-base);line-height:var(--lh-base);margin:0;
+  padding-left:max(var(--page-pad),env(safe-area-inset-left,0px));padding-right:max(var(--page-pad),env(safe-area-inset-right,0px));padding-block:var(--sp-7) var(--sp-10)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--own);outline-offset:2px}
+[hidden]{display:none!important}
+canvas{display:block;width:100%;height:100%}
+h1{font-family:var(--font-display);font-weight:600;font-size:var(--fs-6xl);letter-spacing:var(--ls-display);margin:0;line-height:var(--lh-tight);text-wrap:balance}
+.sub{color:var(--muted);margin:var(--sp-1) 0 0;max-width:62ch}
+.subhead{font-family:var(--font-display);font-weight:600;font-size:var(--fs-xl);margin:var(--sp-7) 0 var(--sp-2)}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.note{font-size:var(--fs-s);color:var(--muted)}
+.note.lead{margin:0 0 var(--sp-2)}
+.toast{font-size:var(--fs-m);color:var(--good);min-height:1.2em}
+.fine{font-size:var(--fs-xs);color:var(--muted);margin:0;line-height:1.4}
+.fine a{color:inherit}
+
+/* page frame */
+.wrap{max-width:var(--content-max);margin:0 auto;display:flex;flex-direction:column;min-height:calc(100vh - 48px);min-height:calc(100dvh - 48px)}
+.content{display:flex;flex-direction:column;gap:var(--sp-6);flex:1;padding-bottom:var(--sp-13)}
+.wrap>footer{margin-top:auto;padding-top:var(--sp-6)}
+footer{font-size:var(--fs-s);color:var(--muted);border-top:var(--border);padding-top:var(--sp-4)}
+
+/* ---------- 3. Components ---------- */
+/* btn */
+.btn{font:inherit;font-weight:600;font-size:var(--fs-base);border-radius:var(--r-m);padding:var(--pad-btn);cursor:pointer;border:var(--border);background:var(--panel2);color:var(--fg)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accentText)}
+.btn.danger{border-color:var(--bad);color:var(--bad);background:transparent}
+.btn.small{font-size:var(--fs-s);font-weight:500;padding:var(--pad-btn-small)}
+/* linkbtn: quiet text action for researcher-only controls, kept away from the participant's primary button */
+.linkbtn{font:inherit;font-size:var(--fs-xs);letter-spacing:var(--ls-caps-s);text-transform:uppercase;color:var(--muted);background:none;border:0;padding:0;cursor:pointer;opacity:.7;text-decoration:underline dotted;text-underline-offset:3px}
+.linkbtn:hover{opacity:1;color:var(--fg)}
+.btn:disabled{opacity:.5;cursor:default}
+.actions{display:flex;flex-wrap:wrap;gap:var(--sp-3)}
+.actions.spaced{margin-top:var(--sp-5)}
+
+/* seg */
+.seg{display:inline-flex;border:var(--border);border-radius:var(--r-m);overflow:hidden;background:var(--panel)}
+.seg button{font:inherit;font-size:var(--fs-m);border:0;background:transparent;color:var(--muted);padding:var(--pad-seg);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--panel2);color:var(--fg);font-weight:600}
+.seg button+button{border-left:var(--border)}
+
+/* chip, pill */
+.chips,.alts{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
+.alts{margin-top:var(--sp-3)}
+.chip{font:inherit;font-size:var(--fs-s);border:var(--border);background:var(--panel);color:var(--fg);border-radius:var(--r-pill);padding:var(--pad-chip);cursor:pointer;text-align:left}
+.chip:hover{border-color:var(--ai)}
+.pill{display:inline-block;font-size:var(--fs-xs);font-weight:600;padding:var(--sp-0) var(--sp-3);border-radius:var(--r-pill);letter-spacing:var(--ls-wide)}
+.pill.ok{background:var(--goodSoft);color:var(--good)} .pill.no{background:var(--badSoft);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)}
+
+/* form controls, field */
+select,input[type=text]{font:inherit;font-size:var(--fs-m);color:var(--fg);background:var(--panel2);border:var(--border);border-radius:var(--r-s);padding:var(--pad-input);max-width:100%}
+input[aria-invalid="true"]{border-color:var(--bad)}
+#caseSel{min-width:0;width:100%;max-width:360px}
+.field{display:flex;flex-direction:column;gap:var(--sp-2);font-size:var(--fs-s);color:var(--muted);text-transform:uppercase;letter-spacing:var(--ls-caps-s)}
+.field select,.field input,.field .seg{text-transform:none;letter-spacing:0;align-self:flex-start;max-width:100%}
+.field select{width:100%;max-width:420px}
+
+/* card, eyebrow */
+.card{background:var(--panel);border:var(--border);border-radius:var(--r-l);padding:var(--sp-5);min-width:0}
+.eyebrow{font-family:var(--font-display);font-size:var(--fs-base);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--muted);margin:0 0 var(--sp-3);display:flex;justify-content:space-between;gap:var(--sp-3);flex-wrap:wrap}
+
+.brand{font-family:var(--font-display);font-weight:600;font-size:var(--fs-xl);letter-spacing:var(--ls-display);white-space:nowrap}
+.tag{font-size:var(--fs-xs);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--ai);font-weight:600}
+
+/* advisory: the manoeuvre as a headline, confidence as a thin bar, the AI's grounds as a list of checkable claims */
+.advisory{display:flex;flex-direction:column;gap:var(--sp-3)}
+.advisory .act{font-family:var(--font-display);font-size:var(--fs-6xl);font-weight:600;line-height:1.02;text-wrap:balance}
+.advisory .enc{font-size:var(--fs-s);color:var(--muted)}
+/* confidence: big value (number in B, word in C) with a five-segment meter; segments fill partially so 71% reads as three and a half */
+.conf{display:grid;grid-template-columns:auto 1fr;gap:var(--sp-1) var(--sp-6);align-items:end;margin-top:var(--sp-2)}
+.conf .num{grid-row:1/3;font-family:var(--font-display);font-size:44px;font-weight:600;line-height:.9}
+.conf .num small{font-size:22px;color:var(--muted);font-weight:500;margin-left:2px}
+.conf.word .num{font-size:30px;line-height:1;text-transform:capitalize}
+.conf .lbl{font-size:var(--fs-s);color:var(--muted);text-transform:uppercase;letter-spacing:var(--ls-caps-s);align-self:end}
+.meter{display:flex;gap:var(--sp-1);margin-bottom:5px}
+.meter i{flex:1;max-width:44px;height:12px;border-radius:var(--r-xs);background:linear-gradient(90deg,var(--ai) var(--p,0%),var(--line) var(--p,0%))}
+.claims{display:flex;flex-direction:column;border-top:var(--border);margin-top:var(--sp-2)}
+.claim{display:grid;grid-template-columns:1fr auto auto;gap:var(--sp-4);align-items:center;min-height:44px;padding:var(--sp-3) var(--sp-3);margin:0 calc(-1 * var(--sp-3));border:0;border-bottom:var(--border);border-radius:0;font:inherit;font-size:var(--fs-m);color:var(--fg);background:none;text-align:left;cursor:pointer;width:calc(100% + 2 * var(--sp-3))}
+.claim .val{font-family:var(--font-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.claim .check{font-size:var(--fs-s);color:var(--own);white-space:nowrap}
+.claim:hover{background:color-mix(in srgb,var(--own) 10%,transparent)}
+.claim:hover .check{text-decoration:underline}
+.claim.hl{background:var(--aiSoft)}
+.claim.hl .val{color:var(--fg)}
+.advisory .rule{font-size:var(--fs-s);color:var(--muted)}
+
+/* datatable */
+table{border-collapse:collapse;width:100%;font-size:var(--fs-m)}
+th,td{text-align:left;padding:var(--pad-cell);border-bottom:var(--border);vertical-align:top}
+th{color:var(--muted);font-weight:500;font-size:var(--fs-s)}
+tr.hl th,tr.hl td{background:var(--aiSoft)}
+.tablewrap{overflow-x:auto}
+
+/* truth */
+.truth{border-left:3px solid var(--line);padding:var(--sp-2) var(--sp-4);font-size:var(--fs-m);background:var(--panel2);border-radius:0 var(--r-s) var(--r-s) 0}
+.truth.correct{border-color:var(--good)} .truth.wrong,.truth.plausible{border-color:var(--bad)}
+
+/* dashboard (results screen): head with session picker and download menu, then cards */
+#results{display:flex;flex-direction:column;gap:var(--sp-6)}
+.dash{padding:var(--sp-7)}
+.dash .eyebrow{align-items:center}
+.dash .legend{margin:0;gap:var(--sp-2) var(--sp-6)}
+.dash .legend i{width:10px;height:10px;border:0;border-radius:var(--r-2xs);vertical-align:-1px;margin-right:6px}
+.dash .note.after{margin:var(--sp-4) 0 0}
+.dash td,.dash th{vertical-align:middle;padding:var(--sp-3) var(--sp-3)}
+.dash tr.cur td{background:color-mix(in srgb,var(--own) 8%,transparent)}
+/* trials table: a trial note is folded under its row; an arrow in the last cell marks it (↓ folded, ↑ open), a click on the row toggles it */
+.dash tr[data-tr]{cursor:pointer}
+.dash tr[data-tr]:hover td,.dash tr[data-tr][aria-expanded="true"] td{background:color-mix(in srgb,var(--own) 8%,transparent)}
+.dash tr[data-tr][aria-expanded="true"] td{border-bottom-color:transparent}
+.nmark{color:var(--own);text-align:center;font-size:var(--fs-base)}
+.noterow td{background:color-mix(in srgb,var(--own) 5%,transparent);padding:0 var(--sp-5) var(--sp-4) 44px;font-size:var(--fs-m);color:var(--fg);white-space:pre-wrap}
+.dash .rowact{display:flex;gap:var(--sp-2);justify-content:flex-end;align-items:center}
+.dhead{display:flex;justify-content:space-between;align-items:flex-end;gap:var(--sp-6);flex-wrap:wrap}
+.dhead .dmeta{color:var(--muted);font-size:var(--fs-m);margin-top:var(--sp-2)}
+.dhead .acts{display:flex;gap:var(--sp-3);flex-wrap:wrap;align-items:center}
+.picker{display:flex;align-items:center;gap:var(--sp-5);flex-wrap:wrap}
+.picker select{font-family:var(--font-mono);font-size:var(--fs-base);font-weight:600;padding:var(--sp-3) var(--sp-5)}
+.navses{display:inline-flex;gap:var(--sp-1)}
+.flag{display:inline-flex;gap:var(--sp-2);align-items:center;font-size:var(--fs-s);color:var(--ai);border:1px solid color-mix(in srgb,var(--ai) 50%,var(--line));border-radius:var(--r-pill);padding:var(--sp-0) var(--sp-4)}
+.btn.ghost{background:transparent;color:var(--muted)}
+.dd{position:relative}
+.menu{position:absolute;right:0;top:calc(100% + 6px);min-width:300px;background:var(--panel);border:var(--border);border-radius:var(--r-l);padding:var(--sp-2);box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:3}
+.menu button{display:grid;width:100%;text-align:left;font:inherit;background:none;border:0;color:var(--fg);padding:var(--sp-3) var(--sp-4);border-radius:var(--r-s);cursor:pointer;gap:var(--sp-0)}
+.menu button:hover{background:var(--panel2)}
+.menu b{font-weight:600}
+.menu span{font-size:var(--fs-s);color:var(--muted)}
+.menu em{font-style:normal;font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--muted)}
+.menu .sep{height:1px;background:var(--line);margin:var(--sp-2) var(--sp-1)}
+.menu .quiet{font-size:var(--fs-s);color:var(--muted)}
+.pill.over{background:var(--badSoft);color:var(--bad)} .pill.under,.pill.run{background:var(--aiSoft);color:var(--ai)}
+.pill i{font-style:normal;font-size:10px;margin-right:4px}
+.empty{text-align:center;color:var(--muted);padding:var(--sp-12) var(--sp-7)}
+/* trial sequence figure: one column per trial, four rows (outcome, decision time, data open, encounter) */
+.rows{display:grid;grid-template-columns:120px 1fr;gap:var(--sp-9) var(--sp-7);align-items:center}
+.rl{font-size:var(--fs-xs);color:var(--muted);text-transform:uppercase;letter-spacing:var(--ls-caps-s);line-height:1.25;align-self:end;padding-bottom:var(--sp-1)}
+.rl b{display:block;font-family:var(--font-display);font-size:var(--fs-l);color:var(--fg);letter-spacing:var(--ls-wide)}
+.cells,.tbars,.encs{display:grid;grid-template-columns:repeat(var(--n,8),minmax(0,1fr));gap:var(--sp-3)}
+.cell{height:44px;border-radius:var(--r-m);display:grid;place-items:center;font-size:var(--fs-s);font-weight:600;border:var(--border);background:var(--panel2);letter-spacing:var(--ls-wide)}
+.cell.ok{color:var(--good);border-color:color-mix(in srgb,var(--good) 55%,var(--line))}
+.cell.over{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 60%,var(--line))}
+.cell.under{color:var(--ai);border-color:color-mix(in srgb,var(--ai) 55%,var(--line))}
+.tbars{align-items:end;height:116px;padding-top:20px;border-bottom:var(--border)}
+.tbars div{background:var(--own);border-radius:var(--r-xs) var(--r-xs) 0 0;min-height:2px;width:56%;justify-self:center;position:relative;height:var(--h,2%)}
+.tbars div.zero{background:var(--line);height:2px}
+.tbars div span{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--muted);white-space:nowrap}
+.tbars.t div{background:var(--muted)}
+.tbars div.to{background:var(--bad)}
+.encs{font-size:var(--fs-xs);color:var(--muted);line-height:1.3}
+.encs span b{display:block;color:var(--fg);font-weight:500}
+.summary{border-top:var(--border);padding-top:var(--sp-7);margin-top:var(--sp-7);display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:var(--sp-6) var(--sp-9)}
+.summary p{margin:0;font-size:var(--fs-m);color:var(--muted)}
+.summary b{display:block;font-family:var(--font-display);font-size:var(--fs-6xl);font-weight:600;color:var(--fg);line-height:1;margin-bottom:var(--sp-1)}
+/* three analytic cards */
+.three{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--sp-6)}
+.matrix{display:grid;grid-template-columns:90px 1fr 1fr;gap:var(--sp-2);font-size:var(--fs-s)}
+.matrix .h{color:var(--muted);text-transform:uppercase;letter-spacing:var(--ls-caps-s);font-size:10px;display:grid;place-items:center;text-align:center;line-height:1.2}
+.mq{border:var(--border);border-radius:var(--r-m);padding:var(--sp-4);background:var(--panel2);min-height:74px;display:flex;flex-direction:column;justify-content:space-between}
+.mq b{font-family:var(--font-display);font-size:var(--fs-5xl);font-weight:600;line-height:1}
+.mq span{font-size:var(--fs-xs);color:var(--muted)}
+.mq.ok{border-color:color-mix(in srgb,var(--good) 55%,var(--line))}.mq.ok b{color:var(--good)}
+.mq.over{border-color:color-mix(in srgb,var(--bad) 60%,var(--line))}.mq.over b{color:var(--bad)}
+.mq.under{border-color:color-mix(in srgb,var(--ai) 55%,var(--line))}.mq.under b{color:var(--ai)}
+.rate{display:grid;gap:var(--sp-5)}
+.rate .r{display:grid;grid-template-columns:140px 1fr 52px;gap:var(--sp-4);align-items:center;font-size:var(--fs-m)}
+.rate .k{color:var(--muted)}
+.rate .k b{display:block;color:var(--fg);font-weight:500}
+.rate .bar{height:10px;background:var(--line);border-radius:var(--r-xs);overflow:hidden;display:flex}
+.rate .bar i{height:100%;background:var(--muted);width:var(--w,0%)}
+.rate .v{font-family:var(--font-mono);font-size:var(--fs-s);text-align:right}
+.kvl{display:grid;grid-template-columns:1fr auto;gap:var(--sp-3) var(--sp-5);font-size:var(--fs-m);margin:0}
+.kvl dt{color:var(--muted)}.kvl dd{margin:0;font-family:var(--font-mono);text-align:right}
+.kvl dd.warn{color:var(--ai)}
+/* event timelines: one track per trial, 0 to 45 s */
+.tl{display:grid;grid-template-columns:26px 1fr;gap:var(--sp-3) var(--sp-5);align-items:center}
+.tl .n{font-family:var(--font-mono);font-size:var(--fs-s);color:var(--muted)}
+.track{position:relative;height:22px;background:var(--panel2);border-radius:var(--r-xs);border:var(--border)}
+.track .open{position:absolute;top:4px;bottom:4px;background:color-mix(in srgb,var(--own) 55%,transparent);border-radius:var(--r-2xs)}
+.track .click{position:absolute;top:2px;bottom:2px;width:2px;background:var(--ai)}
+.track .altm{position:absolute;top:2px;bottom:2px;width:2px;background:var(--muted)}
+.track .dec{position:absolute;top:-3px;width:12px;height:28px;transform:translateX(-50%);display:grid;place-items:center;font-size:var(--fs-xs);font-weight:700}
+.track .dec.ok{color:var(--good)}.track .dec.over{color:var(--bad)}.track .dec.under{color:var(--ai)}
+.track .to{position:absolute;right:-1px;top:-1px;bottom:-1px;width:3px;background:var(--bad);border-radius:0 var(--r-xs) var(--r-xs) 0}
+/* live review of a session in progress: one card per trial, a note under each */
+.live{display:inline-flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-s);color:var(--own);font-family:var(--font-body);text-transform:none;letter-spacing:0}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--own);animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.sofar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--sp-6)}
+.sofar p{margin:0;font-size:var(--fs-m);color:var(--muted)}
+.sofar b{display:block;font-family:var(--font-display);font-size:var(--fs-6xl);font-weight:600;color:var(--fg);line-height:1;margin-bottom:var(--sp-1)}
+.sofar .over b{color:var(--bad)} .sofar .under b{color:var(--ai)}
+.tc{display:grid;grid-template-columns:44px 1fr;gap:var(--sp-2) var(--sp-6);align-items:start}
+.tc .num{grid-row:1/6;font-family:var(--font-display);font-size:34px;font-weight:600;color:var(--muted);line-height:1}
+.tc h3{margin:0;font-size:var(--fs-l);font-weight:600;display:flex;justify-content:space-between;gap:var(--sp-4);align-items:baseline;flex-wrap:wrap}
+.tc .adv{font-size:var(--fs-m);color:var(--muted)}
+.tc .adv b{color:var(--fg);font-weight:500}
+.tc .line{display:flex;gap:var(--sp-7);flex-wrap:wrap;font-size:var(--fs-s);color:var(--muted);font-family:var(--font-mono)}
+.tc .line .bad{color:var(--bad)}
+.tc .notes{min-height:44px;margin-top:var(--sp-1)}
+.tc.warn{border-color:color-mix(in srgb,var(--bad) 45%,var(--line))}
+.tc.now{border-color:var(--own)}
+.tc.todo{opacity:.72}
+.axis{display:flex;justify-content:space-between;font-size:var(--fs-xs);color:var(--muted);font-family:var(--font-mono);grid-column:2;margin-top:-2px}
+.notes{width:100%;min-height:72px;font:inherit;font-size:var(--fs-m);color:var(--fg);background:var(--panel2);border:var(--border);border-radius:var(--r-s);padding:var(--sp-3);resize:vertical;display:block}
+/* note field with explicit Save / Cancel: the row appears only while the text differs from what is stored */
+.notebox{position:relative}
+.notebox.dirty .notes{border-color:var(--ai)}
+.noteacts{display:flex;gap:var(--sp-3);align-items:center;margin-top:var(--sp-3);flex-wrap:wrap}
+.noteacts .note{margin-left:var(--sp-2)}
+.savedmsg{position:absolute;right:var(--sp-4);top:var(--sp-2);font-size:var(--fs-s);color:var(--good);pointer-events:none}
+.savedmsg:empty{display:none}
+.notebox.auto .savedmsg{color:var(--muted);font-size:var(--fs-xs)}
+/* overview: one research question per row, the three conditions compared to its right */
+.dhead h1 small{font-family:var(--font-body);font-size:var(--fs-base);font-weight:400;color:var(--muted);letter-spacing:0;margin-left:var(--sp-3)}
+.back{font:inherit;font-size:var(--fs-m);color:var(--muted);background:none;border:0;padding:0;cursor:pointer;align-self:flex-start}
+.back:hover{color:var(--fg)}
+.rq{display:grid;grid-template-columns:minmax(260px,1fr) 2fr;gap:var(--sp-9);align-items:start}
+.rq h2{font-family:var(--font-display);font-size:var(--fs-3xl);font-weight:600;margin:0 0 var(--sp-2);line-height:1.1;text-wrap:balance}
+.rq .note{margin:0}
+.rq-verdict{margin:var(--sp-4) 0 0;font-size:var(--fs-m);border-left:3px solid var(--line);padding-left:var(--sp-4)}
+.rq-verdict b{color:var(--own)}
+.rq-cmp{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-4)}
+.rq-cmp>div{border:var(--border);border-radius:var(--r-m);padding:var(--sp-4) var(--sp-5);background:var(--panel2);display:flex;flex-direction:column;gap:var(--sp-2);min-width:0}
+.rq-cmp h3{font-family:var(--font-display);font-size:var(--fs-base);margin:0;letter-spacing:var(--ls-caps-s);color:var(--muted);font-weight:500}
+.rq-cmp b{font-family:var(--font-display);font-size:var(--fs-6xl);line-height:1;font-weight:600}
+.rq-cmp b em{font-style:normal} .rq-cmp b em.warn{color:var(--ai)}
+.rq-cmp .bad b{color:var(--bad)}
+.rq-cmp .bar{display:block;height:8px;background:var(--line);border-radius:var(--r-xs);overflow:hidden}
+.rq-cmp .bar i{display:block;height:100%;width:var(--w,0%);background:var(--own)}
+.rq-cmp .bad .bar i{background:var(--bad)}
+.rq-cmp span:not(.bar){font-size:var(--fs-xs);color:var(--muted)}
+
+/* legend */
+.legend{display:flex;flex-wrap:wrap;gap:var(--sp-2) var(--sp-6);font-size:var(--fs-s);color:var(--muted);margin-top:var(--sp-3)}
+.legend i{display:inline-block;width:18px;height:0;border-top:2px solid;vertical-align:middle;margin-right:5px}
+.sw-own{border-color:var(--own)} .sw-target{border-color:var(--target)} .sw-ai{border-color:var(--ai)} .sw-muted{border-color:var(--muted)}
+.legend .sw-dashed{border-top-style:dashed} .legend .sw-dotted{border-top-style:dotted}
+
+/* door (start-page entry card) and its unfolding panel */
+.doors{display:grid;gap:var(--sp-4);margin-top:var(--sp-2)}
+.door{display:grid;grid-template-columns:1fr auto;gap:var(--sp-1) var(--sp-6);align-items:center;text-align:left;font:inherit;color:var(--fg);background:var(--panel2);border:var(--border);border-radius:var(--r-l);padding:var(--sp-6) var(--sp-7);cursor:pointer}
+.door:hover,.door[aria-expanded="true"]{border-color:var(--own)}
+.door b{grid-column:1;grid-row:1;font-family:var(--font-display);font-size:var(--fs-2xl);font-weight:600;letter-spacing:var(--ls-display)}
+.door span{grid-column:1;grid-row:2;color:var(--muted);font-size:var(--fs-m)}
+.door i{grid-column:2;grid-row:1/3;font-style:normal;font-size:22px;color:var(--own)}
+.doorpanel{display:flex;flex-direction:column;gap:var(--sp-5);padding:var(--sp-2) var(--sp-1) var(--sp-4) var(--sp-7);margin:calc(-1 * var(--sp-1)) 0 var(--sp-0) var(--sp-3);border-left:2px solid var(--line)}
+.doorpanel .note{margin:0}
+.doorpanel>div:last-child{margin-top:var(--sp-4);padding-bottom:var(--sp-0)}
+/* recent sessions inside the researcher door: code · condition · time · score · arrow, then the link to the full comparison */
+.doorpanel>.recent{margin-top:0}
+.recent{display:grid;gap:var(--sp-0)}
+.recent .h{display:flex;justify-content:space-between;align-items:baseline;font-size:var(--fs-xs);color:var(--muted);text-transform:uppercase;letter-spacing:var(--ls-caps-s);margin-bottom:var(--sp-2)}
+.recent .row{display:grid;grid-template-columns:44px 28px auto 1fr auto auto;gap:var(--sp-5);align-items:center;padding:var(--sp-3) var(--sp-3);margin:0 calc(-1 * var(--sp-3));border:0;border-radius:var(--r-s);background:none;color:var(--fg);font:inherit;font-size:var(--fs-m);text-align:left;cursor:pointer;width:calc(100% + 2 * var(--sp-3))}
+.recent .row:hover{background:var(--panel2)}
+.recent .code{font-family:var(--font-mono);font-weight:600}
+.recent .ctag{font-family:var(--font-display);font-size:var(--fs-m);letter-spacing:var(--ls-caps-s);border:var(--border);border-radius:var(--r-xs);padding:0 var(--sp-2);color:var(--muted);text-align:center}
+.recent .when,.recent .score{font-family:var(--font-mono);font-size:var(--fs-s);color:var(--muted)}
+.recent .go{color:var(--own)}
+.recent .all{font-size:var(--fs-s);padding-top:var(--sp-3)}
+.recent .all button{font:inherit;font-size:var(--fs-s);color:var(--own);background:none;border:0;padding:0;cursor:pointer}
+.recent .all button:hover{text-decoration:underline}
+.recent .empty{font-size:var(--fs-s);color:var(--muted);margin:0}
+
+/* steps, conds (method and briefing) */
+.steps{counter-reset:s;list-style:none;padding:0;margin:var(--sp-8) 0 0;display:grid;gap:var(--sp-4)}
+.steps li{display:grid;grid-template-columns:var(--size-step) 1fr;gap:var(--sp-5);align-items:start}
+.steps li>b,.steps li>span{grid-column:2}
+.steps li::before{grid-row:1/3;counter-increment:s;content:counter(s);font-family:var(--font-display);font-weight:600;font-size:var(--fs-2xl);color:var(--ai);border:var(--border);border-radius:var(--r-m);width:var(--size-step);height:var(--size-step);display:grid;place-items:center}
+.steps b{display:block;font-weight:600}
+.steps span{color:var(--muted)}
+.conds{border-top:var(--border)}
+.conds div{display:grid;grid-template-columns:150px 1fr;gap:var(--sp-5);padding:var(--sp-3) 0;border-bottom:var(--border);font-size:var(--fs-m)}
+.conds b{font-family:var(--font-display);font-size:var(--fs-l);letter-spacing:var(--ls-wide)}
+.conds span{color:var(--muted)}
+
+/* fab: theme toggle and back-to-top */
+.fab{position:fixed;right:max(var(--sp-6),env(safe-area-inset-right,0px));z-index:20;width:var(--size-fab);height:var(--size-fab);border-radius:50%;border:var(--border);background:var(--panel);color:var(--fg);font-size:var(--fs-xl);line-height:1;cursor:pointer;box-shadow:var(--shadow-fab);display:grid;place-items:center}
+.fab:hover{border-color:var(--own)}
+.themeBtn{bottom:max(var(--sp-6),env(safe-area-inset-bottom,0px))}
+.toTop{bottom:calc(max(var(--sp-6),env(safe-area-inset-bottom,0px)) + var(--size-fab) + var(--sp-4));opacity:0;pointer-events:none;transform:translateY(6px);transition:opacity var(--dur),transform var(--dur)}
+.toTop.on{opacity:1;pointer-events:auto;transform:none}
+
+/* ---------- 4. Screens ---------- */
+/* start console: live plot of encounter 5 next to the title and three entry cards; the method block opens below on demand */
+.stage{position:relative;border:var(--border);border-radius:var(--r-xl);overflow:hidden;background:var(--plot);display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,.85fr)}
+.plot{position:relative;min-height:520px}
+.plot canvas{position:absolute;inset:0;width:100%;height:100%}
+.fade{position:absolute;inset:0;background:linear-gradient(90deg,transparent 55%,var(--panel) 100%);pointer-events:none}
+.overlay{position:absolute;left:var(--sp-8);top:var(--sp-7);pointer-events:none;font-size:var(--fs-s);color:var(--ai);opacity:.9}
+.sim{position:absolute;left:var(--sp-8);bottom:var(--sp-10);color:var(--muted);font-size:var(--fs-s)}
+.panel{background:var(--panel);padding:var(--sp-9);display:flex;flex-direction:column;gap:var(--sp-7);min-width:0}
+.panel h1{font-size:var(--fs-7xl)}
+.panel .sub{font-size:var(--fs-l);margin-top:var(--sp-4)}
+.meta{display:flex;gap:var(--sp-7);flex-wrap:wrap;color:var(--muted);font-size:var(--fs-s);margin-top:auto}
+.meta b{color:var(--fg);font-weight:600}
+.method{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(300px,1fr);gap:var(--sp-6) var(--sp-11);align-items:start;margin-top:var(--sp-6);padding-top:var(--sp-9);border-top:var(--border)}
+.method .head{display:flex;justify-content:space-between;gap:var(--sp-3);align-items:center}
+.q{font-size:var(--fs-3xl);line-height:var(--lh-snug);margin:var(--sp-2) 0 0;color:var(--fg);text-wrap:balance}
+.q em{font-style:normal;color:var(--ai)}
+.abstract{margin:var(--sp-7) 0 0;color:var(--muted);max-width:62ch}
+
+/* start page fills the viewport: no page padding, no frame, no footer; the panel scrolls inside if a form does not fit */
+body.is-start{padding:0}
+body.is-start .wrap{max-width:none}
+body.is-start .content{padding-bottom:0}
+body.is-start .wrap>footer{display:none}
+body.is-start .stage{height:100vh;height:100dvh;border:0;border-radius:0;grid-template-columns:minmax(0,1fr) clamp(360px,42vw,620px);grid-template-rows:minmax(0,1fr)}
+body.is-start .plot{min-height:0;height:100%}
+body.is-start .panel{padding:clamp(var(--sp-8),4vh,var(--sp-12)) clamp(var(--sp-9),4vw,56px);overflow:auto;min-height:0}
+body.is-start .panel>div:first-child{margin-top:auto}
+body.is-start .panel h1{font-size:clamp(36px,3.4vw,var(--fs-8xl))}
+body.is-start .overlay{left:clamp(var(--sp-8),3vw,var(--sp-11));top:clamp(var(--sp-7),3vh,var(--sp-10))}
+body.is-start .sim{left:clamp(var(--sp-8),3vw,var(--sp-11))}
+/* the method block is a second full-height page under the console; scrolling snaps softly between the two */
+body.is-start .method{max-width:var(--content-max);width:100%;margin:0 auto;padding-inline:max(var(--page-pad),env(safe-area-inset-left,0px));min-height:100vh;min-height:100dvh;align-content:center;padding-block:clamp(var(--sp-10),6vh,72px)}
+html.snap{scroll-snap-type:y proximity}
+body.is-start .stage,body.is-start .method{scroll-snap-align:start}
+
+/* participant briefing: one card centred in the viewport, nothing else on screen */
+body.is-participant .content{padding-bottom:0;justify-content:center;align-items:center;min-height:calc(100vh - 48px);min-height:calc(100dvh - 48px)}
+body.is-participant .wrap>footer{display:none}
+body.is-participant #participant{width:100%;max-width:760px}
+#participant{padding:0;overflow:hidden}
+/* end of session: the console fades behind a quiet message */
+body.is-done{padding:0}
+body.is-done .wrap{max-width:none}
+body.is-done .content{padding-bottom:0;gap:0}
+body.is-done .wrap>footer{display:none}
+.donescreen{position:relative;height:100vh;height:100dvh;background:var(--plot);overflow:hidden}
+.donescreen canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.5}
+.donescreen .veil{position:absolute;inset:0;background:radial-gradient(ellipse at center,color-mix(in srgb,var(--bg) 92%,transparent) 0 26%,transparent 72%)}
+.donescreen .msg{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:var(--sp-7)}
+.donescreen .eyebrow.center{justify-content:center}
+.donescreen h1{font-size:clamp(40px,6vw,56px)}
+.donescreen .sub{color:var(--muted);font-size:var(--fs-l);margin:var(--sp-5) auto 0;max-width:none}
+.donescreen .code{display:inline-block;margin-top:var(--sp-9);font-size:22px;letter-spacing:.16em;padding:var(--sp-3) var(--sp-8);border:var(--border);border-radius:var(--r-pill);background:color-mix(in srgb,var(--panel) 85%,transparent)}
+.donescreen .hint{color:var(--muted);font-size:var(--fs-m);margin:var(--sp-9) 0 0}
+.donescreen .corner{position:absolute;right:calc(var(--size-fab) + var(--sp-10));bottom:var(--sp-9)}
+.brief{padding:clamp(var(--sp-8),4vw,var(--sp-11));display:flex;flex-direction:column;gap:var(--sp-6)}
+.brief h2{font-family:var(--font-display);font-weight:600;font-size:var(--fs-6xl);margin:0;line-height:var(--lh-tight)}
+.brief p{margin:0}
+.brief .steps{margin:0}
+/* check-in strip under the briefing: code large enough to verify from a distance, start button across the strip */
+.checkin{border-top:var(--border);background:var(--panel2);padding:clamp(var(--sp-8),4vw,var(--sp-10)) clamp(var(--sp-8),4vw,var(--sp-11));display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--sp-5) var(--sp-9);align-items:end}
+.checkin .field input{align-self:stretch;width:100%;font-family:var(--font-mono);font-size:var(--fs-4xl);letter-spacing:.14em;padding:var(--sp-4) var(--sp-6)}
+.checkin .facts{display:grid;gap:var(--sp-0);text-align:right;padding-bottom:var(--sp-2);opacity:.8}
+.checkin .k{font-size:var(--fs-xs);color:var(--muted);text-transform:uppercase;letter-spacing:var(--ls-caps-s)}
+.checkin .v{font-family:var(--font-display);font-size:var(--fs-2xl);font-weight:600;line-height:1.1;color:var(--fg)}
+.checkin .btn{grid-column:1/-1;margin-top:var(--sp-3);width:100%;padding:var(--sp-5) var(--sp-8);font-family:var(--font-display);font-size:var(--fs-3xl);font-weight:600;letter-spacing:var(--ls-caps);text-transform:uppercase;line-height:1.2}
+
+/* workspace: an instrument panel that fills the viewport. rail · sensor data (on demand) · plot · advisory and decision */
+body.is-work{padding:0}
+body.is-work .wrap{max-width:none}
+body.is-work .content{padding-bottom:0;gap:0}
+body.is-work .wrap>footer{display:none}
+body.is-work .fab{right:auto;left:9px}
+body.is-work .toTop{display:none}
+.work{display:grid;height:100vh;height:100dvh;grid-template-rows:4px minmax(0,1fr);grid-template-columns:56px auto minmax(0,1fr) clamp(380px,36vw,520px);background:var(--bg)}
+.topline{grid-column:1/-1;grid-row:1;background:var(--line)}
+/* explicit placement: the data pane is display:none when closed and must not shift the other columns */
+.rail{grid-column:1;grid-row:2} .datapane{grid-column:2;grid-row:2} .plotarea{grid-column:3;grid-row:2} .side{grid-column:4;grid-row:2}
+.topline>div{height:100%;width:0;background:var(--ai);transition:width var(--dur) linear}
+.rail{background:var(--panel);border-right:var(--border);display:flex;flex-direction:column;align-items:center;gap:var(--sp-5);padding:var(--sp-5) 0}
+.railbtn{font:inherit;font-size:16px;color:var(--muted);background:none;border:var(--border);border-radius:50%;width:34px;height:34px;cursor:pointer}
+.railbtn:hover{color:var(--fg);border-color:var(--own)}
+.vtab{writing-mode:vertical-rl;transform:rotate(180deg);font-family:var(--font-display);font-size:var(--fs-l);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--muted);border:var(--border);border-radius:var(--r-m);padding:var(--sp-5) var(--sp-3);background:var(--panel2);cursor:pointer}
+.vtab:hover,.vtab[aria-expanded="true"]{border-color:var(--own);color:var(--fg)}
+.datapane{width:320px;background:var(--panel);border-right:var(--border);overflow:auto;min-width:0}
+.datapane .inner{padding:var(--sp-6);display:flex;flex-direction:column;gap:var(--sp-4)}
+.datapane .eyebrow{margin:0}
+.datapane th{font-weight:400;color:var(--muted);width:58%}
+.plotarea{position:relative;background:var(--plot);min-width:0}
+.plotarea canvas{position:absolute;inset:0;width:100%;height:100%}
+.plotarea .hud{position:absolute;left:var(--sp-6);top:var(--sp-5);display:flex;gap:var(--sp-5);align-items:baseline;flex-wrap:wrap;pointer-events:none}
+.plotarea .sim{left:var(--sp-6)}
+.plotarea .legend{position:absolute;right:var(--sp-6);bottom:var(--sp-5);margin:0;justify-content:flex-end;max-width:70%}
+.side{background:var(--panel);border-left:var(--border);display:flex;flex-direction:column;gap:var(--sp-5);padding:var(--sp-6);overflow:hidden;min-width:0}
+/* the advisory scrolls if it must; the decision block stays pinned at the bottom of the panel */
+.side .advisory{flex:1;min-height:0;overflow:auto;margin:0 calc(-1 * var(--sp-3));padding:0 var(--sp-3)}
+.side .decision{flex:0 0 auto;max-height:70%;overflow:auto}
+.trialbar{display:flex;justify-content:space-between;align-items:baseline}
+.trialbar .t{font-family:var(--font-display);font-size:var(--fs-3xl);font-weight:600}
+.trialbar .left{font-size:var(--fs-2xl);color:var(--ai)}
+.muted{color:var(--muted);font-weight:500}
+.explorebar{display:flex;flex-direction:column;gap:var(--sp-3);padding-bottom:var(--sp-4);border-bottom:var(--border)}
+.explorebar .field select{max-width:none}
+.decision{margin-top:auto;border-top:var(--border);padding-top:var(--sp-5);display:flex;flex-direction:column;gap:var(--sp-3)}
+.decision .eyebrow{margin:0;align-items:center}
+.timeout{font-family:var(--font-body);font-size:var(--fs-xs);color:var(--muted);display:inline-flex;gap:var(--sp-2);align-items:center;text-transform:none;letter-spacing:0}
+.timeout i{width:7px;height:7px;border-radius:50%;background:var(--ai)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3)}
+.btn.choice{font-family:var(--font-display);font-size:var(--fs-2xl);letter-spacing:var(--ls-caps-s);text-transform:uppercase;padding:var(--sp-5) var(--sp-6)}
+.btn.choice:hover:not(:disabled){border-color:var(--own)}
+/* alternatives after Reject: grouped by manoeuvre (where, then how much), touch-sized, unfolding above the Accept / Reject pair */
+.decision .alts{display:flex;flex-direction:column;gap:var(--sp-3);padding-bottom:var(--sp-3);border-bottom:var(--border);margin-bottom:var(--sp-1)}
+.decision .lbl{font-size:var(--fs-xs);color:var(--muted);text-transform:uppercase;letter-spacing:var(--ls-caps-s)}
+.group{display:grid;grid-template-columns:96px 1fr;gap:var(--sp-4);align-items:center}
+.group .g{font-size:var(--fs-xs);color:var(--muted);text-transform:uppercase;letter-spacing:var(--ls-caps-s);line-height:1.2}
+.group .g b{display:block;color:var(--fg);font-family:var(--font-display);font-size:var(--fs-l);letter-spacing:var(--ls-wide)}
+.segbig{display:flex;border:var(--border);border-radius:var(--r-m);overflow:hidden;background:var(--panel2)}
+.segbig button{flex:1;font:inherit;font-size:var(--fs-base);font-weight:500;min-height:46px;border:0;background:transparent;color:var(--fg);cursor:pointer;padding:var(--sp-3) var(--sp-4)}
+.segbig button+button{border-left:var(--border)}
+.segbig button:hover:not(:disabled){background:color-mix(in srgb,var(--own) 12%,transparent)}
+.segbig button:disabled{opacity:.5;cursor:default}
+#rejectBtn[aria-expanded="true"]{border-color:var(--own)}
+.segbig button.hov{background:color-mix(in srgb,var(--own) 14%,transparent)}
+/* helm buttons on the plot: positioned by script at the end of each ghost heading */
+.helm{position:absolute;inset:0;pointer-events:none}
+.hb{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;font:inherit;font-size:var(--fs-m);font-weight:600;width:52px;height:52px;padding:0;border-radius:50%;border:1.5px solid var(--own);background:color-mix(in srgb,var(--panel) 90%,transparent);color:var(--fg);cursor:pointer;display:grid;place-items:center;align-content:center;line-height:1.05;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.hb small{display:block;font-size:8px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+.hb.port{border-color:var(--bad)}
+.hb:hover:not(:disabled),.hb.hov{background:var(--panel2);border-width:2.5px}
+.hb:disabled{opacity:.4;cursor:default}
+.explore-tools{display:flex;justify-content:flex-end}
+
+/* ---------- 5. Responsive ---------- */
+@media (max-width:880px){
+  .work{height:auto;min-height:100dvh;grid-template-columns:1fr;grid-template-rows:4px auto auto auto auto}
+  .rail{grid-column:1;grid-row:2;flex-direction:row;justify-content:flex-start;border-right:0;border-bottom:var(--border);padding:var(--sp-3) var(--sp-5)}
+  .vtab{writing-mode:horizontal-tb;transform:none;padding:var(--sp-2) var(--sp-5)}
+  .plotarea{grid-column:1;grid-row:3}
+  .side{grid-column:1;grid-row:4}
+  .datapane{grid-column:1;grid-row:5;width:auto;border-right:0;border-top:var(--border)}
+  .plotarea{aspect-ratio:1/1}
+  .side{border-left:0;overflow:visible}
+  .side .advisory{flex:none;overflow:visible}
+  .side .decision{max-height:none;overflow:visible}
+  .decision{margin-top:0}
+  body.is-work .fab{left:auto;right:max(var(--sp-6),env(safe-area-inset-right,0px))}
+  .stage{grid-template-columns:1fr}
+  .plot{min-height:340px}
+  .fade{background:linear-gradient(180deg,transparent 45%,var(--panel) 100%)}
+  .panel{padding:var(--sp-8) var(--sp-7)}
+  .panel h1{font-size:var(--fs-6xl)}
+  .method{grid-template-columns:1fr}
+  .conds div{grid-template-columns:1fr}
+  .checkin{grid-template-columns:1fr}
+  .checkin .facts{text-align:left;padding:0}
+  body.is-start .stage{height:auto;min-height:0;grid-template-columns:1fr}
+  body.is-start .plot{height:auto;min-height:min(60vh,420px)}
+  body.is-start .panel{overflow:visible}
+  .rows{grid-template-columns:1fr;gap:var(--sp-3)}
+  .rows .rl{padding-top:var(--sp-5)}
+  .agg{grid-template-columns:1fr}
+  .matrix{grid-template-columns:70px 1fr 1fr}
+  .rate .r{grid-template-columns:110px 1fr 48px}
+  .menu{min-width:260px}
+  .recent .row{grid-template-columns:40px 26px 1fr auto auto;gap:var(--sp-3)}
+  .recent .w,.recent .when{display:none}
+  .rq,.rq-cmp{grid-template-columns:1fr}
+  .rq{gap:var(--sp-5)}
+}
+@media (max-height:820px){
+  body.is-start .panel{gap:var(--sp-5)}
+  body.is-start .panel h1{font-size:var(--fs-6xl)}
+  body.is-start .doors{gap:var(--sp-3)}
+  body.is-start .door{padding:var(--sp-4) var(--sp-6)}
+}
+@media (prefers-reduced-motion:reduce){.topline>div,.toTop{transition:none}.live i{animation:none}}
+</style>
+
+<button class="fab themeBtn" id="themeBtn" type="button" aria-label="Switch to day theme" title="Night / day theme">☀</button>
+<button class="fab toTop" id="toTop" type="button" aria-label="Back to top" title="Back to top">↑</button>
+<div class="wrap">
+<div class="content">
+<section id="start">
+  <div class="stage">
+    <div class="plot">
+      <canvas id="plotStart" aria-label="Radar plot preview: encounter 5, crossing with a stale AIS report"></canvas>
+      <div class="fade"></div>
+      <div class="overlay mono">AI advisory · encounter 5 · hold course and speed</div>
+      <div class="sim mono" id="startClock">T+00:00 · encounter 5 of 8</div>
+    </div>
+    <div class="panel">
+      <div>
+        <h1>Shore Control Reliance Lab</h1>
+        <p class="sub">A research prototype on appropriate reliance: when should a remote operator trust an AI collision-avoidance advisory, and when should they check it?</p>
+      </div>
+      <div class="doors">
+        <button class="door" type="button" data-door="explore" aria-expanded="false" aria-controls="door-explore"><b>Explore an encounter</b><span>Any of 8 encounters, any of 3 presentations, ground truth on demand.</span><i>↓</i></button>
+        <div class="doorpanel" id="door-explore" hidden>
+          <label class="field" for="caseSel">Encounter <select id="caseSel"></select></label>
+          <div class="field"><span>Presentation</span>
+            <span class="seg" role="group" aria-label="Presentation condition">
+              <button data-cond="A" aria-pressed="false" type="button">A · Advice</button>
+              <button data-cond="B" aria-pressed="false" type="button">B · + Confidence</button>
+              <button data-cond="C" aria-pressed="true" type="button">C · + Evidence</button>
+            </span>
+          </div>
+          <div><button class="btn primary" id="openExplore" type="button">Open encounter</button></div>
+        </div>
+        <button class="door" type="button" data-door="study" aria-expanded="false" aria-controls="door-study"><b>Run a study session</b><span>8 trials in random order, 45 s each, checking behaviour recorded.</span><i>↓</i></button>
+        <div class="doorpanel" id="door-study" hidden>
+          <p class="note">Researcher setup. The participant does not see this screen: the next screen asks for their code and gives the instructions, without naming the condition.</p>
+          <div class="field"><span>Presentation condition</span>
+            <span class="seg" role="group" aria-label="Study condition" id="studyCond">
+              <button data-scond="A" aria-pressed="false" type="button">A · Advice only</button>
+              <button data-scond="B" aria-pressed="false" type="button">B · + Confidence</button>
+              <button data-scond="C" aria-pressed="true" type="button">C · + Evidence</button>
+            </span>
+          </div>
+          <div><button class="btn primary" id="startStudy" type="button">Continue to participant screen</button></div>
+        </div>
+        <!-- Researcher's entry: the sessions stored in this browser, newest first, each row opening its own dashboard -->
+        <button class="door" type="button" data-door="results" aria-expanded="false" aria-controls="door-results"><b>Researcher dashboard</b><span id="doorResultsSub">Results of recorded sessions, one dashboard per participant, conditions compared.</span><i>↓</i></button>
+        <div class="doorpanel" id="door-results" hidden>
+          <div class="recent" id="recent"></div>
+        </div>
+        <button class="door" type="button" data-door="method" aria-expanded="false" aria-controls="method"><b>About the method</b><span>Research question, three steps, three presentation conditions.</span><i>↓</i></button>
+      </div>
+      <div class="meta"><span><b>8</b> encounters</span><span><b>3</b> wrong, 2 plausibly</span><span><b>A · B · C</b> presentations</span><span><b>45 s</b> per decision</span></div>
+      <p class="fine">Research prototype by Anastasiia Ilina for the PhD application “Human-AI Teaming for Maritime Operations” (NTNU). Encounters and traffic are fictional, geometry and COLREG logic simplified. Not for navigation.</p>
+    </div>
+  </div>
+  <section class="method" id="method" hidden aria-label="About the method">
+    <div>
+      <p class="eyebrow">Research question</p>
+      <p class="q">How should an AI collision-avoidance advisory be presented so that a remote operator <em>relies on it when it is right</em> and <em>intervenes when it is wrong</em>?</p>
+      <p class="abstract">A research prototype for the study of appropriate reliance in shore control centres. The AI is scripted with known accuracy (Wizard-of-Oz), so every operator decision can be compared against ground truth. Three ways of presenting the same advice are compared.</p>
+      <ol class="steps">
+        <li><b>The AI proposes a manoeuvre</b><span>for example “Alter course 30° to starboard”, with or without confidence and evidence.</span></li>
+        <li><b>The operator decides in 45 seconds</b><span>accept, or reject and choose one of five alternatives. Doing nothing executes the advice.</span></li>
+        <li><b>The prototype records the checking behaviour</b><span>whether sensor data was opened, for how long, and which evidence was clicked.</span></li>
+      </ol>
+    </div>
+    <div>
+      <p class="eyebrow">Three presentation conditions</p>
+      <div class="conds">
+        <div><b>A · ADVICE</b><span>The manoeuvre and the type of encounter. Baseline reliance on bare advice.</span></div>
+        <div><b>B · + CONFIDENCE</b><span>Adds a confidence percentage. Does a number calibrate trust or lull people into accepting?</span></div>
+        <div><b>C · + EVIDENCE</b><span>Graded confidence, data basis, predicted CPA, COLREG rule and clickable evidence chips. Explanation as an invitation to check.</span></div>
+      </div>
+    </div>
+  </section>
+</section>
+
+<!-- Participant-facing briefing: shown after the researcher has set the condition. Says nothing about A/B/C. -->
+<section id="participant" class="card" hidden>
+  <div class="brief">
+    <p class="eyebrow"><span>Study session</span><button class="linkbtn" id="participantBack" type="button" title="Back to researcher setup">Researcher setup ↩</button></p>
+    <h2>Before you begin</h2>
+    <p>You are the operator in a shore control centre, supervising an autonomous vessel. In each of the eight situations the vessel meets another vessel and the AI proposes a manoeuvre.</p>
+    <ol class="steps">
+      <li><b>You have 45 seconds to decide</b><span>accept the advice, or reject it and choose another action. If time runs out, the vessel executes the AI advice.</span></li>
+      <li><b>Sensor data is one click away</b><span>open it whenever you want to check the AI. The AI advice is not always correct.</span></li>
+      <li><b>There are no trick questions about the interface</b><span>decide as you would on watch. The session takes about six minutes.</span></li>
+    </ol>
+  </div>
+  <!-- check-in strip: participant code, session facts, start. Reads top-down after the briefing. -->
+  <div class="checkin">
+    <label class="field" for="pcode">Participant code <input type="text" id="pcode" class="code" value="" placeholder="P01" autocomplete="off" spellcheck="false"></label>
+    <div class="facts"><span class="k">Session</span><span class="v">8 trials · ~6 min</span><span class="k">Recorded under this code only</span></div>
+    <button class="btn primary" id="beginStudy" type="button">Start session</button>
+  </div>
+</section>
+
+<!-- Workspace: an instrument panel. Rail (back, sensor-data tab) · sensor data pane (opens on demand, pushes the plot) · plot · advisory and decision. -->
+<main class="work" id="workspace" hidden>
+  <div class="topline" id="topline" aria-hidden="true"><div id="timerFill"></div></div>
+  <aside class="rail">
+    <button class="railbtn" id="backBtn" type="button" title="Start page" aria-label="Start page">←</button>
+    <button class="vtab" id="dataBtn" type="button" aria-expanded="false" aria-controls="dataPanel">Sensor data</button>
+  </aside>
+  <section class="datapane" id="dataPanel" hidden aria-label="Sensor data">
+    <div class="inner">
+      <p class="eyebrow"><span>Sensor data</span><span class="mono" id="dataClock">T+00:00</span></p>
+      <div class="tablewrap"><table><tbody id="dataRows"></tbody></table></div>
+      <p class="note">Radar sees the target directly; AIS is what the target reports about itself and can be stale.</p>
+    </div>
+  </section>
+  <section class="plotarea">
+    <canvas id="plot" aria-label="Radar plot showing own vessel at centre and the target vessel"></canvas>
+    <!-- helm: the same alternatives as in the panel list, placed on the plot at the end of each ghost heading. Shown after Reject. -->
+    <div class="helm" id="helm" hidden aria-label="Choose another action on the plot">
+      <button class="hb port" type="button" data-alt="port20">20°<small>port</small></button>
+      <button class="hb" type="button" data-alt="stbd30">30°<small>stbd</small></button>
+      <button class="hb" type="button" data-alt="stbd45">45°<small>stbd</small></button>
+      <button class="hb" type="button" data-alt="hold">Hold<small>course · speed</small></button>
+      <button class="hb" type="button" data-alt="slow">Reduce<small>speed</small></button>
+    </div>
+    <div class="hud"><span class="brand">Shore Control Reliance Lab</span><span class="note">Relative motion · head-up · rings 1 nm</span></div>
+    <div class="sim mono" id="simclock">T+00:00</div>
+    <div class="legend">
+      <span><i class="sw-own"></i>Own vessel, 6-min vector</span>
+      <span><i class="sw-target"></i>Target, radar</span>
+      <span><i class="sw-target sw-dashed"></i>Target, AIS</span>
+      <span><i class="sw-ai sw-dashed"></i>AI heading</span>
+      <span><i class="sw-muted sw-dotted"></i>Relative track · CPA</span>
+      <span id="legendOpt" hidden><i class="sw-own sw-dashed"></i>Your options</span>
+    </div>
+  </section>
+  <aside class="side">
+    <div class="trialbar" id="studybar" hidden>
+      <span class="t" id="studyStatus"></span>
+      <span class="left mono" id="timerTxt"></span>
+    </div>
+    <div class="explorebar" id="explorebar">
+      <label class="field" for="caseSelBar">Encounter <select id="caseSelBar"></select></label>
+      <div class="field"><span>Presentation</span>
+        <span class="seg" role="group" aria-label="Presentation condition">
+          <button data-cond="A" aria-pressed="false" type="button">A · Advice</button>
+          <button data-cond="B" aria-pressed="false" type="button">B · + Confidence</button>
+          <button data-cond="C" aria-pressed="true" type="button">C · + Evidence</button>
+        </span>
+      </div>
+    </div>
+    <section class="advisory" id="advice" aria-live="polite"></section>
+    <section class="decision" id="decision">
+      <p class="eyebrow"><span>Operator decision</span><span class="timeout" id="timeoutNote"><i></i>no decision executes the advice</span></p>
+      <!-- Alternatives unfold above the Accept / Reject pair, grouped by manoeuvre, so the pair stays put at the bottom edge -->
+      <div class="alts" id="alts" hidden>
+        <div class="lbl">Choose another action</div>
+        <div class="group"><span class="g"><b>Starboard</b>alter course</span><div class="segbig"><button data-alt="stbd30" type="button">30°</button><button data-alt="stbd45" type="button">45°</button></div></div>
+        <div class="group"><span class="g"><b>Port</b>alter course</span><div class="segbig"><button data-alt="port20" type="button">20°</button></div></div>
+        <div class="group"><span class="g"><b>Speed</b>course unchanged</span><div class="segbig"><button data-alt="hold" type="button">Hold course and speed</button><button data-alt="slow" type="button">Reduce speed</button></div></div>
+      </div>
+      <div class="pair">
+        <button class="btn choice" id="acceptBtn" type="button">Accept advice</button>
+        <button class="btn choice" id="rejectBtn" type="button" aria-expanded="false" aria-controls="alts">Reject</button>
+      </div>
+      <p class="toast" id="toast"></p>
+      <div id="truthBox"></div>
+      <div class="explore-tools" id="exploreTools"><button class="btn small" id="revealBtn" type="button">Reveal ground truth</button></div>
+    </section>
+  </aside>
+</main>
+
+<!-- Participant-facing end of session: no scores, no condition. The researcher opens the results from the quiet link. -->
+<section id="done" class="donescreen" hidden>
+  <canvas id="plotDone" aria-hidden="true"></canvas>
+  <div class="veil"></div>
+  <div class="msg"><div>
+    <p class="eyebrow center">Study session</p>
+    <h1>Session complete</h1>
+    <p class="sub">Thank you. Your eight decisions have been recorded.</p>
+    <span class="code mono" id="doneCode"></span>
+    <p class="hint">Please hand the screen back to the researcher.</p>
+  </div></div>
+  <button class="linkbtn corner" id="toResults" type="button" title="Researcher: open the session results">Researcher · results ↩</button>
+</section>
+
+<!-- Researcher dashboard: rendered by script from the session being viewed (the one just finished, or any stored on this device). -->
+<section id="results" aria-label="Session results" hidden></section>
+
+</div>
+<footer>Research prototype by Anastasiia Ilina, for the PhD application “Human-AI Teaming for Maritime Operations” (NTNU). Encounters are fictional and the geometry and COLREG logic are simplified; the AI is scripted with controlled accuracy (Wizard-of-Oz), as planned for Study 2 of the project outline. Not for navigation.</footer>
+</div>
+
+<script>
+(function(){
+const R=Math.PI/180, OWN={cog:0,sog:12}, LIMIT=0.5, TRIAL_S=45, TIME_SCALE=6; // 1 s on screen = 6 s at sea
+const CASES=[
+ {id:'c1',enc:'Crossing, target on starboard bow',brg:45,range:3.0,ais:{cog:270,sog:11},radar:{cog:270,sog:11},age:12,vis:6,adv:{kind:'stbd',deg:30,text:'Alter course 30° to starboard'},basis:'Radar and AIS fused',truth:'correct',conf:.86,
+  rule:'Rule 15, crossing: own vessel is the give-way vessel.',ev:[['brg','Target on starboard bow'],['cpa','CPA below 0.5 nm limit'],['tcpa','Time for an early, large alteration']],
+  note:'Correct. A clear starboard turn now raises CPA to about 0.7 nm.'},
+ {id:'c2',enc:'Head-on',brg:2,range:4.0,ais:{cog:180,sog:10},radar:{cog:180,sog:10},age:8,vis:6,adv:{kind:'stbd',deg:20,text:'Alter course 20° to starboard'},basis:'Radar and AIS fused',truth:'correct',conf:.90,
+  rule:'Rule 14, head-on: both vessels alter to starboard.',ev:[['brg','Target nearly dead ahead'],['radar','Reciprocal course'],['cpa','CPA about 0.1 nm']],
+  note:'Correct. After the alteration CPA is about 0.6 nm.'},
+ {id:'c3',enc:'Crossing, target on port bow',brg:310,range:3.6,ais:{cog:80,sog:8},radar:{cog:80,sog:8},age:10,vis:6,adv:{kind:'hold',deg:0,text:'Stand on: hold course and speed'},basis:'Radar and AIS fused',truth:'correct',conf:.78,
+  rule:'Rule 17: the target is give-way; own vessel keeps course and speed.',ev:[['brg','Target on port bow'],['cpa','CPA above 0.5 nm limit'],['tcpa','About 16 min to CPA']],
+  note:'Correct. CPA stays above the limit and holding course keeps own vessel predictable for the give-way vessel.'},
+ {id:'c4',enc:'Crossing, target on starboard bow',brg:40,range:2.6,ais:{cog:265,sog:12},radar:{cog:265,sog:12},age:9,vis:6,adv:{kind:'port',deg:25,text:'Alter course 25° to port'},basis:'Radar and AIS fused',truth:'wrong',conf:.71,
+  rule:'Rule 15, crossing: own vessel is the give-way vessel.',ev:[['brg','Target on starboard bow'],['cpa','CPA about 0.1 nm'],['tcpa','About 9 min to CPA']],
+  note:'Clearly wrong. Giving way to a vessel on the starboard side by turning to port takes own vessel across her bow. About 30° to starboard gives CPA ≈ 0.8 nm.'},
+ {id:'c5',enc:'Crossing, target on starboard bow',brg:45,range:3.0,ais:{cog:200,sog:10},radar:{cog:270,sog:10},age:190,vis:6,adv:{kind:'hold',deg:0,text:'No action needed: hold course and speed'},basis:'AIS track',truth:'plausible',conf:.82,
+  rule:'No risk of collision: predicted CPA above the limit.',ev:[['ais','Target heading away (AIS)'],['cpa','Predicted CPA 1.8 nm'],['age','Based on last AIS report']],
+  note:'Wrong in a plausible way. The AI relies on a stale AIS report. Radar shows the target has turned to 270°, so CPA is about 0.1 nm and own vessel must give way to starboard.'},
+ {id:'c6',enc:'Overtaking a slower vessel',brg:0,range:1.5,ais:{cog:0,sog:6},radar:{cog:0,sog:6},age:11,vis:6,adv:{kind:'stbd',deg:15,text:'Alter course 15° to starboard to overtake'},basis:'Radar and AIS fused',truth:'correct',conf:.84,
+  rule:'Rule 13: the overtaking vessel keeps out of the way.',ev:[['brg','Target dead ahead'],['radar','Same course, 6 kn'],['cpa','CPA 0.0 nm']],
+  note:'Correct. CPA after the alteration is about 0.7 nm.'},
+ {id:'c7',enc:'Close-quarters crossing',brg:30,range:2.0,ais:{cog:250,sog:9},radar:{cog:250,sog:9},age:7,vis:2.5,adv:{kind:'stbd',deg:10,text:'Alter course 10° to starboard'},basis:'Radar and AIS fused',truth:'plausible',conf:.79,
+  rule:'Rule 15, crossing: own vessel is the give-way vessel.',ev:[['brg','Target on starboard bow'],['cpa','CPA about 0.0 nm'],['tcpa','About 7 min to CPA']],
+  note:'Wrong in a plausible way. The direction is right but 10° is too small: CPA after the manoeuvre is about 0.2 nm, under the 0.5 nm limit. Rule 8 asks for a large, readily apparent alteration; about 35° gives ≈ 0.7 nm.'},
+ {id:'c8',enc:'Being overtaken from starboard quarter',brg:150,range:1.8,ais:{cog:345,sog:16},radar:{cog:345,sog:16},age:6,vis:6,adv:{kind:'hold',deg:0,text:'Stand on: hold course and speed'},basis:'Radar and AIS fused',truth:'correct',conf:.74,
+  rule:'Rule 13: the overtaking vessel keeps out of the way.',ev:[['brg','Target abaft the beam'],['radar','Target faster, 16 kn'],['cpa','CPA about 0.6 nm']],
+  note:'Correct. The target is overtaking and must keep clear; CPA is about 0.6 nm.'}
+];
+const ALT_LABEL={stbd30:'Alter 30° starboard',stbd45:'Alter 45° starboard',port20:'Alter 20° port',hold:'Hold course and speed',slow:'Reduce speed'};
+const TRUTH_LABEL={correct:'Correct',wrong:'Clearly wrong',plausible:'Plausibly wrong'};
+
+const $=id=>document.getElementById(id);
+const vel=(c,s)=>[Math.sin(c*R)*s,Math.cos(c*R)*s];
+function geom(cs,track,ownCog,tMin){
+  const p0=[Math.sin(cs.brg*R)*cs.range,Math.cos(cs.brg*R)*cs.range];
+  const vo=vel(ownCog,OWN.sog), vt=vel(cs[track].cog,cs[track].sog);
+  const w=[vt[0]-vo[0],vt[1]-vo[1]];
+  const p=[p0[0]+w[0]*tMin/60,p0[1]+w[1]*tMin/60];
+  const ww=w[0]*w[0]+w[1]*w[1]; const tc=ww?-(p[0]*w[0]+p[1]*w[1])/ww:0;
+  return {p,w,vt,vo,cpa:Math.hypot(p[0]+w[0]*tc,p[1]+w[1]*tc),tcpa:tc*60,cpaPt:[p[0]+w[0]*tc,p[1]+w[1]*tc],range:Math.hypot(p[0],p[1]),brg:((Math.atan2(p[0],p[1])/R)+360)%360};
+}
+const advCog=a=>a.kind==='stbd'?a.deg:a.kind==='port'?-a.deg:0;
+const fmtT=s=>{s=Math.max(0,Math.round(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+const fmtAge=s=>s<60?s+' s':Math.floor(s/60)+' min '+(s%60)+' s';
+
+let state={mode:'start',cond:'C',caseIdx:0,reveal:false,dataOpen:true,tSim:0,running:true,decided:null,altsOpen:false};
+let study=null, hl=null;
+
+// ---------- plot ----------
+// Two canvases share one renderer: the workspace plot (current encounter) and the start-page preview (encounter 5, stale AIS).
+const cv=$('plot'), cvStart=$('plotStart'), cvDone=$('plotDone'), START_CASE=4;
+const ctxs=new Map(); const ctxOf=c=>{if(!ctxs.has(c))ctxs.set(c,c.getContext('2d'));return ctxs.get(c)};
+let startT=0;
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+function sizeCanvas(c){const r=c.getBoundingClientRect(),d=window.devicePixelRatio||1;c.width=Math.max(10,r.width*d);c.height=Math.max(10,r.height*d);ctxOf(c).setTransform(d,0,0,d,0,0);c===cv?draw():c===cvStart?drawStart():drawDone()}
+const ro=new ResizeObserver(es=>es.forEach(e=>sizeCanvas(e.target)));ro.observe(cv);ro.observe(cvStart);ro.observe(cvDone);
+function ship(ctx,x,y,hdg,col,sz){ctx.save();ctx.translate(x,y);ctx.rotate(hdg*R);ctx.beginPath();ctx.moveTo(0,-sz);ctx.lineTo(sz*.55,sz*.7);ctx.lineTo(0,sz*.35);ctx.lineTo(-sz*.55,sz*.7);ctx.closePath();ctx.fillStyle=col;ctx.fill();ctx.restore()}
+// Helm: where each alternative sits on the plot (true heading, radius in nm). Mirrors the list in the panel.
+const HELM={port20:{deg:-20,r:3.4},stbd30:{deg:30,r:2.8},stbd45:{deg:45,r:3.8},hold:{deg:0,r:1.9},slow:{deg:180,r:1.2}};
+const frame=c=>{const W=c.clientWidth,H=c.clientHeight;return {W,H,cx:W/2,cy:H*0.56,sc:Math.min(W,H)/9.4}};
+const helmPt=(f,o)=>[f.cx+Math.sin(o.deg*R)*o.r*f.sc,f.cy-Math.cos(o.deg*R)*o.r*f.sc];
+function layoutHelm(){const f=frame(cv);document.querySelectorAll('#helm .hb').forEach(b=>{const [x,y]=helmPt(f,HELM[b.dataset.alt]);b.style.left=x+'px';b.style.top=y+'px'})}
+function draw(){const cs=current(); if(!cs)return; drawPlot(cv,cs,state.tSim,undefined,state.altsOpen); if(state.altsOpen)layoutHelm()}
+function drawStart(){drawPlot(cvStart,CASES[START_CASE],startT%6,startT)}
+function drawDone(){drawPlot(cvDone,CASES[START_CASE],startT%6,startT)}  // same scene as the start page: the console fading, not a new place
+
+// Background traffic for the start page only: scripted, fictional, drawn dim so the flagged target stays the focus.
+// Positions in nm relative to own vessel (head-up), courses true; motion is relative to own vessel like everything else on the plot.
+const TRAFFIC=[
+  {x:-4.6,y:-6.0,cog:0,sog:11,t:'CARGO'},{x:-4.4,y:-1.0,cog:0,sog:13,t:'CARGO'},{x:-4.7,y:4.0,cog:2,sog:10,t:'BULK'},
+  {x:-3.1,y:6.0,cog:180,sog:12,t:'CARGO'},{x:-3.3,y:0.5,cog:181,sog:14,t:'CONTAINER'},{x:-3.0,y:-5.0,cog:178,sog:9,t:'TANKER'},
+  {x:-7.0,y:2.2,cog:95,sog:18,t:'FERRY'},{x:6.0,y:-0.8,cog:275,sog:17,t:'FERRY'},
+  {x:3.2,y:-3.2,cog:40,sog:3,t:'FISHING',wander:1},{x:4.6,y:-2.1,cog:300,sog:2.5,t:'FISHING',wander:2},{x:2.4,y:-4.6,cog:150,sog:3.5,t:'FISHING',wander:3},
+  {x:5.6,y:3.1,cog:20,sog:0,t:'AT ANCHOR'},{x:6.2,y:3.7,cog:15,sog:0,t:'AT ANCHOR'},
+  {x:4.2,y:5.6,cog:250,sog:9,t:'TANKER'}
+];
+function drawTraffic(ctx,P,t){
+  const vo=vel(OWN.cog,OWN.sog), wrap=(v,L)=>((v+L/2)%L+L)%L-L/2, col=css('--muted');
+  ctx.save(); ctx.globalAlpha=.5; ctx.font='10px "IBM Plex Mono", monospace'; ctx.lineWidth=1.5; ctx.strokeStyle=col; ctx.fillStyle=col;
+  TRAFFIC.forEach((v,i)=>{
+    const cog=v.wander?v.cog+Math.sin(t*0.9+i)*25:v.cog;
+    const vt=vel(cog,v.sog), w=[vt[0]-vo[0],vt[1]-vo[1]];
+    const x=wrap(v.x+w[0]*t/60,18), y=wrap(v.y+w[1]*t/60,16), p=P([x,y]);
+    if(v.sog>0){ctx.beginPath();ctx.moveTo(...p);ctx.lineTo(...P([x+vt[0]*0.1,y+vt[1]*0.1]));ctx.stroke();ship(ctx,p[0],p[1],cog,col,7)}
+    else{ctx.beginPath();ctx.arc(p[0],p[1],5,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(p[0],p[1],1.5,0,Math.PI*2);ctx.fill()}
+    ctx.fillText(v.t+(v.sog?'  '+v.sog+' kn':''),p[0]+9,p[1]+12);
+  });
+  ctx.restore();
+}
+function drawPlot(cv,cs,tSim,trafficT,helm){
+  const ctx=ctxOf(cv);
+  const {W,H,cx,cy,sc}=frame(cv); // sc: px per nm
+  const P=([x,y])=>[cx+x*sc,cy-y*sc];
+  ctx.clearRect(0,0,W,H);
+  ctx.font='11px "IBM Plex Mono", monospace';
+  for(let r=1;r<=5;r++){ctx.beginPath();ctx.arc(cx,cy,r*sc,0,Math.PI*2);ctx.strokeStyle=css('--ring');ctx.lineWidth=1;ctx.stroke();ctx.fillStyle=css('--ringLabel');ctx.fillText(r+' nm',cx+4,cy-r*sc+12)}
+  ctx.strokeStyle=css('--ring');ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,H);ctx.moveTo(0,cy);ctx.lineTo(W,cy);ctx.stroke();
+  // safety ring
+  ctx.setLineDash([3,4]);ctx.beginPath();ctx.arc(cx,cy,LIMIT*sc,0,Math.PI*2);ctx.strokeStyle=css('--bad');ctx.globalAlpha=.6;ctx.stroke();ctx.globalAlpha=1;ctx.setLineDash([]);
+  if(trafficT!==undefined)drawTraffic(ctx,P,trafficT);
+  const g=geom(cs,'radar',OWN.cog,tSim), ga=geom(cs,'ais',OWN.cog,tSim);
+  // relative track & CPA
+  ctx.setLineDash([2,4]);ctx.strokeStyle=css('--muted');ctx.beginPath();const a=P(g.p),b=P([g.p[0]+g.w[0]*0.4,g.p[1]+g.w[1]*0.4]);ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([]);
+  if(g.tcpa>0){const c=P(g.cpaPt);ctx.beginPath();ctx.arc(c[0],c[1],4,0,Math.PI*2);ctx.fillStyle=css('--muted');ctx.fill();ctx.fillText('CPA',c[0]+6,c[1]-6)}
+  // own vector
+  ctx.strokeStyle=css('--own');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(...P([0,OWN.sog*0.1]));ctx.stroke();
+  // ghost headings for the operator's own options (after Reject)
+  if(helm){ctx.save();ctx.setLineDash([4,5]);ctx.strokeStyle=css('--own');ctx.globalAlpha=.55;ctx.lineWidth=1.5;
+    Object.values(HELM).forEach(o=>{const f={cx,cy,sc};const [x,y]=helmPt(f,o);ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(x,y);ctx.stroke()});ctx.restore()}
+  // AI proposed heading
+  const ac=advCog(cs.adv);
+  if(cs.adv.kind!=='hold'){ctx.setLineDash([6,5]);ctx.strokeStyle=css('--ai');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(...P([Math.sin(ac*R)*2.2,Math.cos(ac*R)*2.2]));ctx.stroke();ctx.setLineDash([]);
+    const lp=P([Math.sin(ac*R)*2.4,Math.cos(ac*R)*2.4]);ctx.fillStyle=css('--ai');ctx.fillText('AI '+(cs.adv.kind==='stbd'?'+':'−')+cs.adv.deg+'°',lp[0]+4,lp[1])}
+  ship(ctx,cx,cy,0,css('--own'),11);
+  // target
+  const tp=P(g.p);
+  ctx.strokeStyle=css('--target');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(...tp);ctx.lineTo(...P([g.p[0]+g.vt[0]*0.1,g.p[1]+g.vt[1]*0.1]));ctx.stroke();
+  if(cs.ais.cog!==cs.radar.cog){const ap=P(ga.p);ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(...ap);ctx.lineTo(...P([ga.p[0]+ga.vt[0]*0.1,ga.p[1]+ga.vt[1]*0.1]));ctx.stroke();ctx.setLineDash([])}
+  ship(ctx,tp[0],tp[1],cs.radar.cog,css('--target'),9);
+  ctx.fillStyle=css('--target');ctx.fillText('TGT',tp[0]+10,tp[1]+4);
+  if(trafficT!==undefined){ // start page: mark the target the AI advisory is about
+    ctx.setLineDash([4,4]);ctx.strokeStyle=css('--ai');ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(tp[0],tp[1],16,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle=css('--ai');ctx.fillText('AI · hold course',tp[0]+10,tp[1]+17);
+  }
+  ctx.fillStyle=css('--muted');ctx.fillText('HDG 000°  '+OWN.sog+' kn',8,H-10);
+}
+
+// ---------- panels ----------
+function current(){return state.mode==='study'&&study&&study.i<study.order.length?CASES[study.order[study.i]]:CASES[state.caseIdx]}
+function cond(){return state.mode==='study'&&study?study.cond:state.cond}
+// One row model for the sensor table and for the values quoted in the advisory. g/ga: geometry on the radar / AIS track; t: minutes since the trial began.
+function dataRows(cs,g,ga,t){
+  return [['brg','Target bearing (relative)',g.brg.toFixed(0).padStart(3,'0')+'°'],['range','Range',g.range.toFixed(2)+' nm'],
+   ['cpa','CPA, radar track',g.cpa.toFixed(2)+' nm'],['tcpa','TCPA, radar track',g.tcpa>0?g.tcpa.toFixed(1)+' min':'passed'],
+   ['radar','Target COG / SOG, radar',cs.radar.cog+'° / '+cs.radar.sog+' kn'],['ais','Target COG / SOG, AIS',cs.ais.cog+'° / '+cs.ais.sog+' kn'],
+   ['aiscpa','CPA, AIS track',ga.cpa.toFixed(2)+' nm'],['age','AIS report age',fmtAge(cs.age+Math.round(t*60))],
+   ['vis','Visibility',cs.vis+' nm'],['own','Own COG / SOG','000° / '+OWN.sog+' kn']];
+}
+function renderAdvice(){
+  const cs=current(),c=cond(),el=$('advice');
+  const bt=cs.basis.startsWith('AIS')?'ais':'radar';           // the track the AI actually used
+  const after=geom(cs,bt,advCog(cs.adv),0);
+  const pct=Math.round(cs.conf*100), lab=cs.conf>=.8?'High':cs.conf>=.7?'Moderate':'Low';
+  let h='<div class="tag">AI advisory · collision avoidance</div><div class="act">'+cs.adv.text+'</div>';
+  if(c==='A') h+='<div class="enc">'+cs.enc+'</div>';
+  // Confidence: a five-segment meter with partial fill (the number is continuous, the segments give it a scale). B shows the number, C the word.
+  const meter=()=>{const f=cs.conf*5;return '<span class="meter" aria-hidden="true">'+[0,1,2,3,4].map(i=>{const p=Math.max(0,Math.min(1,f-i));return '<i style="--p:'+(p*100).toFixed(0)+'%"></i>'}).join('')+'</span>'};
+  if(c==='B') h+='<div class="conf" role="img" aria-label="AI confidence '+pct+'%"><b class="num">'+pct+'<small>%</small></b><span class="lbl">AI confidence</span>'+meter()+'</div>';
+  if(c==='C'){
+    // Values quoted next to each claim are the AI's own numbers: computed on its data basis at advisory time.
+    // The radar/AIS disagreement in encounter 5 therefore only shows in the sensor data, as intended.
+    const rowsB=dataRows(cs,geom(cs,bt,OWN.cog,0),geom(cs,'ais',OWN.cog,0),0), val=k=>{const r=rowsB.find(x=>x[0]===k);return r?r[2]:''};
+    h+='<div class="conf word" role="img" aria-label="AI confidence '+lab+'"><b class="num">'+lab+'</b><span class="lbl">AI confidence · '+cs.basis+(bt==='ais'?' · report age '+fmtAge(cs.age):'')+'</span>'+meter()+'</div>';
+    // Each claim is one touch-sized button: tapping anywhere on the row opens the sensor data on that row.
+    const claim=(label,value,key)=>'<button class="claim" type="button" data-ev="'+key+'" aria-label="'+label+': check in sensor data"><span>'+label+'</span><span class="val">'+value+'</span><span class="check">check →</span></button>';
+    h+='<div class="claims">'+cs.ev.map(e=>claim(e[1],val(e[0]),e[0])).join('')+claim('Predicted CPA after action',after.cpa.toFixed(2)+' nm','cpa')+'</div>';
+    h+='<div class="rule">'+cs.rule+' Safety limit '+LIMIT+' nm.</div>';
+  }
+  el.innerHTML=h;
+  el.querySelectorAll('[data-ev]').forEach(b=>b.addEventListener('click',()=>{hl=b.dataset.ev;hlEl=b;if(study&&study.cur){study.cur.evidence++;logEv('claim',b.dataset.ev)}setData(true)}));
+}
+let hlEl=null; // the claim that was tapped; several claims may point at the same table row
+function renderData(){
+  const cs=current(),rows=dataRows(cs,geom(cs,'radar',OWN.cog,state.tSim),geom(cs,'ais',OWN.cog,state.tSim),state.tSim);
+  $('dataRows').innerHTML=rows.map(r=>'<tr class="'+(hl===r[0]?'hl':'')+'"><th scope="row">'+r[1]+'</th><td class="mono">'+r[2]+'</td></tr>').join('');
+  $('dataClock').textContent='T+'+fmtT(state.tSim*60);
+  $('advice').querySelectorAll('.claim').forEach(cl=>cl.classList.toggle('hl',state.dataOpen&&cl===hlEl));
+}
+function setData(open){
+  const was=state.dataOpen; state.dataOpen=open; $('dataPanel').hidden=!open; $('dataBtn').setAttribute('aria-expanded',open);
+  if(!open){hl=null;hlEl=null}
+  if(study&&study.cur){const now=performance.now();if(open&&!was){study.cur.opens++;study.cur.openAt=now;logEv('open')}if(!open&&was&&study.cur.openAt){study.cur.openMs+=now-study.cur.openAt;study.cur.openAt=null;logEv('close')}}
+  renderData();
+  if(open&&!was&&matchMedia('(max-width:880px)').matches)$('dataPanel').scrollIntoView({behavior:'smooth',block:'start'}); // stacked layout: the pane sits below the decision
+}
+function renderTruth(){
+  const cs=current(),box=$('truthBox');
+  if(state.mode==='explore'&&state.reveal){box.innerHTML='<div class="truth '+cs.truth+'"><b>'+TRUTH_LABEL[cs.truth]+'.</b> '+cs.note.replace(/^[^.]+\.\s*/,'')+'</div>'}else box.innerHTML='';
+}
+function renderAll(){renderAdvice();renderData();renderTruth();draw();$('simclock').textContent='T+'+fmtT(state.tSim*60)}
+
+// ---------- explore ----------
+// The encounter select and the presentation switch exist twice: on the start page and in the toolbar. syncExplore keeps them equal.
+['caseSel','caseSelBar'].forEach(id=>{
+  CASES.forEach((c,i)=>{const o=document.createElement('option');o.value=i;o.textContent=(i+1)+'. '+c.enc+' · '+TRUTH_LABEL[c.truth].toLowerCase();$(id).appendChild(o)});
+  $(id).addEventListener('change',e=>{state.caseIdx=+e.target.value;syncExplore();if(state.mode==='explore')resetExplore()});
+});
+document.querySelectorAll('[data-cond]').forEach(b=>b.addEventListener('click',()=>{state.cond=b.dataset.cond;syncExplore();if(state.mode==='explore')renderAll()}));
+function syncExplore(){['caseSel','caseSelBar'].forEach(id=>$(id).value=state.caseIdx);document.querySelectorAll('[data-cond]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.cond===state.cond));if(state.mode==='explore')setHash(exploreHash(),true)}
+const exploreHash=()=>'explore='+(state.caseIdx+1)+'&c='+state.cond;
+$('revealBtn').addEventListener('click',()=>{state.reveal=!state.reveal;$('revealBtn').textContent=state.reveal?'Hide ground truth':'Reveal ground truth';renderTruth()});
+$('openExplore').addEventListener('click',()=>setMode('explore'));
+$('backBtn').addEventListener('click',showStart);
+
+// ---------- start page doors ----------
+// One card open at a time: explore and study unfold their form under the card, method unfolds the block below the console.
+let door=null; // all cards start collapsed
+function setDoor(name){
+  door=name;
+  document.querySelectorAll('[data-door]').forEach(b=>{const on=b.dataset.door===name;b.setAttribute('aria-expanded',on);b.querySelector('i').textContent=on?'↑':'↓'});
+  $('door-explore').hidden=name!=='explore'; $('door-study').hidden=name!=='study'; $('door-results').hidden=name!=='results'; $('method').hidden=name!=='method';
+  if(name==='method')setTimeout(()=>smoothTo($('method').offsetTop),0);
+}
+// Smooth page scroll. Scroll snapping is lifted for the duration: Chrome otherwise snaps back to the first page mid-animation.
+let snapTimer=null;
+function smoothTo(top){
+  const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches, de=document.documentElement, hadSnap=de.classList.contains('snap');
+  if(hadSnap)de.classList.remove('snap');
+  scrollTo({top,behavior:reduce?'auto':'smooth'});
+  // Smooth scrolling is driven by compositor frames and stalls in a background tab: settle instantly if we have not arrived.
+  clearTimeout(snapTimer); snapTimer=setTimeout(()=>{if(Math.abs(scrollY-top)>8)scrollTo({top,behavior:'auto'});if(hadSnap&&state.mode==='start')de.classList.add('snap')},reduce?50:900);
+}
+document.querySelectorAll('[data-door]').forEach(b=>b.addEventListener('click',()=>setDoor(door===b.dataset.door?null:b.dataset.door)));
+function closeAlts(){state.altsOpen=false;$('alts').hidden=true;$('helm').hidden=true;$('legendOpt').hidden=true;$('rejectBtn').setAttribute('aria-expanded','false');document.querySelectorAll('[data-alt].hov').forEach(t=>t.classList.remove('hov'))}
+function resetExplore(){state.tSim=0;state.decided=null;hl=null;hlEl=null;$('toast').textContent='';closeAlts();enableDecision(true);renderAll()}
+
+// ---------- decisions ----------
+function enableDecision(on){['acceptBtn','rejectBtn'].forEach(id=>$(id).disabled=!on);document.querySelectorAll('[data-alt]').forEach(b=>b.disabled=!on)}
+$('acceptBtn').addEventListener('click',()=>decide('accept'));
+function setAlts(open){state.altsOpen=open;$('alts').hidden=!open;$('helm').hidden=!open;$('legendOpt').hidden=!open;$('rejectBtn').setAttribute('aria-expanded',open);if(open&&study&&study.cur){study.cur.alts++;logEv('alts')}draw()}
+// Study log: one timestamped event per operator action inside a trial (seconds since the trial began). Feeds the timelines on the results screen.
+function logEv(type,key){if(!study||!study.cur||state.mode!=='study')return;const e={t:+((performance.now()-study.cur.start)/1000).toFixed(2),type};if(key)e.key=key;study.cur.events.push(e)}
+$('rejectBtn').addEventListener('click',()=>setAlts(!state.altsOpen));
+// hovering or focusing an option highlights its twin: plot button <-> list segment
+document.querySelectorAll('[data-alt]').forEach(b=>{const twins=()=>document.querySelectorAll('[data-alt="'+b.dataset.alt+'"]');
+  ['mouseenter','focus'].forEach(ev=>b.addEventListener(ev,()=>twins().forEach(t=>{if(t!==b)t.classList.add('hov')})));
+  ['mouseleave','blur'].forEach(ev=>b.addEventListener(ev,()=>twins().forEach(t=>t.classList.remove('hov'))))});
+document.querySelectorAll('[data-alt]').forEach(b=>b.addEventListener('click',()=>decide(b.dataset.alt)));
+$('dataBtn').addEventListener('click',()=>setData(!state.dataOpen));
+function decide(choice,timeout){
+  const cs=current(); if(state.decided)return; state.decided=choice; enableDecision(false); closeAlts();
+  const accepted=choice==='accept', appropriate=cs.truth==='correct'?accepted:!accepted;
+  if(state.mode==='explore'){
+    $('toast').textContent=accepted?'Advice accepted. The vessel executes the AI manoeuvre.':'Advice rejected: '+ALT_LABEL[choice]+'.';
+    $('toast').style.color=appropriate?css('--good'):css('--bad');
+    if(!state.reveal){state.reveal=true;$('revealBtn').textContent='Hide ground truth'}renderTruth();
+    setTimeout(()=>{if(state.mode==='explore')enableDecision(true),state.decided=null},1200);
+    return;
+  }
+  const cur=study.cur; if(cur.openAt){cur.openMs+=performance.now()-cur.openAt;cur.openAt=null;logEv('close')}
+  study.trials.push({trial:study.i+1,case:cs.id,encounter:cs.enc,advice:cs.adv.text,adviceWas:cs.truth,decision:accepted?'accept':choice,timeout:!!timeout,
+    timeS:+((performance.now()-cur.start)/1000).toFixed(1),dataOpened:cur.opens>0,dataOpenS:+(cur.openMs/1000).toFixed(1),evidenceClicks:cur.evidence,claimsDistinct:new Set(cur.events.filter(e=>e.type==='claim').map(e=>e.key)).size,altsOpened:cur.alts>0,appropriate,events:cur.events});
+  saveSessions(); // study.rec shares the trials array, so each decision lands in storage at once
+  $('toast').style.color=css('--muted');$('toast').textContent=timeout?'Time ran out. The vessel executed the AI advice.':'Decision recorded.';
+  clearInterval(study.timer); setTimeout(nextTrial,900);
+}
+
+// ---------- study ----------
+// Start page → workspace (explore or study) → results → start page. Leaving the workspace abandons a running study.
+// Screen classes on <body>: is-start (console), is-participant (briefing), is-work (instrument panel). None for results.
+function startClass(on){document.body.classList.toggle('is-start',on);document.documentElement.classList.toggle('snap',on);if(on)document.body.classList.remove('is-participant','is-work','is-done')}
+function showStart(){
+  if(study)clearInterval(study.timer); study=null; state.mode='start'; state.decided=null;
+  startClass(true);
+  state.reveal=false; $('revealBtn').textContent='Reveal ground truth';
+  $('start').hidden=false; $('participant').hidden=true; $('done').hidden=true; $('workspace').hidden=true; $('results').hidden=true;
+  renderRecent(); setHash(''); window.scrollTo(0,0);
+}
+// End of session, participant side: thanks and the code, nothing about performance. Results stay behind the researcher link.
+function showDone(){
+  state.mode='done'; document.body.classList.remove('is-work','is-participant'); document.body.classList.add('is-done');
+  $('workspace').hidden=true; $('results').hidden=true; $('doneCode').textContent=study.code; $('done').hidden=false; window.scrollTo(0,0);
+}
+// Participant briefing: between the researcher's setup and the first trial. No condition is named here or during the trials.
+function showParticipant(){
+  state.mode='participant'; startClass(false); document.body.classList.remove('is-work'); document.body.classList.add('is-participant');
+  $('start').hidden=true; $('workspace').hidden=true; $('results').hidden=true; $('participant').hidden=false;
+  $('pcode').value=''; setHash('',true); window.scrollTo(0,0); $('pcode').focus();
+}
+function setMode(m){
+  state.mode=m; startClass(false); document.body.classList.remove('is-participant','is-done'); document.body.classList.add('is-work');
+  $('start').hidden=true; $('participant').hidden=true; $('results').hidden=true; $('workspace').hidden=false;
+  $('explorebar').hidden=m!=='explore'; $('studybar').hidden=m!=='study';
+  $('exploreTools').hidden=m!=='explore'; $('timeoutNote').hidden=m!=='study'; $('topline').style.visibility=m==='study'?'visible':'hidden';
+  if(m==='explore'){if(study)clearInterval(study.timer);study=null;setData(false);setHash(exploreHash());syncExplore();resetExplore()}
+  else setHash('',true); // a study in progress is never restored by reload
+  window.scrollTo(0,0);
+}
+let scond='C';
+document.querySelectorAll('[data-scond]').forEach(b=>b.addEventListener('click',()=>{scond=b.dataset.scond;document.querySelectorAll('[data-scond]').forEach(x=>x.setAttribute('aria-pressed',x===b))}));
+$('startStudy').addEventListener('click',showParticipant);
+$('participantBack').addEventListener('click',()=>{showStart();setDoor('study')});
+$('pcode').addEventListener('keydown',e=>{if(e.key==='Enter')$('beginStudy').click()});
+$('beginStudy').addEventListener('click',()=>{
+  const code=$('pcode').value.trim(); if(!code){$('pcode').focus();$('pcode').setAttribute('aria-invalid','true');return}
+  const order=CASES.map((_,i)=>i);for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]]}
+  study={cond:scond,code,order,i:-1,trials:[],started:new Date().toISOString()};
+  // The stored record exists from the first trial on, marked running. An abandoned or reloaded session therefore stays visible as "in progress".
+  study.rec={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),participant:code,condition:scond,started:study.started,status:'running',trialS:TRIAL_S,order:order.map(i=>i+1),trials:study.trials,notes:''};
+  sessions.push(study.rec); saveSessions();
+  setMode('study'); nextTrial();
+});
+function nextTrial(){
+  study.i++;
+  if(study.i>=study.order.length){finishStudy();return}
+  state.tSim=0;state.decided=null;hl=null;hlEl=null;$('toast').textContent='';closeAlts();enableDecision(true);
+  study.cur={start:performance.now(),opens:0,openMs:0,openAt:null,evidence:0,alts:0,events:[]};
+  state.dataOpen=true;setData(false);
+  $('studyStatus').innerHTML='Trial '+(study.i+1)+' <span class="muted">/ '+study.order.length+'</span>';
+  renderAll(); tick();
+  study.timer=setInterval(tick,200);
+}
+function tick(){
+  if(!study||!study.cur)return; const el=(performance.now()-study.cur.start)/1000, left=TRIAL_S-el;
+  $('timerFill').style.width=Math.max(0,left/TRIAL_S*100)+'%'; $('timerTxt').textContent=fmtT(left);
+  if(left<=0&&!state.decided){decide('accept',true)}
+}
+// ---------- sessions: stored on this device ----------
+// Every finished study session is kept in localStorage (codes only, no names) so the researcher can compare conditions across participants.
+const STORE='scrl-sessions';
+function loadSessions(){try{const a=JSON.parse(localStorage.getItem(STORE)||'[]');return Array.isArray(a)?a:[]}catch(e){return []}}
+let sessions=loadSessions(), view=null; // view: the session the dashboard shows
+const sKey=s=>s.id||s.participant+'|'+s.started, deletedKeys=new Set();
+// Two tabs may touch the same session at once: the participant's tab writes trials and status, the researcher's tab writes notes.
+// Each save therefore merges with what is in storage: a tab keeps the fields it owns and takes the others from storage.
+function saveSessions(){
+  const stored=loadSessions(),mem=new Map(sessions.map(s=>[sKey(s),s])),out=[];
+  stored.forEach(o=>{const k=sKey(o);if(deletedKeys.has(k))return;const s=mem.get(k);if(!s){out.push(o);return}
+    if(study&&study.rec===s){if(o.notes!=null)s.notes=o.notes;if(o.trialNotes)s.trialNotes=o.trialNotes}       // running here: notes may come from the other tab
+    else if(o.status==='running'||s.status==='running'){s.trials=o.trials;s.status=o.status;if(o.ended)s.ended=o.ended} // running elsewhere: trials come from there
+    out.push(s);mem.delete(k)});
+  mem.forEach(s=>out.push(s)); // started in this tab, not yet in storage
+  sessions=out; try{localStorage.setItem(STORE,JSON.stringify(sessions))}catch(e){}
+}
+// Another tab wrote: take its view of things, keeping object identity so `view` and `study.rec` stay valid.
+function syncFromStorage(){
+  const stored=loadSessions(),mem=new Map(sessions.map(s=>[sKey(s),s]));
+  sessions=stored.map(o=>{const s=mem.get(sKey(o));if(!s)return o;
+    if(study&&study.rec===s){if(o.notes!=null)s.notes=o.notes;if(o.trialNotes)s.trialNotes=o.trialNotes;return s}
+    return Object.assign(s,o)});
+  if(view&&!sessions.includes(view))view=null;
+}
+let pendingRender=false;
+addEventListener('storage',e=>{
+  if(e.key!==STORE)return;
+  syncFromStorage(); renderRecent();
+  if(state.mode!=='results')return;
+  if(dirtyNotes.size||focusInNote()){pendingRender=true;scheduleIdleRender()}else renderResults(); // never rebuild under the researcher's cursor; afterNoteSettled or the idle timer catches up
+});
+// Start page, researcher door: the three newest sessions and a link to the full comparison. Rebuilt whenever the stored set changes.
+function renderRecent(){
+  const n=sessions.length,el=$('recent');
+  $('doorResultsSub').textContent=n?n+' session'+(n===1?'':'s')+' stored in this browser · one dashboard per participant, conditions compared.':'Results of recorded sessions, one dashboard per participant, conditions compared.';
+  if(!n){el.innerHTML='<p class="empty">No sessions stored in this browser yet. Run a study session and its dashboard will appear here.</p>';return}
+  el.innerHTML='<div class="h"><span>Recent sessions on this device</span><span class="mono">'+n+'</span></div>'
+   +sessions.slice(-3).reverse().map(x=>{const q=stats(x),i=sessions.indexOf(x),done=isDone(x);return '<button class="row" type="button" data-open="'+i+'"><span class="code">'+esc(x.participant)+'</span><span class="ctag">'+x.condition+'</span><span class="when">'+fmtDate(x.started)+'</span><span class="st"><span class="pill '+(done?'ok':'run')+'">'+(done?'finished':'in progress')+'</span></span><span class="score">'+(done?q.approp+' / '+q.n+'<span class="w"> appropriate</span>':q.n+' / '+CASES.length+'<span class="w"> trials</span>')+'</span><span class="go">→</span></button>'}).join('')
+   +'<div class="all"><button type="button" data-open="all">'+(n>3?'All '+n+' sessions and the condition comparison →':'Condition comparison and all sessions →')+'</button></div>';
+}
+$('recent').addEventListener('click',e=>{const b=e.target.closest('[data-open]');if(!b)return;if(b.dataset.open==='all')showResultsScreen(null);else if(sessions[+b.dataset.open])showResultsScreen(sessions[+b.dataset.open])});
+function finishStudy(){
+  clearInterval(study.timer); $('timerFill').style.width='0%'; $('timerTxt').textContent='';
+  const s=study.rec; s.status='finished'; s.ended=new Date().toISOString(); saveSessions(); view=s;
+  showDone();
+}
+// s: the session to show; null opens the overview; undefined keeps whatever `view` already holds
+function showResultsScreen(s){
+  if(s!==undefined)view=s;
+  if(study)clearInterval(study.timer); study=null; state.mode='results'; startClass(false);
+  document.body.classList.remove('is-done','is-work','is-participant');
+  $('start').hidden=true;$('participant').hidden=true;$('workspace').hidden=true;$('done').hidden=true;
+  renderResults(); $('results').hidden=false; window.scrollTo(0,0);
+}
+$('toResults').addEventListener('click',()=>showResultsScreen());
+
+// ---------- results: measures ----------
+const CLS=x=>x.appropriate?'ok':x.decision==='accept'?'over':'under';
+const CLS_LABEL={ok:'appropriate',over:'over-reliance',under:'under-reliance'}, CLS_ICON={ok:'✓',over:'●',under:'▲'};
+const SHORT={c1:'Crossing, target stbd',c2:'Head-on',c3:'Crossing, target port',c4:'Crossing, target stbd',c5:'Crossing, stale AIS',c6:'Overtaking',c7:'Close-quarters',c8:'Being overtaken'};
+const advShort=cs=>cs.adv.kind==='hold'?(/^No action/.test(cs.adv.text)?'no action':'stand on'):cs.adv.deg+'° to '+(cs.adv.kind==='stbd'?'starboard':'port');
+const decLabel=x=>x.decision==='accept'?(x.timeout?'Accepted (timeout)':'Accepted'):ALT_LABEL[x.decision]||x.decision;
+const mean=a=>a.length?a.reduce((s,v)=>s+v,0)/a.length:0, f1=v=>(Math.round(v*10)/10).toFixed(1);
+const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate=(iso,year)=>{const d=new Date(iso);return isNaN(d)?'':d.toLocaleDateString('en-GB',{day:'numeric',month:'short',...(year?{year:'numeric'}:{})})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})};
+const fmtDur=s=>s>=60?Math.floor(s/60)+' min '+Math.round(s%60)+' s':Math.round(s)+' s';
+function stats(s){
+  const t=s.trials,n=t.length,by=c=>t.filter(x=>CLS(x)===c).length;
+  const plaus=t.filter(x=>x.adviceWas==='plausible'),opened=t.filter(x=>x.dataOpened),half=Math.floor(n/2);
+  const pct=a=>a.length?Math.round(a.filter(x=>x.dataOpened).length/a.length*100):0;
+  const acc=k=>{const a=t.filter(x=>x.adviceWas===k);return [a.filter(x=>x.decision==='accept').length,a.length]};
+  return {n,approp:by('ok'),over:by('over'),under:by('under'),plaus:plaus.length,plausCaught:plaus.filter(x=>x.decision!=='accept').length,
+    timeouts:t.filter(x=>x.timeout).length,meanT:mean(t.map(x=>x.timeS)),checked:opened.length,meanOpen:mean(opened.map(x=>x.dataOpenS)),
+    claims:t.reduce((a,x)=>a+(x.evidenceClicks||0),0),claimsDistinct:t.reduce((a,x)=>a+distinctClaims(x),0),
+    wrongNoCheck:t.filter(x=>x.adviceWas!=='correct'&&x.decision==='accept'&&!x.dataOpened).length,
+    wrongChecked:t.filter(x=>x.adviceWas!=='correct'&&x.decision==='accept'&&x.dataOpened).length,
+    drift:pct(t.slice(0,half))+'% → '+pct(t.slice(half)),fast:t.filter(x=>x.timeS<2&&!x.timeout).length,
+    hits:t.filter(x=>x.adviceWas==='correct'&&x.decision==='accept').length,cr:t.filter(x=>x.adviceWas!=='correct'&&x.decision!=='accept').length,
+    nCorrect:t.filter(x=>x.adviceWas==='correct').length,nWrong:t.filter(x=>x.adviceWas!=='correct').length,
+    acc:{correct:acc('correct'),wrong:acc('wrong'),plausible:acc('plausible')},
+    durS:s.ended&&s.started?Math.max(0,(new Date(s.ended)-new Date(s.started))/1000):null};
+}
+
+// ---------- results: dashboard ----------
+// Two levels: the overview (what the pilot says so far, all sessions) and one participant's session. `view` decides.
+function renderResults(){closeMenu();dirtyNotes.clear();if(view&&!sessions.includes(view))view=null;if(!view)renderOverview();else if(isDone(view))renderSession();else renderReview();setHash(view?'session='+encodeURIComponent(view.participant):'overview')}
+
+// ---------- routing ----------
+// Screens a researcher may reload, bookmark or step back to: #overview, #session=<code>, #explore=<n>&c=<A|B|C>.
+// Study screens are never restored: a reload during a session lands on the start page.
+let routing=false; // true while applyHash drives the screens, so they do not push history entries of their own
+function setHash(h,replace){
+  if(routing)return; const cur=location.hash.replace(/^#/,''); if(cur===h)return;
+  const url=h?'#'+h:location.pathname+location.search;
+  if(replace)history.replaceState(null,'',url); else history.pushState(null,'',url);
+}
+function applyHash(){
+  const h=location.hash.replace(/^#/,''); routing=true;
+  try{
+    if(h==='overview')showResultsScreen(null);
+    else if(h.startsWith('session=')){const code=decodeURIComponent(h.slice(8));showResultsScreen(sessions.filter(x=>x.participant===code).pop()||null)}
+    else if(h.startsWith('explore')){const m=/explore=(\d+)/.exec(h),c=/[&?]c=([ABC])\b/.exec(h);if(m)state.caseIdx=Math.min(CASES.length-1,Math.max(0,+m[1]-1));if(c)state.cond=c[1];setMode('explore')}
+    else showStart();
+  }finally{routing=false}
+}
+addEventListener('popstate',applyHash);
+
+// ---------- results: overview ----------
+const COND_NAME={A:'A · Advice',B:'B · + Confidence',C:'C · + Evidence'};
+// Sessions recorded before statuses existed carry none and count as finished. Only finished sessions enter the comparison.
+const isDone=s=>s.status!=='running';
+const statusPill=s=>isDone(s)?'<span class="pill ok">finished</span>':'<span class="pill run">in progress · '+s.trials.length+' / '+CASES.length+' trials</span>';
+let sessionsOpen=false; // the table under the three questions starts collapsed
+const people=n=>n+' '+(n===1?'person':'people');
+const pctS=v=>v==null?'—':Math.round(v*100)+'%';
+// Pooled measures for one condition: wrong advice accepted, plausible errors caught, data checked first half → second half.
+function condStats(c){
+  const ss=sessions.filter(s=>s.condition===c&&isDone(s)),t=ss.flatMap(s=>s.trials),q=ss.map(stats);
+  const wrong=t.filter(x=>x.adviceWas!=='correct'),wrongAcc=wrong.filter(x=>x.decision==='accept').length;
+  const plaus=t.filter(x=>x.adviceWas==='plausible'),plausCaught=plaus.filter(x=>x.decision!=='accept').length;
+  const e5=t.filter(x=>x.case==='c5'),e5Caught=e5.filter(x=>x.decision!=='accept').length;
+  const h1=[],h2=[];ss.forEach(s=>{const h=Math.floor(s.trials.length/2);h1.push(...s.trials.slice(0,h));h2.push(...s.trials.slice(h))});
+  const pct=a=>a.length?a.filter(x=>x.dataOpened).length/a.length:null;
+  return {n:ss.length,wrongN:wrong.length,wrongAcc,wrongRate:wrong.length?wrongAcc/wrong.length:null,plausN:plaus.length,plausCaught,plausPer:ss.length?plausCaught/ss.length:null,
+    e5N:e5.length,e5Caught,d1:pct(h1),d2:pct(h2),approp:ss.length?mean(q.map(x=>x.approp)):null};
+}
+function renderOverview(){
+  const el=$('results'),all=sessions.length,n=sessions.filter(isDone).length,running=all-n,C={A:condStats('A'),B:condStats('B'),C:condStats('C')};
+  let h='<button class="back" data-act="again" type="button">← Start page</button>'
+   +'<div class="dhead"><div><h1>What the pilot says so far<small>'+n+' finished session'+(n===1?'':'s')+' · '+['A','B','C'].map(c=>c+' '+C[c].n).join(' · ')+(running?' · '+running+' in progress, not counted':'')+'</small></h1>'
+   +'<div class="dmeta">Each row is one question from the project outline, answered by the sessions stored in this browser. Eight trials per person and a few people per condition: a pilot, not evidence.</div></div>'
+   +'<div class="acts"><div class="dd" id="dlDD"><button class="btn" data-act="menu" type="button" aria-haspopup="menu" aria-expanded="false"'+(n?'':' disabled')+'>Download all ▾</button><div class="menu" role="menu" hidden>'
+   +'<button role="menuitem" data-act="dl-all-trials" type="button"><b>All sessions · trials CSV</b><span>one row per trial, with participant and condition</span><em>scrl_all_trials.csv</em></button>'
+   +'<button role="menuitem" data-act="dl-all" type="button"><b>All sessions · summary CSV</b><span>one row per session, with notes</span><em>scrl_sessions.csv</em></button></div></div></div></div>';
+  if(!n){el.innerHTML=h+'<section class="card dash"><p class="empty">'+(all?'No finished session yet. The comparison builds itself here once a session runs to the end.':'No sessions stored in this browser yet. Run a study session and the comparison builds itself here.')+'</p>'+(all?sessionsTable():'')+'</section>';return}
+  const box=(c,big,bar,sub,cls)=>'<div class="'+(cls||'')+'"><h3>'+COND_NAME[c]+'</h3><b>'+big+'</b>'+(bar==null?'':'<span class="bar"><i style="--w:'+Math.round(bar*100)+'%"></i></span>')+'<span>'+sub+'</span></div>';
+  const none=c=>box(c,'—',null,'no sessions yet');
+  // 1. confidence: share of wrong advisories accepted, B against A
+  const q1=['A','B','C'].map(c=>{const s=C[c];return s.n&&s.wrongN?box(c,pctS(s.wrongRate),s.wrongRate,s.wrongAcc+' of '+s.wrongN+' wrong advisories accepted · '+people(s.n),'bad'):none(c)}).join('');
+  let v1;{const a=C.A,b=C.B;
+    if(!a.n||!b.n)v1='Needs at least one session in A and one in B before this can be compared.';
+    else{const d=b.wrongRate-a.wrongRate,pp=' ('+pctS(b.wrongRate)+' against '+pctS(a.wrongRate)+')',who=' in '+people(b.n)+' and '+people(a.n)+'.';
+      v1=d>.1?'B accepts wrong advice <b>more often</b> than A'+pp+': the number may lull rather than calibrate,'+who
+       :d<-.1?'B accepts wrong advice <b>less often</b> than A'+pp+': the number may help calibrate,'+who
+       :'B accepts wrong advice <b>about as often</b> as A'+pp+': the number does not calibrate, at least'+who}}
+  // 2. evidence: plausibly wrong advisories caught, C against A and B
+  const q2=['A','B','C'].map(c=>{const s=C[c];return s.n?box(c,f1(s.plausPer)+' / 2',s.plausPer/2,'encounter 5 caught by '+s.e5Caught+' of '+s.e5N):none(c)}).join('');
+  let v2;{const c=C.C,others=sessions.filter(s=>s.condition!=='C');
+    if(!c.n||!others.filter(isDone).length)v2='Needs at least one session in C and one in A or B before this can be compared.';
+    else{const op=mean(others.filter(isDone).map(s=>stats(s).plausCaught)),d=c.plausPer-op;
+      v2=d>=.5?'C catches <b>'+f1(c.plausPer)+' of 2</b> against '+f1(op)+' in A and B: the claims that point at the data seem to work as an invitation to check.'
+       :d<=-.5?'C catches <b>fewer</b> plausible errors ('+f1(c.plausPer)+' of 2 against '+f1(op)+'): the evidence may read as reassurance rather than as an invitation to check.'
+       :'No clear difference yet: C catches '+f1(c.plausPer)+' of 2, A and B '+f1(op)+'.'}}
+  // 3. drift: trials with data opened, first half → second half, pooled per condition
+  const q3=['A','B','C'].map(c=>{const s=C[c];if(!s.n||s.d1==null||s.d2==null)return none(c);const fall=s.d2-s.d1<=-.15;return box(c,pctS(s.d1)+' → <em'+(fall?' class="warn"':'')+'>'+pctS(s.d2)+'</em>',null,'first half → second half · '+people(s.n))}).join('');
+  let v3;{const g={falls:[],holds:[],rises:[]};['A','B','C'].forEach(c=>{const s=C[c];if(!s.n||s.d1==null||s.d2==null)return;const d=s.d2-s.d1;(d<=-.15?g.falls:d>=.15?g.rises:g.holds).push(c)});
+    const parts=[];if(g.falls.length)parts.push('<b>falls</b> in '+g.falls.join(' and '));if(g.holds.length)parts.push('holds in '+g.holds.join(' and '));if(g.rises.length)parts.push('rises in '+g.rises.join(' and '));
+    v3=parts.length?'Checking '+parts.join(', ')+'. Eight trials only hint at drift: worth a longer session, ideally with eye tracking, before believing it.':'Needs sessions before drift can be read.'}
+  const rq=(title,sub,verdict,boxes)=>'<section class="card dash rq"><div><h2>'+title+'</h2><p class="note">'+sub+'</p><p class="rq-verdict">'+verdict+'</p></div><div class="rq-cmp">'+boxes+'</div></section>';
+  h+=rq('Does a confidence number lull people into accepting?','Share of <b>wrong</b> advisories accepted, by condition. Lower is better; B against A is the comparison.',v1,q1);
+  h+=rq('Do evidence claims help catch plausible errors?','Plausibly wrong advisories rejected, out of two per person. Encounter 5 (stale AIS) can only be caught by opening the data.',v2,q2);
+  h+=rq('Does checking drift within a session?','Trials with the sensor data opened, first four against last four, pooled per condition. Links to Study 1 on attention drift.',v3,q3);
+  // 4. all sessions, collapsed by default
+  const ap=['A','B','C'].filter(c=>C[c].n).map(c=>c+' '+f1(C[c].approp)).join(' · ');
+  h+='<section class="card dash"><p class="eyebrow"><span>All sessions</span><span class="note">appropriate / 8, mean · '+ap+' · <button class="btn small" data-act="toggle-sessions" type="button" aria-expanded="'+sessionsOpen+'">'+(sessionsOpen?'Hide sessions ↑':'Show '+all+' session'+(all===1?'':'s')+' ↓')+'</button></span></p>'
+   +(sessionsOpen?sessionsTable():'')+'</section>';
+  el.innerHTML=h;
+}
+function sessionsTable(){
+  return '<div class="tablewrap"><table><thead><tr><th>Code</th><th>Condition</th><th>Date</th><th>Status</th><th>Appropriate</th><th>Over</th><th>Under</th><th>Plausible caught</th><th>Data checked</th><th>Mean time</th><th>Notes</th><th></th></tr></thead><tbody>'
+   +sessions.slice().reverse().map(x=>{const q=stats(x),i=sessions.indexOf(x),nt=x.notes||'';return '<tr><td class="mono">'+esc(x.participant)+'</td><td>'+x.condition+'</td><td class="mono">'+fmtDate(x.started)+'</td><td>'+statusPill(x)+'</td><td class="mono">'+q.approp+' / '+q.n+'</td><td class="mono">'+q.over+'</td><td class="mono">'+q.under+'</td><td class="mono">'+q.plausCaught+' / '+q.plaus+'</td><td class="mono">'+q.checked+' / '+q.n+'</td><td class="mono">'+f1(q.meanT)+' s</td><td class="note">'+esc(nt.slice(0,40))+(nt.length>40?'…':'')+'</td><td><div class="rowact"><button class="btn small" data-act="view" data-i="'+i+'" type="button">Open →</button><button class="btn small" data-act="remove" data-i="'+i+'" type="button" title="Delete this session from this device">Delete</button></div></td></tr>'}).join('')+'</tbody></table></div>';
+}
+
+// ---------- results: one session ----------
+// Head shared by both session screens: back to the overview, the participant, the neighbours, downloads.
+function sessionHead(s,st){
+  const idx=sessions.indexOf(s),prev=sessions[idx-1],next=sessions[idx+1];
+  return '<button class="back" data-act="overview" type="button">← All sessions</button>'
+   +'<div class="dhead"><div><h1>'+esc(s.participant)+'<small>condition '+s.condition+' · '+COND_NAME[s.condition].slice(4)+'</small></h1>'
+   +'<div class="dmeta mono">'+fmtDate(s.started,true)+' · '+(isDone(s)?st.n+' trials in '+fmtDur(st.durS||0):'in progress · '+st.n+' of '+CASES.length+' trials recorded')+(s.order?' · order '+s.order.join(' '):'')+'</div></div>'
+   +'<div class="acts">'+(st.fast?'<span class="flag" title="Decisions faster than 2 s may be clicking through">⚑ '+st.fast+' decision'+(st.fast===1?'':'s')+' under 2 s</span>':'')
+   +'<span class="navses"><button class="btn small" data-act="prev" type="button" title="Previous session"'+(prev?'':' disabled')+'>← '+(prev?esc(prev.participant):'')+'</button><button class="btn small" data-act="next" type="button" title="Next session"'+(next?'':' disabled')+'>'+(next?esc(next.participant):'')+' →</button></span>'
+   +'<div class="dd" id="dlDD"><button class="btn" data-act="menu" type="button" aria-haspopup="menu" aria-expanded="false">Download ▾</button><div class="menu" role="menu" hidden>'
+   +'<button role="menuitem" data-act="dl-json" type="button"><b>Session · JSON</b><span>everything: meta, trials, events, notes</span><em>'+esc(fileName(s,'json'))+'</em></button>'
+   +'<button role="menuitem" data-act="dl-csv" type="button"><b>Trials · CSV</b><span>one row per trial, for R or Python</span><em>'+esc(fileName(s,'csv'))+'</em></button>'
+   +'<div class="sep"></div><button role="menuitem" class="quiet" data-act="copy" type="button">Copy session JSON to clipboard</button>'
+   +'<button role="menuitem" class="quiet" data-act="copy-link" type="button">Copy link to this session<span>opens it again on this device</span></button></div></div>'
+   +'<button class="btn ghost" data-act="again" type="button">New session</button></div></div>';
+}
+// One trial's timeline track, 0 to T seconds: data open, claims, alternatives, the decision or the timeout.
+function trackHTML(x,T){
+  const pos=v=>Math.min(100,v/T*100).toFixed(1)+'%';
+  let m='',openAt=null;
+  (x.events||[]).forEach(e=>{
+    if(e.type==='open')openAt=e.t;
+    else if(e.type==='close'&&openAt!==null){m+='<span class="open" style="left:'+pos(openAt)+';width:'+pos(Math.max(.3,e.t-openAt))+'" title="data open '+f1(e.t-openAt)+' s"></span>';openAt=null}
+    else if(e.type==='claim')m+='<span class="click" style="left:'+pos(e.t)+'" title="claim '+esc(e.key||'')+' at '+e.t+' s"></span>';
+    else if(e.type==='alts')m+='<span class="altm" style="left:'+pos(e.t)+'" title="alternatives opened at '+e.t+' s"></span>'});
+  if(openAt!==null)m+='<span class="open" style="left:'+pos(openAt)+';width:'+pos(Math.max(.3,x.timeS-openAt))+'"></span>';
+  const c=CLS(x); m+=x.timeout?'<span class="to" title="timeout"></span>':'<span class="dec '+c+'" style="left:'+pos(x.timeS)+'" title="'+esc(decLabel(x))+' at '+x.timeS+' s">'+CLS_ICON[c]+'</span>';
+  return '<div class="track">'+m+'</div>';
+}
+const trialNote=(s,n)=>(s.trialNotes||{})[n]||'';
+// Distinct claims checked in a trial: how many different claims were clicked, as opposed to how many clicks. Derived from the event log for sessions recorded before the field existed.
+const distinctClaims=x=>x.claimsDistinct!=null?x.claimsDistinct:x.events?new Set(x.events.filter(e=>e.type==='claim').map(e=>e.key)).size:(x.evidenceClicks||0);
+const claimsCell=x=>{const n=x.evidenceClicks||0,d=distinctClaims(x);return n+(n&&d!==n?' <span class="note">· '+d+' distinct</span>':'')};
+
+// ---------- results: a session in progress, reviewed trial by trial ----------
+// Meant for the researcher's own tab while the participant works in another: cards fill in as decisions arrive, each with a note field.
+function renderReview(){
+  const el=$('results'),s=view,st=stats(s),t=s.trials,T=s.trialS||TRIAL_S,N=CASES.length;
+  let h=sessionHead(s,st);
+  h+='<section class="card dash"><p class="eyebrow"><span>So far</span><span class="live"><i></i>updates as the participant decides</span></p><div class="sofar">'
+   +'<p><b>'+st.approp+' / '+st.n+'</b>appropriate</p><p class="over"><b>'+st.over+'</b>over-reliance</p><p class="under"><b>'+st.under+'</b>under-reliance</p>'
+   +'<p><b>'+st.plausCaught+' / '+st.plaus+'</b>plausibly wrong caught</p><p><b>'+st.checked+' / '+st.n+'</b>decisions after checking data</p><p><b>'+(st.n?f1(st.meanT)+' s':'—')+'</b>mean decision time</p></div></section>';
+  for(let k=1;k<=N;k++){
+    const x=t[k-1],cs=s.order?CASES[s.order[k-1]-1]:null,state_=x?'done':k===t.length+1?'now':'todo';
+    const enc=x?x.encounter:cs?cs.enc:'Trial '+k, adv=x?x.advice:cs?cs.adv.text:'', truth=x?x.adviceWas:cs?cs.truth:null;
+    let cls='card dash tc '+state_,pill,body='',line='';
+    if(x){const c=CLS(x);cls+=c==='over'?' warn':'';pill='<span class="pill '+c+'"><i>'+CLS_ICON[c]+'</i>'+CLS_LABEL[c]+'</span>';
+      body='AI: <b>'+esc(adv)+'</b> · '+TRUTH_LABEL[truth].toLowerCase()+'. Participant: <b>'+esc(decLabel(x)).toLowerCase()+'</b> after '+f1(x.timeS)+' s, '+(x.dataOpened?'data open '+f1(x.dataOpenS)+' s':'data not opened')+'.';
+      const alts=(x.events||[]).find(e=>e.type==='alts');
+      line='<div class="line"><span>'+(x.evidenceClicks||0)+' claim'+(x.evidenceClicks===1?'':'s')+(x.evidenceClicks?' · '+distinctClaims(x)+' distinct':'')+'</span>'+(alts?'<span>alternatives opened at '+alts.t+' s</span>':'')
+        +(c==='over'&&!x.dataOpened?'<span class="bad">wrong advice accepted without checking</span>':'')+(x.timeout?'<span class="bad">timeout: advice executed by default</span>':'')+'</div>';
+      body='<div class="adv">'+body+'</div>'+trackHTML(x,T)+line;}
+    else if(state_==='now'){pill='<span class="live"><i></i>now</span>';body='<div class="adv">AI: <b>'+esc(adv)+'</b> · '+(truth?TRUTH_LABEL[truth].toLowerCase():'')+'. Waiting for the decision.</div>'}
+    else{pill='<span class="pill n">upcoming</span>';body='<div class="adv">AI: <b>'+esc(adv)+'</b>'+(truth?' · '+TRUTH_LABEL[truth].toLowerCase():'')+'</div>'}
+    h+='<section class="'+cls+'"><span class="num">'+k+'</span><h3>'+esc(enc)+pill+'</h3>'+body
+     +noteBox('tn:'+k,trialNote(s,k),x?'Note on this trial: what was said, what was looked at…':'Note, can be written before the trial',true)+'</section>';
+  }
+  h+='<section class="card dash"><p class="eyebrow"><span>Session notes</span><span class="note">saved as you type</span></p>'+noteBox('notes',s.notes||'','Observations across the session: thinking aloud, interruptions, questions the participant asked…',true)+'</section>';
+  h+='<p class="toast" id="copyMsg"></p>';
+  el.innerHTML=h;
+}
+
+let openNotes=new Set(),openNotesFor=null; // trial notes unfolded in the trials table, per session
+function renderSession(){
+  const el=$('results'),s=view,st=stats(s),t=s.trials,T=s.trialS||TRIAL_S;
+  if(openNotesFor!==s){openNotes=new Set();openNotesFor=s}
+  const mxT=Math.max(5,...t.map(x=>x.timeS)),mxO=Math.max(5,...t.map(x=>x.dataOpenS));
+  const legend=items=>'<span class="legend">'+items.map(i=>'<span><i style="background:'+i[0]+'"></i>'+i[1]+'</span>').join('')+'</span>';
+  let h=sessionHead(s,st);
+  // 1. trial sequence
+  h+='<section class="card dash"><p class="eyebrow"><span>Trial sequence</span>'+legend([['var(--good)','appropriate'],['var(--bad)','over-reliance'],['var(--ai)','under-reliance'],['var(--muted)','decision time'],['var(--own)','sensor data open']])+'</p>'
+   +'<div class="rows" style="--n:'+st.n+'">'
+   +'<div class="rl"><b>Outcome</b>reliance</div><div class="cells">'+t.map(x=>{const c=CLS(x);return '<div class="cell '+c+'" title="'+CLS_LABEL[c]+'">'+c+'</div>'}).join('')+'</div>'
+   +'<div class="rl"><b>Decision</b>seconds</div><div class="tbars t">'+t.map(x=>'<div class="'+(x.timeout?'to':'')+'" style="--h:'+Math.max(2,x.timeS/mxT*100)+'%" title="'+(x.timeout?'timeout':x.timeS+' s')+'"><span>'+(x.timeout?'t/o':f1(x.timeS))+'</span></div>').join('')+'</div>'
+   +'<div class="rl"><b>Data open</b>seconds</div><div class="tbars">'+t.map(x=>x.dataOpened?'<div style="--h:'+Math.max(2,x.dataOpenS/mxO*100)+'%" title="'+x.dataOpenS+' s"><span>'+f1(x.dataOpenS)+'</span></div>':'<div class="zero" title="not opened"></div>').join('')+'</div>'
+   +'<div class="rl"><b>Trial</b>encounter · advice</div><div class="encs">'+t.map(x=>{const c=CASES.find(k=>k.id===x.case);return '<span><b>'+x.trial+' · '+esc(SHORT[x.case]||x.encounter)+'</b>'+esc(c?advShort(c):x.advice)+' · '+TRUTH_LABEL[x.adviceWas].toLowerCase()+'</span>'}).join('')+'</div></div>';
+  const list=c=>{const a=t.filter(x=>CLS(x)===c);return ' in trial'+(a.length>1?'s ':' ')+a.map(x=>x.trial).join(', ')};
+  h+='<div class="summary"><p><b>'+st.approp+' / '+st.n+'</b>decisions were appropriate</p>'
+   +'<p><b>'+st.over+'</b>over-reliance · '+(st.over?'wrong advice accepted'+list('over'):'no wrong advice accepted')+'</p>'
+   +'<p><b>'+st.under+'</b>under-reliance · '+(st.under?'correct advice rejected'+list('under'):'no correct advice rejected')+'</p>'
+   +'<p><b>'+st.plausCaught+' / '+st.plaus+'</b>plausibly wrong advisories caught</p>'
+   +'<p><b>'+st.timeouts+'</b>timeout'+(st.timeouts===1?'':'s')+' · '+(st.timeouts?'advice executed by default':'no decision executed by default')+'</p>'
+   +'<p><b>'+f1(st.meanT)+' s</b>mean decision time</p></div></section>';
+  // 2. three analytic cards
+  const rate=(label,p)=>'<div class="r"><span class="k"><b>'+label+'</b>'+p[1]+' trial'+(p[1]===1?'':'s')+'</span><span class="bar"><i style="--w:'+(p[1]?p[0]/p[1]*100:0)+'%"></i></span><span class="v">'+p[0]+' / '+p[1]+'</span></div>';
+  h+='<div class="three">'
+   +'<section class="card dash"><p class="eyebrow"><span>Reliance matrix</span><span class="note">advice × decision</span></p><div class="matrix">'
+   +'<div></div><div class="h">Accepted</div><div class="h">Rejected</div>'
+   +'<div class="h">Advice correct<br>('+st.nCorrect+')</div><div class="mq ok"><b>'+st.hits+'</b><span>appropriate · hit</span></div><div class="mq under"><b>'+st.under+'</b><span>under-reliance · miss</span></div>'
+   +'<div class="h">Advice wrong<br>('+st.nWrong+')</div><div class="mq over"><b>'+st.over+'</b><span>over-reliance · false alarm</span></div><div class="mq ok"><b>'+st.cr+'</b><span>appropriate · correct rejection</span></div></div>'
+   +'<p class="note after">Signal-detection framing: hits and correct rejections are appropriate reliance. Eight trials describe one person, not a population.</p></section>'
+   +'<section class="card dash"><p class="eyebrow"><span>Acceptance by advice type</span></p><div class="rate">'+rate('Correct',st.acc.correct)+rate('Clearly wrong',st.acc.wrong)+rate('Plausibly wrong',st.acc.plausible)+'</div>'
+   +'<p class="note after">The curve the study is about: ideally high on the first row and zero on the other two.</p></section>'
+   +'<section class="card dash"><p class="eyebrow"><span>Checking behaviour</span></p><dl class="kvl">'
+   +'<dt>Decisions preceded by opening sensor data</dt><dd>'+st.checked+' / '+st.n+'</dd>'
+   +'<dt>Mean time in data when opened</dt><dd>'+(st.checked?f1(st.meanOpen)+' s':'—')+'</dd>'
+   +'<dt>Evidence claims clicked'+(s.condition!=='C'?' <span class="note">(none shown in '+s.condition+')</span>':'')+'</dt><dd>'+st.claims+(st.claims?' <span class="note">· '+st.claimsDistinct+' distinct</span>':'')+'</dd>'
+   +'<dt>Wrong advice accepted without checking</dt><dd'+(st.wrongNoCheck?' class="warn"':'')+'>'+st.wrongNoCheck+'</dd>'
+   +'<dt>Checked and still accepted wrong advice</dt><dd'+(st.wrongChecked?' class="warn"':'')+'>'+st.wrongChecked+'</dd>'
+   +'<dt>Data checked, first half → second half</dt><dd>'+st.drift+'</dd>'
+   +'<dt>Decisions under 2 s</dt><dd'+(st.fast?' class="warn"':'')+'>'+st.fast+'</dd></dl></section></div>';
+  // 3. event timelines
+  h+='<section class="card dash"><p class="eyebrow"><span>What happened inside each trial</span><span class="legend"><span><i style="background:color-mix(in srgb,var(--own) 55%,transparent)"></i>sensor data open</span><span><i style="background:var(--ai);width:3px"></i>claim clicked</span><span><i style="background:var(--muted);width:3px"></i>alternatives opened</span><span>✓ ● ▲ decision (ok · over · under)</span><span><i style="background:var(--bad);width:3px"></i>timeout</span></span></p><div class="tl">';
+  t.forEach(x=>{h+='<span class="n">'+x.trial+'</span>'+trackHTML(x,T)});
+  h+='<div class="axis"><span>0 s</span><span>'+Math.round(T/3)+' s</span><span>'+Math.round(2*T/3)+' s</span><span>'+T+' s</span></div></div>'
+   +(t.some(x=>x.events)?'':'<p class="note after">This session was recorded before event timestamps were logged; only totals are available.</p>')+'</section>';
+  // 4. trial table
+  h+='<section class="card dash"><p class="eyebrow"><span>Trials</span><span class="note">'+st.n+' rows · order as shown</span></p><div class="tablewrap"><table><thead><tr><th>#</th><th>Encounter</th><th>AI advice</th><th>Advice was</th><th>Decision</th><th>Time</th><th>Data open</th><th>Claims</th><th>Reliance</th><th title="Note on the trial: click the row">Note</th></tr></thead><tbody>'
+   // a trial note, written during the live review, sits folded in a second row under the trial; the last cell marks it, a click on the row unfolds it
+   +t.map(x=>{const c=CLS(x),nt=trialNote(s,x.trial),open=openNotes.has(x.trial);return '<tr'+(nt?' data-tr="'+x.trial+'" aria-expanded="'+open+'" title="'+(open?'Hide':'Show')+' the note"':'')+'><td class="mono">'+x.trial+'</td><td>'+esc(x.encounter)+'</td><td>'+esc(x.advice)+'</td><td>'+TRUTH_LABEL[x.adviceWas]+'</td><td>'+esc(decLabel(x))+'</td><td class="mono">'+f1(x.timeS)+' s</td><td class="mono">'+(x.dataOpened?f1(x.dataOpenS)+' s':'—')+'</td><td class="mono">'+claimsCell(x)+'</td><td><span class="pill '+c+'"><i>'+CLS_ICON[c]+'</i>'+CLS_LABEL[c]+'</span></td><td class="nmark">'+(nt?(open?'↑':'↓'):'')+'</td></tr>'
+     +(nt?'<tr class="noterow"'+(open?'':' hidden')+'><td colspan="10">'+esc(nt)+'</td></tr>':'')}).join('')+'</tbody></table></div></section>';
+  // 5. notes
+  h+='<section class="card dash"><p class="eyebrow"><span>Researcher notes</span></p>'+noteBox('notes',s.notes||'','Observations: thinking aloud, interruptions, questions the participant asked…')+'</section>';
+  h+='<p class="toast" id="copyMsg"></p>';
+  el.innerHTML=h;
+}
+// dashboard actions: one delegated handler, the markup is rebuilt on every change
+const closeMenu=()=>{const dd=$('dlDD');if(dd){dd.querySelector('.menu').hidden=true;dd.querySelector('[data-act=menu]').setAttribute('aria-expanded','false')}};
+// ---------- notes ----------
+// Two kinds of note field. On a finished session: explicit, saved by its Save button (or Ctrl+Enter), undone by Cancel (or Esc); the buttons appear only
+// while the text differs from what is stored. On the live review, while the participant works: automatic, saved half a second after typing stops,
+// with a quiet "saved" in the corner; the researcher moves between cards with Tab and has no hand free for buttons.
+// id: 'notes' for the session note, 'tn:<trial>' for a trial note.
+const noteBox=(id,value,ph,auto)=>'<div class="notebox'+(auto?' auto':'')+'" data-note="'+id+'"'+(auto?' data-auto="1"':'')+'><textarea class="notes" placeholder="'+esc(ph)+'">'+esc(value)+'</textarea>'
+  +(auto?'':'<div class="noteacts" hidden><button class="btn small primary" data-act="note-save" type="button">Save</button><button class="btn small" data-act="note-cancel" type="button">Cancel</button><span class="note">unsaved · Ctrl+Enter saves, Esc cancels</span></div>')
+  +'<span class="savedmsg" aria-live="polite">'+(auto&&value?'saved':'')+'</span></div>';
+const dirtyNotes=new Set(),autoTimers=new Map();
+function autoFlush(){if(!autoTimers.size)return;autoTimers.forEach((t,id)=>{clearTimeout(t);dirtyNotes.delete(id)});autoTimers.clear();saveSessions()}
+const focusInNote=()=>!!(document.activeElement&&document.activeElement.matches('#results textarea'));
+const noteSaved=id=>id==='notes'?(view.notes||''):trialNote(view,id.slice(3));
+function noteWrite(id,v){if(id==='notes')view.notes=v;else{view.trialNotes=view.trialNotes||{};view.trialNotes[id.slice(3)]=v}}
+function noteSetDirty(box,on){const id=box.dataset.note;box.querySelector('.noteacts').hidden=!on;box.classList.toggle('dirty',on);if(on){dirtyNotes.add(id);box.querySelector('.savedmsg').textContent=''}else dirtyNotes.delete(id)}
+function noteSave(box){const id=box.dataset.note,ta=box.querySelector('textarea');noteWrite(id,ta.value);saveSessions();noteSetDirty(box,false);
+  const m=box.querySelector('.savedmsg');m.textContent='Saved';clearTimeout(m._t);m._t=setTimeout(()=>{m.textContent=''},1800);afterNoteSettled()}
+function noteCancel(box){const ta=box.querySelector('textarea');ta.value=noteSaved(box.dataset.note);noteSetDirty(box,false);afterNoteSettled()}
+// A deferred rebuild (another tab wrote) runs only once nothing is unsaved and no note field has the cursor.
+function afterNoteSettled(){if(pendingRender&&!dirtyNotes.size&&!focusInNote()&&state.mode==='results'){pendingRender=false;renderResults()}}
+// If the cursor just rests in a field, the rebuild still happens after a few idle seconds, and the cursor is put back where it was.
+let idleTimer=null;
+function scheduleIdleRender(){clearTimeout(idleTimer);idleTimer=setTimeout(()=>{
+  if(!pendingRender||dirtyNotes.size||state.mode!=='results')return;
+  const ae=document.activeElement,box=ae&&ae.closest?ae.closest('.notebox'):null,id=box&&box.dataset.note,sel=ae&&ae.matches&&ae.matches('textarea')?[ae.selectionStart,ae.selectionEnd]:null;
+  pendingRender=false;renderResults();
+  if(id){const ta=$('results').querySelector('.notebox[data-note="'+id+'"] textarea');if(ta){ta.focus();if(sel)try{ta.setSelectionRange(sel[0],sel[1])}catch(e){}}}
+},4000)}
+$('results').addEventListener('focusout',e=>{if(e.relatedTarget&&e.relatedTarget.matches&&e.relatedTarget.matches('#results textarea'))return;setTimeout(afterNoteSettled,0)});
+const leaveOk=()=>{autoFlush();return !dirtyNotes.size||confirm('A note has not been saved. Leave without saving it?')};
+addEventListener('beforeunload',e=>{autoFlush();if(dirtyNotes.size){e.preventDefault();e.returnValue=''}});
+$('results').addEventListener('input',e=>{const box=e.target.closest('.notebox');if(!box||!view)return;const id=box.dataset.note;if(pendingRender)scheduleIdleRender();
+  if(box.dataset.auto){noteWrite(id,e.target.value);dirtyNotes.add(id);box.querySelector('.savedmsg').textContent='saving…';clearTimeout(autoTimers.get(id));
+    autoTimers.set(id,setTimeout(()=>{autoTimers.delete(id);saveSessions();dirtyNotes.delete(id);box.querySelector('.savedmsg').textContent=e.target.value?'saved':'';afterNoteSettled()},500));return}
+  noteSetDirty(box,e.target.value!==noteSaved(id))});
+$('results').addEventListener('keydown',e=>{const box=e.target.closest('.notebox');if(!box||box.dataset.auto||!e.target.matches('textarea'))return;
+  if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();if(dirtyNotes.has(box.dataset.note))noteSave(box)}
+  else if(e.key==='Escape'&&dirtyNotes.has(box.dataset.note)){e.preventDefault();noteCancel(box)}});
+$('results').addEventListener('click',e=>{
+  const nb=e.target.closest('[data-act="note-save"],[data-act="note-cancel"]');
+  if(nb){const box=nb.closest('.notebox');if(nb.dataset.act==='note-save')noteSave(box);else noteCancel(box);return}
+  const tr=e.target.closest('tr[data-tr]');
+  if(tr){const k=+tr.dataset.tr,row=tr.nextElementSibling,open=row.hidden;row.hidden=!open;tr.setAttribute('aria-expanded',open);tr.title=(open?'Hide':'Show')+' the note';tr.querySelector('.nmark').textContent=open?'↑':'↓';if(open)openNotes.add(k);else openNotes.delete(k);return}
+  const b=e.target.closest('[data-act]'); if(!b)return; const a=b.dataset.act,i=+b.dataset.i;
+  if(a==='menu'){const m=$('dlDD').querySelector('.menu');m.hidden=!m.hidden;b.setAttribute('aria-expanded',!m.hidden);e.stopPropagation();return}
+  closeMenu();
+  if(['again','overview','prev','next','view'].includes(a)&&!leaveOk())return;
+  if(a==='again')showStart();
+  else if(a==='overview'){view=null;renderResults();window.scrollTo(0,0)}
+  else if(a==='toggle-sessions'){sessionsOpen=!sessionsOpen;renderResults()}
+  else if(a==='prev'||a==='next'){const k=sessions.indexOf(view)+(a==='prev'?-1:1);if(sessions[k]){view=sessions[k];renderResults();window.scrollTo(0,0)}}
+  else if(a==='view'&&sessions[i]){view=sessions[i];renderResults();window.scrollTo(0,0)}
+  else if(a==='remove'&&sessions[i]){const x=sessions[i];if(confirm('Delete session '+x.participant+' (condition '+x.condition+') from this device? This cannot be undone.')){deletedKeys.add(sKey(x));sessions.splice(i,1);saveSessions();if(view===x)view=null;renderResults();renderRecent()}}
+  else if(a==='dl-json')download(fileName(view,'json'),JSON.stringify(sessionJSON(view),null,2),'application/json');
+  else if(a==='dl-csv')download(fileName(view,'csv'),trialsCSV([view]),'text/csv');
+  else if(a==='dl-all-trials')download('scrl_all_trials.csv',trialsCSV(sessions),'text/csv');
+  else if(a==='dl-all')download('scrl_sessions.csv',sessionsCSV(sessions),'text/csv');
+  else if(a==='copy')copyText(JSON.stringify(sessionJSON(view),null,2));
+  else if(a==='copy-link')copyText(location.origin+location.pathname+location.search+'#session='+encodeURIComponent(view.participant),'Link copied: #session='+view.participant);
+});
+addEventListener('click',closeMenu);
+addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
+
+// ---------- results: export ----------
+function download(name,text,type){const u=URL.createObjectURL(new Blob([text],{type:type+';charset=utf-8'})),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)}
+function copyText(txt,okMsg){const done=m=>{const el=$('copyMsg');if(el)el.textContent=m};okMsg=okMsg||'Copied to clipboard.';
+  const fb=()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy')}catch(e){}ta.remove();done(ok?okMsg:'Could not copy here; download the JSON instead.')};
+  try{navigator.clipboard.writeText(txt).then(()=>done(okMsg),fb)}catch(e){fb()}}
+function fileName(s,ext){return 'scrl_'+String(s.participant).replace(/[^\w-]+/g,'_')+'_'+s.condition+'_'+(s.started||'').slice(0,10)+'.'+ext}
+function sessionJSON(s){const q=stats(s);return {participant:s.participant,condition:s.condition,status:isDone(s)?'finished':'running',started:s.started,ended:s.ended||null,trialSeconds:s.trialS||TRIAL_S,order:s.order,notes:s.notes||'',
+  summary:{trials:q.n,appropriate:q.approp,overReliance:q.over,underReliance:q.under,plausiblyWrongCaught:q.plausCaught,plausiblyWrongTotal:q.plaus,timeouts:q.timeouts,meanDecisionS:+f1(q.meanT),trialsWithDataOpened:q.checked,evidenceClicks:q.claims,evidenceClaimsDistinct:q.claimsDistinct},trialNotes:s.trialNotes||{},trials:s.trials}}
+const csvCell=v=>{v=v==null?'':String(v);return /[",\n\r;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+const csv=rows=>rows.map(r=>r.map(csvCell).join(',')).join('\r\n');
+function trialsCSV(list){
+  const rows=[['participant','condition','started','trial','case','encounter','advice','advice_was','decision','timeout','decision_s','data_opened','data_open_s','evidence_clicks','evidence_claims_distinct','alts_opened','appropriate','reliance','note']];
+  list.forEach(s=>s.trials.forEach(x=>rows.push([s.participant,s.condition,s.started,x.trial,x.case,x.encounter,x.advice,x.adviceWas,x.decision,x.timeout?1:0,x.timeS,x.dataOpened?1:0,x.dataOpenS,x.evidenceClicks||0,distinctClaims(x),x.altsOpened?1:0,x.appropriate?1:0,CLS(x),trialNote(s,x.trial)])));
+  return csv(rows);
+}
+function sessionsCSV(list){
+  const rows=[['participant','condition','status','started','ended','duration_s','trials','appropriate','over_reliance','under_reliance','plausible_caught','plausible_total','timeouts','mean_decision_s','trials_data_opened','evidence_clicks','evidence_claims_distinct','notes']];
+  list.forEach(s=>{const q=stats(s);rows.push([s.participant,s.condition,isDone(s)?'finished':'running',s.started,s.ended||'',q.durS==null?'':Math.round(q.durS),q.n,q.approp,q.over,q.under,q.plausCaught,q.plaus,q.timeouts,f1(q.meanT),q.checked,q.claims,q.claimsDistinct,s.notes||''])});
+  return csv(rows);
+}
+
+// ---------- sim clock ----------
+let last=performance.now();
+function loop(now){const dt=(now-last)/1000;last=now;
+  const running=state.mode==='explore'?!state.decided:state.mode==='study'&&study&&study.cur&&!state.decided&&!$('workspace').hidden;
+  if(running&&state.tSim<9){state.tSim+=dt*TIME_SCALE/60;$('simclock').textContent='T+'+fmtT(state.tSim*60);draw();if(Math.random()<.2)renderData()}
+  if(state.mode==='start'){startT+=dt*TIME_SCALE/60;$('startClock').textContent='T+'+fmtT((startT%6)*60)+' · encounter 5 of 8 · '+(TRAFFIC.length+1)+' targets';drawStart()}
+  if(state.mode==='done'){startT+=dt*TIME_SCALE/60;drawDone()}
+  requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+const redraw=()=>{draw();drawStart()};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+new MutationObserver(redraw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+// ---------- theme ----------
+const isDark=()=>{const t=document.documentElement.dataset.theme;return t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches};
+function applyTheme(t){
+  if(t)document.documentElement.dataset.theme=t;else delete document.documentElement.dataset.theme;
+  const dark=isDark();$('themeBtn').textContent=dark?'☀':'☾';$('themeBtn').setAttribute('aria-label',dark?'Switch to day theme':'Switch to night theme');
+}
+$('themeBtn').addEventListener('click',()=>{const next=isDark()?'light':'dark';try{localStorage.setItem('scrl-theme',next)}catch(e){}applyTheme(next)});
+let savedTheme=null;try{savedTheme=localStorage.getItem('scrl-theme')}catch(e){}
+applyTheme(savedTheme==='light'||savedTheme==='dark'?savedTheme:null);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>applyTheme(document.documentElement.dataset.theme||null));
+
+// ---------- back to top ----------
+const toTop=$('toTop');
+function updateToTop(){toTop.classList.toggle('on',scrollY>innerHeight*0.35)}
+addEventListener('scroll',updateToTop,{passive:true}); addEventListener('resize',updateToTop);
+toTop.addEventListener('click',()=>smoothTo(0));
+
+startClass(true);
+renderAll();drawStart();updateToTop();renderRecent();applyHash();
+})();
+</script>
