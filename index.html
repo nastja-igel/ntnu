@@ -65,6 +65,7 @@ h1{font-family:var(--font-display);font-weight:600;font-size:var(--fs-6xl);lette
 .note{font-size:var(--fs-s);color:var(--muted)}
 .note.lead{margin:0 0 var(--sp-2)}
 .toast{font-size:var(--fs-m);color:var(--good);min-height:1.2em}
+.decision .toast:empty,.decision #truthBox:empty{display:none} /* nothing reserved under the buttons until there is something to say */
 .fine{font-size:var(--fs-xs);color:var(--muted);margin:0;line-height:1.4}
 .fine a{color:inherit}
 
@@ -770,12 +771,13 @@ body.is-work .toTop{display:none}
         <div class="group"><span class="g"><b>Port</b>alter course</span><div class="segbig"><button data-alt="port20" type="button">20°</button></div></div>
         <div class="group"><span class="g"><b>Speed</b>course unchanged</span><div class="segbig"><button data-alt="hold" type="button">Hold course and speed</button><button data-alt="slow" type="button">Reduce speed</button></div></div>
       </div>
+      <!-- Feedback and the ground truth sit above the pair, so the buttons stay anchored to the bottom edge and messages grow upwards -->
+      <p class="toast" id="toast"></p>
+      <div id="truthBox"></div>
       <div class="pair">
         <button class="btn choice" id="acceptBtn" type="button">Accept advice</button>
         <button class="btn choice" id="rejectBtn" type="button" aria-expanded="false" aria-controls="alts">Reject</button>
       </div>
-      <p class="toast" id="toast"></p>
-      <div id="truthBox"></div>
       <div class="explore-tools" id="exploreTools"><button class="btn small" id="revealBtn" type="button">Reveal ground truth</button></div>
     </section>
   </aside>
