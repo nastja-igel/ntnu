@@ -878,8 +878,10 @@ function drawPlot(cv,cs,tSim,trafficT,helm){
   if(cs.ais.cog!==cs.radar.cog){const ap=P(ga.p);ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(...ap);ctx.lineTo(...P([ga.p[0]+ga.vt[0]*0.1,ga.p[1]+ga.vt[1]*0.1]));ctx.stroke();ctx.setLineDash([])}
   ship(ctx,tp[0],tp[1],cs.radar.cog,css('--target'),9);
   ctx.fillStyle=css('--target');ctx.fillText('TGT',tp[0]+10,tp[1]+4);
-  if(trafficT!==undefined){ // start page: mark the target the AI advisory is about
-    ctx.setLineDash([4,4]);ctx.strokeStyle=css('--ai');ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(tp[0],tp[1],16,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+  if(trafficT!==undefined){ // start page: mark the target the AI advisory is about. The ring turns slowly and sends out a wave every 2.4 s, so the eye finds it.
+    const still=matchMedia('(prefers-reduced-motion:reduce)').matches, now=performance.now()/1000, ph=still?0:(now/2.4)%1;
+    ctx.save();ctx.setLineDash([4,4]);ctx.lineDashOffset=still?0:-(now*5)%8;ctx.strokeStyle=css('--ai');ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(tp[0],tp[1],16,0,Math.PI*2);ctx.stroke();ctx.restore();
+    if(!still){ctx.save();ctx.globalAlpha=(1-ph)*.45;ctx.strokeStyle=css('--ai');ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(tp[0],tp[1],16+ph*28,0,Math.PI*2);ctx.stroke();ctx.restore()}
     ctx.fillStyle=css('--ai');ctx.fillText('AI · hold course',tp[0]+10,tp[1]+17);
     startHits.push({key:'own',x:cx,y:cy,col:css('--own'),label:'OWN SHIP · HDG 000° · '+OWN.sog+' kn\nautonomous · AI advisory active'});
     startHits.push({key:'tgt',x:tp[0],y:tp[1],col:css('--target'),label:'TARGET · radar COG '+cs.radar.cog+'° · '+cs.radar.sog+' kn\nAIS COG '+cs.ais.cog+'° · report '+fmtAge(cs.age+Math.round(tSim*60))+' old'});
@@ -1169,6 +1171,7 @@ function applyHash(){
   const h=location.hash.replace(/^#/,''); routing=true;
   try{
     if(h==='overview')showResultsScreen(null);
+    else if(h==='sessions'){showStart();setDoor('results')} // start page with the researcher's door open
     else if(h.startsWith('session=')){const code=decodeURIComponent(h.slice(8));showResultsScreen(sessions.filter(x=>x.participant===code).pop()||null)}
     else if(h.startsWith('explore')){const m=/explore=(\d+)/.exec(h),c=/[&?]c=([ABC])\b/.exec(h);if(m)state.caseIdx=Math.min(CASES.length-1,Math.max(0,+m[1]-1));if(c)state.cond=c[1];setMode('explore')}
     else showStart();
