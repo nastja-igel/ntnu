@@ -232,6 +232,7 @@ tr.hl th,tr.hl td{background:var(--aiSoft)}
 .track .open{position:absolute;top:4px;bottom:4px;background:color-mix(in srgb,var(--own) 55%,transparent);border-radius:var(--r-2xs)}
 .track .click{position:absolute;top:2px;bottom:2px;width:2px;background:var(--ai)}
 .track .altm{position:absolute;top:2px;bottom:2px;width:2px;background:var(--muted)}
+.track .zm{position:absolute;top:7px;bottom:7px;width:2px;background:var(--target)}
 .track .dec{position:absolute;top:-3px;width:12px;height:28px;transform:translateX(-50%);display:grid;place-items:center;font-size:var(--fs-xs);font-weight:700}
 .track .dec.ok{color:var(--good)}.track .dec.over{color:var(--bad)}.track .dec.under{color:var(--ai)}
 .track .to{position:absolute;right:-1px;top:-1px;bottom:-1px;width:3px;background:var(--bad);border-radius:0 var(--r-xs) var(--r-xs) 0}
@@ -444,7 +445,8 @@ body.is-work .toTop{display:none}
 .datapane .eyebrow{margin:0}
 .datapane th{font-weight:400;color:var(--muted);width:58%}
 .plotarea{position:relative;background:var(--plot);min-width:0}
-.plotarea canvas{position:absolute;inset:0;width:100%;height:100%}
+.plotarea canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:pan-y} /* one finger still scrolls the page; two fingers pinch the plot */
+.fitBtn{position:absolute;left:var(--sp-6);bottom:calc(var(--sp-10) + 28px);z-index:2}
 .plotarea .hud{position:absolute;left:var(--sp-6);top:var(--sp-5);display:flex;gap:var(--sp-5);align-items:baseline;flex-wrap:wrap;pointer-events:none}
 .plotarea .sim{left:var(--sp-6)}
 .plotarea .legend{position:absolute;right:var(--sp-6);bottom:var(--sp-5);margin:0;justify-content:flex-end;max-width:70%}
@@ -733,6 +735,7 @@ body.is-work .toTop{display:none}
     </div>
     <div class="hud"><span class="brand">Shore Control Reliance Lab</span><span class="note">Relative motion · head-up · rings 1 nm</span></div>
     <div class="sim mono" id="simclock">T+00:00</div>
+    <button class="btn small fitBtn" id="fitBtn" type="button" hidden title="Back to the automatic scale (or double-click the plot)">Fit ↺</button>
     <div class="legend">
       <span><i class="sw-own"></i>Own vessel, 6-min vector</span>
       <span><i class="sw-target"></i>Target, radar</span>
@@ -868,6 +871,24 @@ const frame=c=>{const W=c.clientWidth,H=c.clientHeight,rNm=c.id==='plot'?plotR:B
 // Helm buttons and the AI heading keep their place on the picture, not in miles: their radii scale with the zoom.
 const zoomK=f=>(f.rNm||BASE_R)/BASE_R;
 const helmPt=(f,o)=>[f.cx+Math.sin(o.deg*R)*o.r*zoomK(f)*f.sc,f.cy-Math.cos(o.deg*R)*o.r*zoomK(f)*f.sc];
+// Manual zoom on the workspace plot: mouse wheel (Ctrl+wheel where the page scrolls), two-finger pinch, double-click to fit.
+// Taking the zoom switches the automatic framing off until Fit or the next trial. In a study each gesture is logged once it settles.
+let plotManual=false, zoomLogTimer=null, zoomFrom=null;
+const ZOOM_MIN=0.8, ZOOM_MAX=8;
+function setZoomGoal(r){
+  r=Math.min(ZOOM_MAX,Math.max(ZOOM_MIN,r)); if(Math.abs(r-plotGoal)<1e-4)return;
+  if(!plotManual){plotManual=true;$('fitBtn').hidden=false} if(zoomFrom==null)zoomFrom=plotGoal; plotGoal=r; cv.dataset.goal=r.toFixed(2);
+  if(study&&study.cur&&state.mode==='study'){clearTimeout(zoomLogTimer);zoomLogTimer=setTimeout(()=>{if(!study||!study.cur)return;study.cur.zooms++;logEv('zoom',(plotGoal<zoomFrom?'in':'out')+' '+plotGoal.toFixed(1)+' nm');zoomFrom=null},400)}
+  else zoomFrom=null;
+}
+function fitZoom(redraw){plotManual=false;zoomFrom=null;$('fitBtn').hidden=true;if(redraw!==false)draw()}
+$('fitBtn').addEventListener('click',()=>fitZoom());
+cv.addEventListener('dblclick',e=>{e.preventDefault();fitZoom()});
+cv.addEventListener('wheel',e=>{if(matchMedia('(max-width:880px)').matches&&!(e.ctrlKey||e.metaKey))return;e.preventDefault();setZoomGoal(plotGoal*Math.exp(e.deltaY*0.0012))},{passive:false});
+const pinchPts=new Map(); let pinch=null;
+cv.addEventListener('pointerdown',e=>{pinchPts.set(e.pointerId,[e.clientX,e.clientY]);if(pinchPts.size===2){const [a,b]=[...pinchPts.values()];pinch={d0:Math.hypot(a[0]-b[0],a[1]-b[1]),r0:plotGoal}}});
+cv.addEventListener('pointermove',e=>{if(!pinchPts.has(e.pointerId))return;pinchPts.set(e.pointerId,[e.clientX,e.clientY]);if(pinch&&pinchPts.size===2){const [a,b]=[...pinchPts.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(d>0&&pinch.d0>0)setZoomGoal(pinch.r0*pinch.d0/d)}});
+['pointerup','pointercancel','pointerleave'].forEach(t=>cv.addEventListener(t,e=>{pinchPts.delete(e.pointerId);if(pinchPts.size<2)pinch=null}));
 function layoutHelm(){const f=frame(cv);document.querySelectorAll('#helm .hb').forEach(b=>{const [x,y]=helmPt(f,HELM[b.dataset.alt]);b.style.left=x+'px';b.style.top=y+'px'})}
 function draw(){const cs=current(); if(!cs)return; drawPlot(cv,cs,state.tSim,undefined,state.altsOpen); if(state.altsOpen)layoutHelm()}
 function drawStart(){drawPlot(cvStart,CASES[START_CASE],startT%6,startT)}
@@ -930,13 +951,14 @@ function drawPlot(cv,cs,tSim,trafficT,helm){
   ctx.clearRect(0,0,W,H);
   if(trafficT!==undefined)startHits=[]; // start page: rebuilt every frame for the hover ping
   ctx.font='11px "IBM Plex Mono", monospace';
-  for(let r=1;r<=5;r++){ctx.beginPath();ctx.arc(cx,cy,r*sc,0,Math.PI*2);ctx.strokeStyle=css('--ring');ctx.lineWidth=1;ctx.stroke();ctx.fillStyle=css('--ringLabel');ctx.fillText(r+' nm',cx+4,cy-r*sc+12)}
+  const nRings=cv.id==='plot'?Math.min(12,Math.max(5,Math.ceil(Math.max(W,H)/sc))):5; // zoomed out, the rings go on to the edge
+  for(let r=1;r<=nRings;r++){ctx.beginPath();ctx.arc(cx,cy,r*sc,0,Math.PI*2);ctx.strokeStyle=css('--ring');ctx.lineWidth=1;ctx.stroke();ctx.fillStyle=css('--ringLabel');ctx.fillText(r+' nm',cx+4,cy-r*sc+12)}
   ctx.strokeStyle=css('--ring');ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,H);ctx.moveTo(0,cy);ctx.lineTo(W,cy);ctx.stroke();
   // safety ring
   ctx.setLineDash([3,4]);ctx.beginPath();ctx.arc(cx,cy,LIMIT*sc,0,Math.PI*2);ctx.strokeStyle=css('--bad');ctx.globalAlpha=.6;ctx.stroke();ctx.globalAlpha=1;ctx.setLineDash([]);
   if(trafficT!==undefined)drawTraffic(ctx,P,trafficT);
   const g=geom(cs,'radar',OWN.cog,tSim), ga=geom(cs,'ais',OWN.cog,tSim);
-  if(cv.id==='plot')plotGoal=W/H<0.75?Math.min(BASE_R,Math.max(1.2,g.range*1.25)):BASE_R; // narrow plot: frame the encounter
+  if(cv.id==='plot'&&!plotManual)plotGoal=W/H<0.75?Math.min(BASE_R,Math.max(1.2,g.range*1.25)):BASE_R; // narrow plot: frame the encounter, unless the operator took the zoom
   // relative track & CPA
   ctx.setLineDash([2,4]);ctx.strokeStyle=css('--muted');ctx.beginPath();const a=P(g.p),b=P([g.p[0]+g.w[0]*0.4,g.p[1]+g.w[1]*0.4]);ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([]);
   if(g.tcpa>0){const c=P(g.cpaPt);ctx.beginPath();ctx.arc(c[0],c[1],4,0,Math.PI*2);ctx.fillStyle=css('--muted');ctx.fill();ctx.fillText('CPA',c[0]+6,c[1]-6)}
@@ -1055,7 +1077,7 @@ function smoothTo(top){
 }
 document.querySelectorAll('[data-door]').forEach(b=>b.addEventListener('click',()=>setDoor(door===b.dataset.door?null:b.dataset.door)));
 function closeAlts(){state.altsOpen=false;$('alts').hidden=true;$('helm').hidden=true;$('legendOpt').hidden=true;$('rejectBtn').setAttribute('aria-expanded','false');document.querySelectorAll('[data-alt].hov').forEach(t=>t.classList.remove('hov'))}
-function resetExplore(){state.tSim=0;state.decided=null;hl=null;hlEl=null;$('toast').textContent='';closeAlts();enableDecision(true);renderAll()}
+function resetExplore(){state.tSim=0;state.decided=null;hl=null;hlEl=null;$('toast').textContent='';closeAlts();enableDecision(true);fitZoom(false);renderAll()}
 
 // ---------- decisions ----------
 function enableDecision(on){['acceptBtn','rejectBtn'].forEach(id=>$(id).disabled=!on);document.querySelectorAll('[data-alt]').forEach(b=>b.disabled=!on)}
@@ -1082,7 +1104,7 @@ function decide(choice,timeout){
   }
   const cur=study.cur; if(cur.openAt){cur.openMs+=performance.now()-cur.openAt;cur.openAt=null;logEv('close')}
   study.trials.push({trial:study.i+1,case:cs.id,encounter:cs.enc,advice:cs.adv.text,adviceWas:cs.truth,decision:accepted?'accept':choice,timeout:!!timeout,
-    timeS:+((performance.now()-cur.start)/1000).toFixed(1),dataOpened:cur.opens>0,dataOpenS:+(cur.openMs/1000).toFixed(1),evidenceClicks:cur.evidence,claimsDistinct:new Set(cur.events.filter(e=>e.type==='claim').map(e=>e.key)).size,altsOpened:cur.alts>0,appropriate,events:cur.events});
+    timeS:+((performance.now()-cur.start)/1000).toFixed(1),dataOpened:cur.opens>0,dataOpenS:+(cur.openMs/1000).toFixed(1),evidenceClicks:cur.evidence,claimsDistinct:new Set(cur.events.filter(e=>e.type==='claim').map(e=>e.key)).size,altsOpened:cur.alts>0,zooms:cur.zooms||0,appropriate,events:cur.events});
   saveSessions(); // study.rec shares the trials array, so each decision lands in storage at once
   $('toast').style.color=css('--muted');$('toast').textContent=timeout?'Time ran out. The vessel executed the AI advice.':'Decision recorded.';
   clearInterval(study.timer); setTimeout(nextTrial,900);
@@ -1137,7 +1159,8 @@ function nextTrial(){
   study.i++;
   if(study.i>=study.order.length){finishStudy();return}
   state.tSim=0;state.decided=null;hl=null;hlEl=null;$('toast').textContent='';closeAlts();enableDecision(true);
-  study.cur={start:performance.now(),opens:0,openMs:0,openAt:null,evidence:0,alts:0,events:[]};
+  study.cur={start:performance.now(),opens:0,openMs:0,openAt:null,evidence:0,alts:0,zooms:0,events:[]};
+  fitZoom(false); // every trial starts at the automatic scale
   state.dataOpen=true;setData(false);
   $('studyStatus').innerHTML='Trial '+(study.i+1)+' <span class="muted">/ '+study.order.length+'</span>';
   renderAll(); tick();
@@ -1347,7 +1370,8 @@ function trackHTML(x,T){
     if(e.type==='open')openAt=e.t;
     else if(e.type==='close'&&openAt!==null){m+='<span class="open" style="left:'+pos(openAt)+';width:'+pos(Math.max(.3,e.t-openAt))+'" title="data open '+f1(e.t-openAt)+' s"></span>';openAt=null}
     else if(e.type==='claim')m+='<span class="click" style="left:'+pos(e.t)+'" title="claim '+esc(e.key||'')+' at '+e.t+' s"></span>';
-    else if(e.type==='alts')m+='<span class="altm" style="left:'+pos(e.t)+'" title="alternatives opened at '+e.t+' s"></span>'});
+    else if(e.type==='alts')m+='<span class="altm" style="left:'+pos(e.t)+'" title="alternatives opened at '+e.t+' s"></span>'
+    else if(e.type==='zoom')m+='<span class="zm" style="left:'+pos(e.t)+'" title="zoom '+esc(e.key||'')+' at '+e.t+' s"></span>'});
   if(openAt!==null)m+='<span class="open" style="left:'+pos(openAt)+';width:'+pos(Math.max(.3,x.timeS-openAt))+'"></span>';
   const c=CLS(x); m+=x.timeout?'<span class="to" title="timeout"></span>':'<span class="dec '+c+'" style="left:'+pos(x.timeS)+'" title="'+esc(decLabel(x))+' at '+x.timeS+' s">'+CLS_ICON[c]+'</span>';
   return '<div class="track">'+m+'</div>';
@@ -1372,7 +1396,7 @@ function renderReview(){
     if(x){const c=CLS(x);cls+=c==='over'?' warn':'';pill='<span class="pill '+c+'"><i>'+CLS_ICON[c]+'</i>'+CLS_LABEL[c]+'</span>';
       body='AI: <b>'+esc(adv)+'</b> · '+TRUTH_LABEL[truth].toLowerCase()+'. Participant: <b>'+esc(decLabel(x)).toLowerCase()+'</b> after '+f1(x.timeS)+' s, '+(x.dataOpened?'data open '+f1(x.dataOpenS)+' s':'data not opened')+'.';
       const alts=(x.events||[]).find(e=>e.type==='alts');
-      line='<div class="line"><span>'+(x.evidenceClicks||0)+' claim'+(x.evidenceClicks===1?'':'s')+(x.evidenceClicks?' · '+distinctClaims(x)+' distinct':'')+'</span>'+(alts?'<span>alternatives opened at '+alts.t+' s</span>':'')
+      line='<div class="line"><span>'+(x.evidenceClicks||0)+' claim'+(x.evidenceClicks===1?'':'s')+(x.evidenceClicks?' · '+distinctClaims(x)+' distinct':'')+'</span>'+(alts?'<span>alternatives opened at '+alts.t+' s</span>':'')+(x.zooms?'<span>'+x.zooms+' zoom'+(x.zooms===1?'':'s')+'</span>':'')
         +(c==='over'&&!x.dataOpened?'<span class="bad">wrong advice accepted without checking</span>':'')+(x.timeout?'<span class="bad">timeout: advice executed by default</span>':'')+'</div>';
       body='<div class="adv">'+body+'</div>'+trackHTML(x,T)+line;}
     else if(state_==='now'){pill='<span class="live"><i></i>now</span>';body='<div class="adv">AI: <b>'+esc(adv)+'</b> · '+(truth?TRUTH_LABEL[truth].toLowerCase():'')+'. Waiting for the decision.</div>'}
@@ -1425,7 +1449,7 @@ function renderSession(){
    +'<dt>Data checked, first half → second half</dt><dd>'+st.drift+'</dd>'
    +'<dt>Decisions under 2 s</dt><dd'+(st.fast?' class="warn"':'')+'>'+st.fast+'</dd></dl></section></div>';
   // 3. event timelines
-  h+='<section class="card dash"><p class="eyebrow"><span>What happened inside each trial</span><span class="legend"><span><i style="background:color-mix(in srgb,var(--own) 55%,transparent)"></i>sensor data open</span><span><i style="background:var(--ai);width:3px"></i>claim clicked</span><span><i style="background:var(--muted);width:3px"></i>alternatives opened</span><span>✓ ● ▲ decision (ok · over · under)</span><span><i style="background:var(--bad);width:3px"></i>timeout</span></span></p><div class="tl">';
+  h+='<section class="card dash"><p class="eyebrow"><span>What happened inside each trial</span><span class="legend"><span><i style="background:color-mix(in srgb,var(--own) 55%,transparent)"></i>sensor data open</span><span><i style="background:var(--ai);width:3px"></i>claim clicked</span><span><i style="background:var(--muted);width:3px"></i>alternatives opened</span><span><i style="background:var(--target);width:3px"></i>zoom</span><span>✓ ● ▲ decision (ok · over · under)</span><span><i style="background:var(--bad);width:3px"></i>timeout</span></span></p><div class="tl">';
   t.forEach(x=>{h+='<span class="n">'+x.trial+'</span>'+trackHTML(x,T)});
   h+='<div class="axis"><span>0 s</span><span>'+Math.round(T/3)+' s</span><span>'+Math.round(2*T/3)+' s</span><span>'+T+' s</span></div></div>'
    +(t.some(x=>x.events)?'':'<p class="note after">This session was recorded before event timestamps were logged; only totals are available.</p>')+'</section>';
@@ -1516,8 +1540,8 @@ function sessionJSON(s){const q=stats(s);return {participant:s.participant,condi
 const csvCell=v=>{v=v==null?'':String(v);return /[",\n\r;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
 const csv=rows=>rows.map(r=>r.map(csvCell).join(',')).join('\r\n');
 function trialsCSV(list){
-  const rows=[['participant','condition','started','trial','case','encounter','advice','advice_was','decision','timeout','decision_s','data_opened','data_open_s','evidence_clicks','evidence_claims_distinct','alts_opened','appropriate','reliance','note']];
-  list.forEach(s=>s.trials.forEach(x=>rows.push([s.participant,s.condition,s.started,x.trial,x.case,x.encounter,x.advice,x.adviceWas,x.decision,x.timeout?1:0,x.timeS,x.dataOpened?1:0,x.dataOpenS,x.evidenceClicks||0,distinctClaims(x),x.altsOpened?1:0,x.appropriate?1:0,CLS(x),trialNote(s,x.trial)])));
+  const rows=[['participant','condition','started','trial','case','encounter','advice','advice_was','decision','timeout','decision_s','data_opened','data_open_s','evidence_clicks','evidence_claims_distinct','alts_opened','zooms','appropriate','reliance','note']];
+  list.forEach(s=>s.trials.forEach(x=>rows.push([s.participant,s.condition,s.started,x.trial,x.case,x.encounter,x.advice,x.adviceWas,x.decision,x.timeout?1:0,x.timeS,x.dataOpened?1:0,x.dataOpenS,x.evidenceClicks||0,distinctClaims(x),x.altsOpened?1:0,x.zooms||0,x.appropriate?1:0,CLS(x),trialNote(s,x.trial)])));
   return csv(rows);
 }
 function sessionsCSV(list){
@@ -1531,7 +1555,7 @@ let last=performance.now();
 function loop(now){const dt=(now-last)/1000;last=now;
   const running=state.mode==='explore'?!state.decided:state.mode==='study'&&study&&study.cur&&!state.decided&&!$('workspace').hidden;
   if(running&&state.tSim<9){state.tSim+=dt*TIME_SCALE/60;$('simclock').textContent='T+'+fmtT(state.tSim*60);draw();if(Math.random()<.2)renderData()}
-  // zoom eases towards its goal even when the clock is stopped
+  // zoom eases towards its goal (automatic or the operator's) even when the clock is stopped
   if((state.mode==='explore'||state.mode==='study')&&Math.abs(plotR-plotGoal)>0.003){
     plotR=matchMedia('(prefers-reduced-motion:reduce)').matches?plotGoal:plotR+(plotGoal-plotR)*Math.min(1,dt*7);
     if(Math.abs(plotR-plotGoal)<=0.003)plotR=plotGoal; cv.dataset.zoom=plotR.toFixed(2); if(!running)draw()}

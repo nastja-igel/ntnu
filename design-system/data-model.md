@@ -38,12 +38,13 @@ What the prototype records and how it is stored and exported. A future backend w
 | `evidenceClicks` | number | Clicks on claims (condition C) |
 | `claimsDistinct` | number | Distinct claims clicked; derived from `events` for older records |
 | `altsOpened` | boolean | Reject pressed and alternatives shown |
+| `zooms` | number | Manual zoom gestures on the plot (wheel or pinch), each counted once it settles |
 | `appropriate` | boolean | Correct advice accepted or wrong advice rejected |
 | `events` | Event[] | Timestamped log |
 
 ## Event
 
-`{ t: seconds since trial start, type: "open" | "close" | "claim" | "alts", key?: string }`. `key` names the claim (`brg`, `range`, `cpa`, `tcpa`, `radar`, `ais`, `aiscpa`, `age`, `vis`, `own`).
+`{ t: seconds since trial start, type: "open" | "close" | "claim" | "alts" | "zoom", key?: string }`. For a claim, `key` names it (`brg`, `range`, `cpa`, `tcpa`, `radar`, `ais`, `aiscpa`, `age`, `vis`, `own`); for a zoom, `key` is the direction and the resulting visible radius, e.g. `in 2.1 nm`.
 
 ## Derived measures
 
@@ -54,7 +55,7 @@ Per condition (overview): share of wrong advisories accepted, plausibly wrong ca
 ## Exports
 
 - **Session · JSON**: `{ participant, condition, status, started, ended, trialSeconds, order, notes, summary, trialNotes, trials }`, `trials` including `events`.
-- **Trials · CSV** (one or all sessions): `participant, condition, started, trial, case, encounter, advice, advice_was, decision, timeout, decision_s, data_opened, data_open_s, evidence_clicks, evidence_claims_distinct, alts_opened, appropriate, reliance, note`.
+- **Trials · CSV** (one or all sessions): `participant, condition, started, trial, case, encounter, advice, advice_was, decision, timeout, decision_s, data_opened, data_open_s, evidence_clicks, evidence_claims_distinct, alts_opened, zooms, appropriate, reliance, note`.
 - **Sessions · summary CSV**: `participant, condition, status, started, ended, duration_s, trials, appropriate, over_reliance, under_reliance, plausible_caught, plausible_total, timeouts, mean_decision_s, trials_data_opened, evidence_clicks, evidence_claims_distinct, notes`.
 
 ## Addresses
