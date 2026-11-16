@@ -9,6 +9,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="design-system/tokens.css">
 <style>
 /* ==========================================================================
    Shore Control Reliance Lab — styles
@@ -23,65 +24,32 @@
    4. Screens       start console, participant briefing, workspace, results
    5. Responsive    one breakpoint at 880px, one at 820px tall
 
-   COMPONENT INVENTORY (names = class names)
-   btn        .btn  .primary .danger .small  :disabled
-   seg        .seg > button[aria-pressed]           segmented switch
-   chip       .chip                                  evidence / alternative action
-   pill       .pill .ok .no .n                       status label
-   card       .card                                  generic panel
+   COMPONENT INVENTORY (names = class names; contracts in design-system/components.md)
+   btn        .btn  .primary .ghost .danger .small .choice  :disabled
+   linkbtn    .linkbtn  .back                       quiet text actions
+   seg        .seg > button[aria-pressed]  .segbig   segmented switches
+   pill       .pill .ok .over .under .run .n  .ctag  status labels
+   card       .card  .card.dash                      panels
    eyebrow    .eyebrow                               small caps section label
    field      .field > select | input | .seg         labelled form control
-   bar        .bar .barset .brand                    toolbar
-   timer      .timer > div                           countdown bar
-   advice     .advice .tag .act .conf .meter .kv .why   AI advisory
-   datatable  table th td tr.hl .tablewrap .datahead   sensor data
-   truth      .truth .correct .wrong .plausible      ground-truth callout
-   dashboard  .dash .dhead .picker .menu .flag       researcher results screen
-              .rows .cells .tbars .encs .summary     trial sequence figure
-              .matrix .rate .kvl .tl .agg .notes     analytic cards, timelines, sessions
-   toast/note .toast .note .fine                     feedback and small print
+   advisory   .advisory .tag .act .enc .conf .meter .claims .claim .rule
+   decision   .decision .pair .alts .group .timeout .toast .truth
+   datatable  table th td tr.hl .tablewrap           sensor data and dashboard tables
+   notes      .notebox .notes .noteacts .savedmsg    note fields, explicit or autosaving
+   workspace  .work .topline .rail .vtab .datapane .plotarea .hud .helm .hb .side .trialbar .explorebar
+   start      .stage .plot .panel .overlay .door .doorpanel .recent .method .steps .conds
+   participant .brief .checkin .donescreen
+   dashboard  .dhead .dmeta .acts .navses .flag .dd .menu .rq .rq-cmp .rq-verdict
+              .rows .rl .cells .tbars .encs .summary .matrix .mq .rate .kvl .tl .track .axis
+              .tc .sofar .live .nmark .noterow
    legend     .legend .sw-*                          plot legend swatches
-   door       .door[aria-expanded] .doorpanel        start-page entry card
-   steps      .steps                                 numbered steps
-   conds      .conds                                 condition table
    fab        .themeBtn .toTop                       floating round buttons
    ========================================================================== */
 
-/* ---------- 1. Tokens ---------- */
-:root{
-  /* colour: day */
-  --bg:#eef3f4; --panel:#ffffff; --panel2:#f3f7f8; --line:#c9d9de; --fg:#0f2228; --muted:#4f6b73;
-  --own:#0b7f97; --target:#6a4fd1; --ai:#a95f00; --aiSoft:#fbe9cf; --good:#1f8a52; --bad:#c43d32; --goodSoft:#dff1e6; --badSoft:#f8e0dd;
-  --plot:#f7fbfc; --ring:#c6d8de; --ringLabel:#6b8890;
-  --accent:#0d8784; --accentText:#ffffff; /* action buttons; --good stays for feedback only */
-  color-scheme:light;
-  /* type */
-  --font-display:'Barlow Condensed','Arial Narrow',sans-serif; --font-body:'IBM Plex Sans',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
-  --fs-xs:11px; --fs-s:12px; --fs-m:13px; --fs-base:14px; --fs-l:15px; --fs-xl:18px; --fs-2xl:20px; --fs-3xl:24px; --fs-4xl:26px; --fs-5xl:28px; --fs-6xl:32px; --fs-7xl:40px; --fs-8xl:48px;
-  --lh-tight:1.05; --lh-snug:1.3; --lh-base:1.45;
-  --ls-display:.02em; --ls-wide:.04em; --ls-caps-s:.06em; --ls-caps:.08em;
-  /* spacing scale */
-  --sp-0:2px; --sp-1:4px; --sp-2:6px; --sp-3:8px; --sp-4:10px; --sp-5:12px; --sp-6:14px; --sp-7:16px; --sp-8:20px; --sp-9:24px; --sp-10:32px; --sp-11:40px; --sp-12:48px; --sp-13:64px; --sp-14:80px;
-  /* radius */
-  --r-2xs:2px; --r-xs:3px; --r-s:6px; --r-m:8px; --r-l:10px; --r-xl:12px; --r-pill:999px;
-  /* borders, shadow, motion, layout */
-  --border:1px solid var(--line);
-  --shadow-fab:0 2px 10px rgba(0,0,0,.25);
-  --dur:.2s;
-  --content-max:1220px;
-  --page-pad:16px;
-  /* component tokens */
-  --pad-btn:9px 14px; --pad-btn-small:5px 10px; --pad-seg:7px 12px; --pad-chip:3px 9px; --pad-input:6px 8px; --pad-cell:5px 6px;
-  --size-fab:38px; --size-step:34px;
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#081014; --panel:#0e1b21; --panel2:#12232b; --line:#21404b; --fg:#d6e6ea; --muted:#86a2ab;
-  --own:#59c9e0; --target:#b9a6ff; --ai:#f3b23f; --aiSoft:#3a2c10; --good:#5cc28a; --bad:#ef6a5e; --goodSoft:#123323; --badSoft:#3a1714;
-  --plot:#061015; --ring:#183641; --ringLabel:#4f7380; --accent:#4fc1b4; --accentText:#07171a; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#081014; --panel:#0e1b21; --panel2:#12232b; --line:#21404b; --fg:#d6e6ea; --muted:#86a2ab;
-  --own:#59c9e0; --target:#b9a6ff; --ai:#f3b23f; --aiSoft:#3a2c10; --good:#5cc28a; --bad:#ef6a5e; --goodSoft:#123323; --badSoft:#3a1714;
-  --plot:#061015; --ring:#183641; --ringLabel:#4f7380; --accent:#4fc1b4; --accentText:#07171a; color-scheme:dark}
+/* ---------- 1. Tokens ----------
+   Live in design-system/tokens.css, linked from <head> above this block, with the same values in
+   design-system/tokens.json. Colour (two themes), type, spacing, radius, borders, motion, layout,
+   component tokens. Everything below uses them; nothing below defines a colour or size of its own. */
 
 /* ---------- 2. Base ---------- */
 *{box-sizing:border-box}

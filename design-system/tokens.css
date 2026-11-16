@@ -1,0 +1,55 @@
+/* ==========================================================================
+   Shore Control Reliance Lab — design tokens
+   Source of truth for the prototype (index.html links this file) and for
+   tokens.json next to it, which carries the same values for tooling.
+
+   Two themes. Day is the default; night applies when the system prefers
+   dark and the page has not been switched to light, or when the page is
+   switched to dark explicitly (html[data-theme="dark"]).
+
+   Naming: --bg / --panel / --panel2 surfaces; --fg / --muted text;
+   --own / --target / --ai the three actors on the plot; --good / --bad
+   feedback only (never for actions: --accent is the action colour).
+   ========================================================================== */
+
+:root{
+  /* colour · day */
+  --bg:#eef3f4; --panel:#ffffff; --panel2:#f3f7f8; --line:#c9d9de; --fg:#0f2228; --muted:#4f6b73;
+  --own:#0b7f97; --target:#6a4fd1; --ai:#a95f00; --aiSoft:#fbe9cf; --good:#1f8a52; --bad:#c43d32; --goodSoft:#dff1e6; --badSoft:#f8e0dd;
+  --plot:#f7fbfc; --ring:#c6d8de; --ringLabel:#6b8890;
+  --accent:#0d8784; --accentText:#ffffff;
+  color-scheme:light;
+
+  /* type */
+  --font-display:'Barlow Condensed','Arial Narrow',sans-serif; --font-body:'IBM Plex Sans',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+  --fs-xs:11px; --fs-s:12px; --fs-m:13px; --fs-base:14px; --fs-l:15px; --fs-xl:18px; --fs-2xl:20px; --fs-3xl:24px; --fs-4xl:26px; --fs-5xl:28px; --fs-6xl:32px; --fs-7xl:40px; --fs-8xl:48px;
+  --lh-tight:1.05; --lh-snug:1.3; --lh-base:1.45;
+  --ls-display:.02em; --ls-wide:.04em; --ls-caps-s:.06em; --ls-caps:.08em;
+
+  /* spacing scale */
+  --sp-0:2px; --sp-1:4px; --sp-2:6px; --sp-3:8px; --sp-4:10px; --sp-5:12px; --sp-6:14px; --sp-7:16px; --sp-8:20px; --sp-9:24px; --sp-10:32px; --sp-11:40px; --sp-12:48px; --sp-13:64px; --sp-14:80px;
+
+  /* radius */
+  --r-2xs:2px; --r-xs:3px; --r-s:6px; --r-m:8px; --r-l:10px; --r-xl:12px; --r-pill:999px;
+
+  /* borders, shadow, motion, layout */
+  --border:1px solid var(--line);
+  --shadow-fab:0 2px 10px rgba(0,0,0,.25);
+  --dur:.2s;
+  --content-max:1220px;
+  --page-pad:16px;
+
+  /* component tokens */
+  --pad-btn:9px 14px; --pad-btn-small:5px 10px; --pad-seg:7px 12px; --pad-chip:3px 9px; --pad-input:6px 8px; --pad-cell:5px 6px;
+  --size-fab:38px; --size-step:34px;
+}
+
+/* colour · night */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#081014; --panel:#0e1b21; --panel2:#12232b; --line:#21404b; --fg:#d6e6ea; --muted:#86a2ab;
+  --own:#59c9e0; --target:#b9a6ff; --ai:#f3b23f; --aiSoft:#3a2c10; --good:#5cc28a; --bad:#ef6a5e; --goodSoft:#123323; --badSoft:#3a1714;
+  --plot:#061015; --ring:#183641; --ringLabel:#4f7380; --accent:#4fc1b4; --accentText:#07171a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#081014; --panel:#0e1b21; --panel2:#12232b; --line:#21404b; --fg:#d6e6ea; --muted:#86a2ab;
+  --own:#59c9e0; --target:#b9a6ff; --ai:#f3b23f; --aiSoft:#3a2c10; --good:#5cc28a; --bad:#ef6a5e; --goodSoft:#123323; --badSoft:#3a1714;
+  --plot:#061015; --ring:#183641; --ringLabel:#4f7380; --accent:#4fc1b4; --accentText:#07171a; color-scheme:dark}
