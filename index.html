@@ -489,14 +489,15 @@ body.is-work .toTop{display:none}
 
 /* ---------- 5. Responsive ---------- */
 @media (max-width:880px){
-  .work{height:auto;min-height:100dvh;grid-template-columns:1fr;grid-template-rows:4px auto auto auto auto}
+  .work{height:auto;min-height:100dvh;grid-template-columns:1fr;grid-template-rows:4px auto auto auto auto;align-content:start} /* rows hug their content: no slack under the decision buttons */
   .rail{grid-column:1;grid-row:2;flex-direction:row;justify-content:flex-start;border-right:0;border-bottom:var(--border);padding:var(--sp-3) var(--sp-5)}
   .vtab{writing-mode:horizontal-tb;transform:none;padding:var(--sp-2) var(--sp-5)}
   .plotarea{grid-column:1;grid-row:3}
   .side{grid-column:1;grid-row:4}
   .datapane{grid-column:1;grid-row:5;width:auto;border-right:0;border-top:var(--border)}
   .plotarea{aspect-ratio:1/1}
-  .side{border-left:0;overflow:visible}
+  .side{border-left:0;overflow:visible;padding-bottom:calc(var(--size-fab) + var(--sp-9))} /* room under the last row for the floating buttons */
+  .explore-tools{justify-content:flex-start}
   .side .advisory{flex:none;overflow:visible}
   .side .decision{max-height:none;overflow:visible}
   .decision{margin-top:0}
@@ -858,8 +859,15 @@ const ro=new ResizeObserver(es=>es.forEach(e=>sizeCanvas(e.target)));ro.observe(
 function ship(ctx,x,y,hdg,col,sz){ctx.save();ctx.translate(x,y);ctx.rotate(hdg*R);ctx.beginPath();ctx.moveTo(0,-sz);ctx.lineTo(sz*.55,sz*.7);ctx.lineTo(0,sz*.35);ctx.lineTo(-sz*.55,sz*.7);ctx.closePath();ctx.fillStyle=col;ctx.fill();ctx.restore()}
 // Helm: where each alternative sits on the plot (true heading, radius in nm). Mirrors the list in the panel.
 const HELM={port20:{deg:-20,r:3.4},stbd30:{deg:30,r:2.8},stbd45:{deg:45,r:3.8},hold:{deg:0,r:1.9},slow:{deg:180,r:1.2}};
-const frame=c=>{const W=c.clientWidth,H=c.clientHeight;return {W,H,cx:W/2,cy:H*0.56,sc:Math.min(W,H)/9.4}};
-const helmPt=(f,o)=>[f.cx+Math.sin(o.deg*R)*o.r*f.sc,f.cy-Math.cos(o.deg*R)*o.r*f.sc];
+// Plot scale. The shorter side of the canvas spans 2 × rNm nautical miles. The start and end canvases always show 4.7 nm;
+// the workspace plot zooms in when it is squeezed narrow (sensor data open beside it), so the two vessels still fill the picture:
+// the visible radius follows the range to the target, clamped, and eases towards its goal frame by frame.
+const BASE_R=4.7;
+let plotR=BASE_R, plotGoal=BASE_R;
+const frame=c=>{const W=c.clientWidth,H=c.clientHeight,rNm=c.id==='plot'?plotR:BASE_R;return {W,H,cx:W/2,cy:H*0.56,sc:Math.min(W,H)/(2*rNm),rNm}};
+// Helm buttons and the AI heading keep their place on the picture, not in miles: their radii scale with the zoom.
+const zoomK=f=>(f.rNm||BASE_R)/BASE_R;
+const helmPt=(f,o)=>[f.cx+Math.sin(o.deg*R)*o.r*zoomK(f)*f.sc,f.cy-Math.cos(o.deg*R)*o.r*zoomK(f)*f.sc];
 function layoutHelm(){const f=frame(cv);document.querySelectorAll('#helm .hb').forEach(b=>{const [x,y]=helmPt(f,HELM[b.dataset.alt]);b.style.left=x+'px';b.style.top=y+'px'})}
 function draw(){const cs=current(); if(!cs)return; drawPlot(cv,cs,state.tSim,undefined,state.altsOpen); if(state.altsOpen)layoutHelm()}
 function drawStart(){drawPlot(cvStart,CASES[START_CASE],startT%6,startT)}
@@ -917,8 +925,8 @@ function drawHover(ctx,W){
 }
 function drawPlot(cv,cs,tSim,trafficT,helm){
   const ctx=ctxOf(cv);
-  const {W,H,cx,cy,sc}=frame(cv); // sc: px per nm
-  const P=([x,y])=>[cx+x*sc,cy-y*sc];
+  const {W,H,cx,cy,sc,rNm}=frame(cv); // sc: px per nm
+  const P=([x,y])=>[cx+x*sc,cy-y*sc], k=rNm/BASE_R;
   ctx.clearRect(0,0,W,H);
   if(trafficT!==undefined)startHits=[]; // start page: rebuilt every frame for the hover ping
   ctx.font='11px "IBM Plex Mono", monospace';
@@ -928,6 +936,7 @@ function drawPlot(cv,cs,tSim,trafficT,helm){
   ctx.setLineDash([3,4]);ctx.beginPath();ctx.arc(cx,cy,LIMIT*sc,0,Math.PI*2);ctx.strokeStyle=css('--bad');ctx.globalAlpha=.6;ctx.stroke();ctx.globalAlpha=1;ctx.setLineDash([]);
   if(trafficT!==undefined)drawTraffic(ctx,P,trafficT);
   const g=geom(cs,'radar',OWN.cog,tSim), ga=geom(cs,'ais',OWN.cog,tSim);
+  if(cv.id==='plot')plotGoal=W/H<0.75?Math.min(BASE_R,Math.max(1.2,g.range*1.25)):BASE_R; // narrow plot: frame the encounter
   // relative track & CPA
   ctx.setLineDash([2,4]);ctx.strokeStyle=css('--muted');ctx.beginPath();const a=P(g.p),b=P([g.p[0]+g.w[0]*0.4,g.p[1]+g.w[1]*0.4]);ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([]);
   if(g.tcpa>0){const c=P(g.cpaPt);ctx.beginPath();ctx.arc(c[0],c[1],4,0,Math.PI*2);ctx.fillStyle=css('--muted');ctx.fill();ctx.fillText('CPA',c[0]+6,c[1]-6)}
@@ -935,11 +944,11 @@ function drawPlot(cv,cs,tSim,trafficT,helm){
   ctx.strokeStyle=css('--own');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(...P([0,OWN.sog*0.1]));ctx.stroke();
   // ghost headings for the operator's own options (after Reject)
   if(helm){ctx.save();ctx.setLineDash([4,5]);ctx.strokeStyle=css('--own');ctx.globalAlpha=.55;ctx.lineWidth=1.5;
-    Object.values(HELM).forEach(o=>{const f={cx,cy,sc};const [x,y]=helmPt(f,o);ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(x,y);ctx.stroke()});ctx.restore()}
-  // AI proposed heading
+    Object.values(HELM).forEach(o=>{const f={cx,cy,sc,rNm};const [x,y]=helmPt(f,o);ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(x,y);ctx.stroke()});ctx.restore()}
+  // AI proposed heading (a direction, not a distance: its length follows the zoom)
   const ac=advCog(cs.adv);
-  if(cs.adv.kind!=='hold'){ctx.setLineDash([6,5]);ctx.strokeStyle=css('--ai');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(...P([Math.sin(ac*R)*2.2,Math.cos(ac*R)*2.2]));ctx.stroke();ctx.setLineDash([]);
-    const lp=P([Math.sin(ac*R)*2.4,Math.cos(ac*R)*2.4]);ctx.fillStyle=css('--ai');ctx.fillText('AI '+(cs.adv.kind==='stbd'?'+':'−')+cs.adv.deg+'°',lp[0]+4,lp[1])}
+  if(cs.adv.kind!=='hold'){ctx.setLineDash([6,5]);ctx.strokeStyle=css('--ai');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(...P([Math.sin(ac*R)*2.2*k,Math.cos(ac*R)*2.2*k]));ctx.stroke();ctx.setLineDash([]);
+    const lp=P([Math.sin(ac*R)*2.4*k,Math.cos(ac*R)*2.4*k]);ctx.fillStyle=css('--ai');ctx.fillText('AI '+(cs.adv.kind==='stbd'?'+':'−')+cs.adv.deg+'°',lp[0]+4,lp[1])}
   ship(ctx,cx,cy,0,css('--own'),11);
   // target
   const tp=P(g.p);
@@ -1522,6 +1531,10 @@ let last=performance.now();
 function loop(now){const dt=(now-last)/1000;last=now;
   const running=state.mode==='explore'?!state.decided:state.mode==='study'&&study&&study.cur&&!state.decided&&!$('workspace').hidden;
   if(running&&state.tSim<9){state.tSim+=dt*TIME_SCALE/60;$('simclock').textContent='T+'+fmtT(state.tSim*60);draw();if(Math.random()<.2)renderData()}
+  // zoom eases towards its goal even when the clock is stopped
+  if((state.mode==='explore'||state.mode==='study')&&Math.abs(plotR-plotGoal)>0.003){
+    plotR=matchMedia('(prefers-reduced-motion:reduce)').matches?plotGoal:plotR+(plotGoal-plotR)*Math.min(1,dt*7);
+    if(Math.abs(plotR-plotGoal)<=0.003)plotR=plotGoal; cv.dataset.zoom=plotR.toFixed(2); if(!running)draw()}
   if(state.mode==='start'){startT+=dt*TIME_SCALE/60;$('startClock').textContent='T+'+fmtT((startT%6)*60)+' · encounter 5 of 8 · '+(TRAFFIC.length+1)+' targets';drawStart()}
   if(state.mode==='done'){startT+=dt*TIME_SCALE/60;drawDone()}
   requestAnimationFrame(loop)}

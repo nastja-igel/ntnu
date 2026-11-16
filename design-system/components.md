@@ -86,7 +86,7 @@ Back button `.railbtn` and the vertical tab `.vtab` "Sensor data" (`aria-expande
 320px panel with eyebrow + clock, the data table and a note on radar vs AIS. `hidden` when closed; the grid columns are placed explicitly so closing it does not shift the plot.
 
 ### Plot `.plotarea`
-Canvas with `.hud` (brand, projection note), `.sim` clock, `.legend` with swatches `.sw-own .sw-target .sw-ai .sw-muted` (+ `.sw-dashed .sw-dotted`), and the helm `.helm` of five `.hb` round buttons positioned by script at the end of each ghost heading (`.port` is bordered `--bad`). Canvas colours are read from the tokens at draw time.
+Canvas with `.hud` (brand, projection note), `.sim` clock, `.legend` with swatches `.sw-own .sw-target .sw-ai .sw-muted` (+ `.sw-dashed .sw-dotted`), and the helm `.helm` of five `.hb` round buttons positioned by script at the end of each ghost heading (`.port` is bordered `--bad`). Canvas colours are read from the tokens at draw time. The shorter side spans 2 × 4.7 nm; when the plot is narrower than 0.75 of its height (data pane open) the visible radius follows the range to the target (1.2–4.7 nm) and eases towards it, so the two vessels keep filling the picture. Helm radii and the AI heading length scale with the zoom; vectors and ranges stay true to the mile.
 
 ### Advisory `.advisory`
 `.tag` (AI ADVISORY), `.act` manoeuvre in the display font `--fs-6xl`, `.enc` encounter line (A only), `.conf` confidence block: `.num` (percentage in B, word in C), `.lbl`, `.meter` of five `<i>` segments filled by `--p`. In C, `.claims` lists `.claim` buttons (label, `.val` in mono, `.check` "check →"), each ≥ 44px, `.hl` when it is the claim the data pane is highlighting; `.rule` holds the COLREG rule and safety limit.
