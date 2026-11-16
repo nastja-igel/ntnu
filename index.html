@@ -816,7 +816,34 @@ function drawTraffic(ctx,P,t){
     if(v.sog>0){ctx.beginPath();ctx.moveTo(...p);ctx.lineTo(...P([x+vt[0]*0.1,y+vt[1]*0.1]));ctx.stroke();ship(ctx,p[0],p[1],cog,col,7)}
     else{ctx.beginPath();ctx.arc(p[0],p[1],5,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(p[0],p[1],1.5,0,Math.PI*2);ctx.fill()}
     ctx.fillText(v.t+(v.sog?'  '+v.sog+' kn':''),p[0]+9,p[1]+12);
+    startHits.push({key:'t'+i,x:p[0],y:p[1],col,label:v.t+(v.sog?' · COG '+String(Math.round((cog+360)%360)).padStart(3,'0')+'° · '+v.sog+' kn':'')});
   });
+  ctx.restore();
+}
+// Hover on the start-page plot: a sonar ping around the vessel under the pointer and a tag with what the console knows about it.
+// Hits are collected on every frame by drawTraffic and drawPlot; the loop redraws the start page anyway, so the ping animates for free.
+let startHits=[], startHover=null, startHoverOut=null;
+const HOVER_R=16, HOVER_FADE=350;
+function hitAt(x,y){let best=null,bd=HOVER_R*HOVER_R;startHits.forEach(h=>{const d=(h.x-x)**2+(h.y-y)**2;if(d<bd){bd=d;best=h}});return best}
+cvStart.addEventListener('mousemove',e=>{const h=hitAt(e.offsetX,e.offsetY);
+  if(h&&(!startHover||startHover.key!==h.key))startHover={key:h.key,since:performance.now()};
+  else if(!h&&startHover){startHoverOut={key:startHover.key,since:startHover.since,at:performance.now()};startHover=null}
+  cvStart.style.cursor=h?'pointer':''});
+cvStart.addEventListener('mouseleave',()=>{if(startHover){startHoverOut={key:startHover.key,since:startHover.since,at:performance.now()};startHover=null}cvStart.style.cursor=''});
+function drawHover(ctx,W){
+  const now=performance.now(), h=startHover||(startHoverOut&&now-startHoverOut.at<HOVER_FADE?startHoverOut:null); if(!h)return;
+  const hit=startHits.find(k=>k.key===h.key); if(!hit)return;
+  const fade=startHover?Math.min(1,(now-h.since)/150):1-(now-startHoverOut.at)/HOVER_FADE, t=(now-h.since)/1000;
+  const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  ctx.save();
+  if(!reduce)for(let k=0;k<2;k++){const ph=(t*0.7+k*0.5)%1,r=10+ph*34;ctx.beginPath();ctx.arc(hit.x,hit.y,r,0,Math.PI*2);ctx.strokeStyle=hit.col;ctx.lineWidth=1.5;ctx.globalAlpha=fade*(1-ph)*.8;ctx.stroke()}
+  ctx.globalAlpha=fade;ctx.beginPath();ctx.arc(hit.x,hit.y,9,0,Math.PI*2);ctx.strokeStyle=hit.col;ctx.lineWidth=1.5;ctx.stroke();
+  ctx.font='11px "IBM Plex Mono", monospace';
+  const lines=hit.label.split('\n'),w=Math.max(...lines.map(l=>ctx.measureText(l).width))+14,hgt=lines.length*16+6;
+  let x=hit.x+18,y=hit.y-hgt-10; if(x+w>W-8)x=hit.x-18-w; if(y<8)y=hit.y+18;
+  ctx.globalAlpha=fade*.94;ctx.fillStyle=css('--panel');ctx.beginPath();ctx.roundRect(x,y,w,hgt,4);ctx.fill();
+  ctx.globalAlpha=fade;ctx.strokeStyle=hit.col;ctx.lineWidth=1;ctx.stroke();
+  ctx.fillStyle=css('--fg');lines.forEach((l,i)=>ctx.fillText(l,x+7,y+15+i*16));
   ctx.restore();
 }
 function drawPlot(cv,cs,tSim,trafficT,helm){
@@ -824,6 +851,7 @@ function drawPlot(cv,cs,tSim,trafficT,helm){
   const {W,H,cx,cy,sc}=frame(cv); // sc: px per nm
   const P=([x,y])=>[cx+x*sc,cy-y*sc];
   ctx.clearRect(0,0,W,H);
+  if(trafficT!==undefined)startHits=[]; // start page: rebuilt every frame for the hover ping
   ctx.font='11px "IBM Plex Mono", monospace';
   for(let r=1;r<=5;r++){ctx.beginPath();ctx.arc(cx,cy,r*sc,0,Math.PI*2);ctx.strokeStyle=css('--ring');ctx.lineWidth=1;ctx.stroke();ctx.fillStyle=css('--ringLabel');ctx.fillText(r+' nm',cx+4,cy-r*sc+12)}
   ctx.strokeStyle=css('--ring');ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,H);ctx.moveTo(0,cy);ctx.lineTo(W,cy);ctx.stroke();
@@ -853,8 +881,11 @@ function drawPlot(cv,cs,tSim,trafficT,helm){
   if(trafficT!==undefined){ // start page: mark the target the AI advisory is about
     ctx.setLineDash([4,4]);ctx.strokeStyle=css('--ai');ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(tp[0],tp[1],16,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
     ctx.fillStyle=css('--ai');ctx.fillText('AI · hold course',tp[0]+10,tp[1]+17);
+    startHits.push({key:'own',x:cx,y:cy,col:css('--own'),label:'OWN SHIP · HDG 000° · '+OWN.sog+' kn\nautonomous · AI advisory active'});
+    startHits.push({key:'tgt',x:tp[0],y:tp[1],col:css('--target'),label:'TARGET · radar COG '+cs.radar.cog+'° · '+cs.radar.sog+' kn\nAIS COG '+cs.ais.cog+'° · report '+fmtAge(cs.age+Math.round(tSim*60))+' old'});
   }
   ctx.fillStyle=css('--muted');ctx.fillText('HDG 000°  '+OWN.sog+' kn',8,H-10);
+  if(trafficT!==undefined)drawHover(ctx,W);
 }
 
 // ---------- panels ----------
