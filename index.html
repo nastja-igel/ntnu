@@ -867,7 +867,8 @@ const HELM={port20:{deg:-20,r:3.4},stbd30:{deg:30,r:2.8},stbd45:{deg:45,r:3.8},h
 // the visible radius follows the range to the target, clamped, and eases towards its goal frame by frame.
 const BASE_R=4.7;
 let plotR=BASE_R, plotGoal=BASE_R;
-const frame=c=>{const W=c.clientWidth,H=c.clientHeight,rNm=c.id==='plot'?plotR:BASE_R;return {W,H,cx:W/2,cy:H*0.56,sc:Math.min(W,H)/(2*rNm),rNm}};
+let plotOff=[0,0]; // pan of the workspace plot, in nm east / north of the default centre
+const frame=c=>{const W=c.clientWidth,H=c.clientHeight,work=c.id==='plot',rNm=work?plotR:BASE_R,sc=Math.min(W,H)/(2*rNm);return {W,H,cx:W/2+(work?plotOff[0]*sc:0),cy:H*0.56-(work?plotOff[1]*sc:0),sc,rNm}};
 // Helm buttons and the AI heading keep their place on the picture, not in miles: their radii scale with the zoom.
 const zoomK=f=>(f.rNm||BASE_R)/BASE_R;
 const helmPt=(f,o)=>[f.cx+Math.sin(o.deg*R)*o.r*zoomK(f)*f.sc,f.cy-Math.cos(o.deg*R)*o.r*zoomK(f)*f.sc];
@@ -881,14 +882,27 @@ function setZoomGoal(r){
   if(study&&study.cur&&state.mode==='study'){clearTimeout(zoomLogTimer);zoomLogTimer=setTimeout(()=>{if(!study||!study.cur)return;study.cur.zooms++;logEv('zoom',(plotGoal<zoomFrom?'in':'out')+' '+plotGoal.toFixed(1)+' nm');zoomFrom=null},400)}
   else zoomFrom=null;
 }
-function fitZoom(redraw){plotManual=false;zoomFrom=null;$('fitBtn').hidden=true;if(redraw!==false)draw()}
+function fitZoom(redraw){plotManual=false;zoomFrom=null;plotOff=[0,0];$('fitBtn').hidden=true;if(redraw!==false)draw()}
+// Pan: a drag with the mouse wheel pressed, or two fingers moving together. Follows the pointer directly, no easing; Fit undoes it.
+function setPan(o){const lim=plotGoal*2,cl=v=>Math.min(lim,Math.max(-lim,v));plotOff=[cl(o[0]),cl(o[1])];if(!plotManual){plotManual=true;$('fitBtn').hidden=false}draw()}
 $('fitBtn').addEventListener('click',()=>fitZoom());
 cv.addEventListener('dblclick',e=>{e.preventDefault();fitZoom()});
 cv.addEventListener('wheel',e=>{if(matchMedia('(max-width:880px)').matches&&!(e.ctrlKey||e.metaKey))return;e.preventDefault();setZoomGoal(plotGoal*Math.exp(e.deltaY*0.0012))},{passive:false});
-const pinchPts=new Map(); let pinch=null;
-cv.addEventListener('pointerdown',e=>{pinchPts.set(e.pointerId,[e.clientX,e.clientY]);if(pinchPts.size===2){const [a,b]=[...pinchPts.values()];pinch={d0:Math.hypot(a[0]-b[0],a[1]-b[1]),r0:plotGoal}}});
-cv.addEventListener('pointermove',e=>{if(!pinchPts.has(e.pointerId))return;pinchPts.set(e.pointerId,[e.clientX,e.clientY]);if(pinch&&pinchPts.size===2){const [a,b]=[...pinchPts.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(d>0&&pinch.d0>0)setZoomGoal(pinch.r0*pinch.d0/d)}});
-['pointerup','pointercancel','pointerleave'].forEach(t=>cv.addEventListener(t,e=>{pinchPts.delete(e.pointerId);if(pinchPts.size<2)pinch=null}));
+cv.addEventListener('mousedown',e=>{if(e.button===1)e.preventDefault()}); // no browser autoscroll on the middle button
+const pinchPts=new Map(); let pinch=null, pan=null;
+const mid=(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2];
+cv.addEventListener('pointerdown',e=>{
+  if(e.pointerType!=='touch'){if(e.button!==1)return;e.preventDefault();try{cv.setPointerCapture(e.pointerId)}catch(err){}pan={id:e.pointerId,x:e.clientX,y:e.clientY,off:[...plotOff]};cv.style.cursor='grabbing';return}
+  pinchPts.set(e.pointerId,[e.clientX,e.clientY]);
+  if(pinchPts.size===2){const [a,b]=[...pinchPts.values()];pinch={d0:Math.hypot(a[0]-b[0],a[1]-b[1]),r0:plotGoal,c0:mid(a,b),off0:[...plotOff]}}});
+cv.addEventListener('pointermove',e=>{
+  if(pan&&e.pointerId===pan.id){const sc=frame(cv).sc;setPan([pan.off[0]+(e.clientX-pan.x)/sc,pan.off[1]-(e.clientY-pan.y)/sc]);return}
+  if(!pinchPts.has(e.pointerId))return;pinchPts.set(e.pointerId,[e.clientX,e.clientY]);
+  if(pinch&&pinchPts.size===2){const [a,b]=[...pinchPts.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]),c=mid(a,b),sc=frame(cv).sc;
+    setPan([pinch.off0[0]+(c[0]-pinch.c0[0])/sc,pinch.off0[1]-(c[1]-pinch.c0[1])/sc]);if(d>0&&pinch.d0>0)setZoomGoal(pinch.r0*pinch.d0/d)}});
+['pointerup','pointercancel','pointerleave'].forEach(t=>cv.addEventListener(t,e=>{
+  if(pan&&e.pointerId===pan.id&&t!=='pointerleave'){pan=null;cv.style.cursor=''}
+  pinchPts.delete(e.pointerId);if(pinchPts.size<2)pinch=null}));
 function layoutHelm(){const f=frame(cv);document.querySelectorAll('#helm .hb').forEach(b=>{const [x,y]=helmPt(f,HELM[b.dataset.alt]);b.style.left=x+'px';b.style.top=y+'px'})}
 function draw(){const cs=current(); if(!cs)return; drawPlot(cv,cs,state.tSim,undefined,state.altsOpen); if(state.altsOpen)layoutHelm()}
 function drawStart(){drawPlot(cvStart,CASES[START_CASE],startT%6,startT)}
