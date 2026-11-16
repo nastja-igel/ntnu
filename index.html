@@ -331,8 +331,28 @@ tr.hl th,tr.hl td{background:var(--aiSoft)}
 .fab{position:fixed;right:max(var(--sp-6),env(safe-area-inset-right,0px));z-index:20;width:var(--size-fab);height:var(--size-fab);border-radius:50%;border:var(--border);background:var(--panel);color:var(--fg);font-size:var(--fs-xl);line-height:1;cursor:pointer;box-shadow:var(--shadow-fab);display:grid;place-items:center}
 .fab:hover{border-color:var(--own)}
 .themeBtn{bottom:max(var(--sp-6),env(safe-area-inset-bottom,0px))}
-.toTop{bottom:calc(max(var(--sp-6),env(safe-area-inset-bottom,0px)) + var(--size-fab) + var(--sp-4));opacity:0;pointer-events:none;transform:translateY(6px);transition:opacity var(--dur),transform var(--dur)}
+.helpBtn{bottom:calc(max(var(--sp-6),env(safe-area-inset-bottom,0px)) + var(--size-fab) + var(--sp-4));font-family:var(--font-display);font-weight:600;font-size:var(--fs-2xl)}
+.helpBtn[aria-expanded="true"]{border-color:var(--own);color:var(--own)}
+.toTop{bottom:calc(max(var(--sp-6),env(safe-area-inset-bottom,0px)) + 2 * (var(--size-fab) + var(--sp-4)));opacity:0;pointer-events:none;transform:translateY(6px);transition:opacity var(--dur),transform var(--dur)}
 .toTop.on{opacity:1;pointer-events:auto;transform:none}
+/* help drawer: how the prototype works, slid in from the right over any screen */
+.helpVeil{position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 55%,transparent);z-index:29}
+.help{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--panel);border-left:var(--border);box-shadow:0 0 40px rgba(0,0,0,.35);z-index:30;overflow:auto;padding:var(--sp-9) clamp(var(--sp-7),4vw,var(--sp-11)) var(--sp-13);display:flex;flex-direction:column;gap:var(--sp-7);font-size:var(--fs-base)}
+.help .close{position:absolute;right:var(--sp-5);top:var(--sp-5);width:34px;height:34px;border-radius:50%;border:var(--border);background:var(--panel2);color:var(--muted);font:inherit;font-size:var(--fs-xl);cursor:pointer}
+.help .close:hover{color:var(--fg);border-color:var(--own)}
+.help h2{font-family:var(--font-display);font-weight:600;font-size:var(--fs-6xl);margin:0;line-height:var(--lh-tight);padding-right:var(--sp-12)}
+.help h3{font-family:var(--font-display);font-weight:600;font-size:var(--fs-xl);letter-spacing:var(--ls-wide);margin:var(--sp-4) 0 0;color:var(--fg)}
+.help p,.help li{margin:0;color:var(--muted)}
+.help p b,.help li b{color:var(--fg);font-weight:600}
+.help ul{margin:0;padding-left:1.1em;display:grid;gap:var(--sp-2)}
+.help table{font-size:var(--fs-s)}
+.help td,.help th{padding:var(--sp-2) var(--sp-3)}
+.help .toc{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
+.help .toc a{font-size:var(--fs-s);color:var(--own);text-decoration:none;border:var(--border);border-radius:var(--r-pill);padding:var(--sp-0) var(--sp-4)}
+.help .toc a:hover{border-color:var(--own)}
+.help a{color:var(--own)}
+.help section{display:grid;gap:var(--sp-3);scroll-margin-top:var(--sp-7)}
+.help .kbd{font-family:var(--font-mono);font-size:var(--fs-s);background:var(--panel2);border:var(--border);border-radius:var(--r-xs);padding:0 var(--sp-2);color:var(--fg)}
 
 /* ---------- 4. Screens ---------- */
 /* start console: live plot of encounter 5 next to the title and three entry cards; the method block opens below on demand */
@@ -515,6 +535,84 @@ body.is-work .toTop{display:none}
 
 <button class="fab themeBtn" id="themeBtn" type="button" aria-label="Switch to day theme" title="Night / day theme">☀</button>
 <button class="fab toTop" id="toTop" type="button" aria-label="Back to top" title="Back to top">↑</button>
+<button class="fab helpBtn" id="helpBtn" type="button" aria-label="How this prototype works" title="How this prototype works" aria-expanded="false" aria-controls="help">?</button>
+<div class="helpVeil" id="helpVeil" hidden></div>
+<aside class="help" id="help" role="dialog" aria-modal="true" aria-labelledby="helpTitle" hidden>
+  <button class="close" id="helpClose" type="button" aria-label="Close">✕</button>
+  <h2 id="helpTitle">How this prototype works</h2>
+  <p>A research tool for one question: <b>how should an AI collision-avoidance advisory be presented so that a remote operator relies on it when it is right and intervenes when it is wrong?</b> The AI is scripted with known accuracy (Wizard-of-Oz), so every decision can be compared with ground truth. Full text in the <a href="https://github.com/nastja-igel/ntnu#readme" target="_blank" rel="noopener">README</a>.</p>
+  <nav class="toc" aria-label="Sections"><a href="#h-scenario">Scenario</a><a href="#h-screens">Screens</a><a href="#h-conditions">Conditions</a><a href="#h-encounters">Encounters</a><a href="#h-recorded">What is recorded</a><a href="#h-dashboard">Dashboard</a><a href="#h-storage">Storage</a><a href="#h-limits">Limitations</a></nav>
+
+  <section id="h-scenario"><h3>Scenario</h3>
+    <p>An operator in a shore control centre supervises an autonomous vessel. In each encounter the vessel meets another vessel and the AI proposes a manoeuvre. The operator has <b>45 seconds</b> to accept it, or to reject it and choose one of five alternatives. If time runs out, the vessel executes the advice: in an autonomous system, doing nothing is also a decision.</p>
+    <p><b>Sensor data is collapsed by default.</b> Opening it is the operator's own choice, and that choice is what the prototype measures alongside the decision: whether the data was opened, for how long, and which claims were checked.</p>
+  </section>
+
+  <section id="h-screens"><h3>Screens and modes</h3>
+    <ul>
+      <li><b>Start page.</b> A live plot of encounter 5 and four doors: Explore, Run a study session, Researcher dashboard, About the method. Hover a vessel on the plot for its course and speed.</li>
+      <li><b>Explore.</b> Any encounter in any presentation, decide, then reveal the ground truth with an explanation. For demos and walkthroughs.</li>
+      <li><b>Study session.</b> The researcher picks the condition. The participant reads a briefing that names no condition, enters a code and runs eight encounters in random order, 45 s each. At the end only "Session complete" is shown; results stay behind a quiet researcher link.</li>
+      <li><b>Workspace.</b> Left rail with the Sensor data tab, the relative-motion plot in the centre (own vessel at the centre, 1 nm rings, 0.5 nm safety limit, target by radar and, when they disagree, by AIS, the AI heading, the CPA), the advisory and the decision on the right. After Reject the alternatives also appear on the plot as ghost headings.</li>
+      <li><b>Researcher dashboard.</b> Two levels: an overview across all sessions and one participant's session. Described below.</li>
+    </ul>
+  </section>
+
+  <section id="h-conditions"><h3>Three presentation conditions</h3>
+    <table><thead><tr><th>Condition</th><th>The operator sees</th><th>It tests</th></tr></thead><tbody>
+      <tr><td><b>A · Advice</b></td><td>The manoeuvre and the type of encounter</td><td>Baseline reliance on bare advice</td></tr>
+      <tr><td><b>B · + Confidence</b></td><td>The manoeuvre and a confidence percentage</td><td>Does a number calibrate trust or lull people into accepting?</td></tr>
+      <tr><td><b>C · + Evidence</b></td><td>Graded confidence, data basis and AIS report age, predicted CPA after the manoeuvre, the COLREG rule, clickable claims</td><td>Do explanations that point at the data help people catch errors?</td></tr>
+    </tbody></table>
+    <p>In C each claim is a button: it opens the sensor data on the matching row. Explanation as an invitation to check, not a reason to agree.</p>
+  </section>
+
+  <section id="h-encounters"><h3>Eight encounters, three kinds of advice</h3>
+    <table><thead><tr><th>#</th><th>Encounter</th><th>AI advice</th><th>Advice is</th></tr></thead><tbody>
+      <tr><td>1</td><td>Crossing, target on starboard bow</td><td>30° to starboard</td><td>Correct</td></tr>
+      <tr><td>2</td><td>Head-on</td><td>20° to starboard</td><td>Correct</td></tr>
+      <tr><td>3</td><td>Crossing, target on port bow</td><td>Stand on</td><td>Correct</td></tr>
+      <tr><td>4</td><td>Crossing, target on starboard bow</td><td>25° to port</td><td><b>Clearly wrong</b>: turning to port crosses the target's bow</td></tr>
+      <tr><td>5</td><td>Crossing, target on starboard bow</td><td>No action needed</td><td><b>Plausibly wrong</b>: built on a 3-minute-old AIS report; radar shows the target has turned, CPA ≈ 0.1 nm</td></tr>
+      <tr><td>6</td><td>Overtaking a slower vessel</td><td>15° to starboard</td><td>Correct</td></tr>
+      <tr><td>7</td><td>Close-quarters crossing, low visibility</td><td>10° to starboard</td><td><b>Plausibly wrong</b>: right direction, too small; CPA ≈ 0.2 nm against a 0.5 nm limit</td></tr>
+      <tr><td>8</td><td>Being overtaken from starboard quarter</td><td>Stand on</td><td>Correct</td></tr>
+    </tbody></table>
+    <p>Encounter 5 is the key case: the error can only be caught by opening the data and noticing that radar and AIS disagree.</p>
+  </section>
+
+  <section id="h-recorded"><h3>What is recorded</h3>
+    <p>Per trial: the decision and whether it was a timeout, decision time, whether the sensor data was opened and for how long, claims clicked (total and distinct), whether the alternatives were unfolded, and a timestamped event log (open, close, claim, alternatives). From these: <b>appropriate reliance</b> (correct advice accepted or wrong advice rejected), <b>over-reliance</b> (wrong advice accepted), <b>under-reliance</b> (correct advice rejected).</p>
+    <p>A session is saved from its first trial and marked <b>in progress</b> until the last decision. An interrupted session stays visible with the trials it recorded, but does not enter the comparison.</p>
+  </section>
+
+  <section id="h-dashboard"><h3>Researcher dashboard</h3>
+    <ul>
+      <li><b>Overview · What the pilot says so far.</b> One row per question from the project outline, the three conditions side by side and a cautious one-sentence reading: does a confidence number lull people into accepting (wrong advice accepted, B against A); do evidence claims help catch plausible errors (C against A and B, encounter 5 singled out); does checking drift within a session (data opened, first half against second half). The table of all sessions opens below.</li>
+      <li><b>One session.</b> Trial sequence with outcome, decision time and seconds in the data; reliance matrix (advice × decision, signal-detection terms); acceptance by advice type; checking behaviour; event timelines per trial; the trials table with per-trial notes; researcher notes with explicit Save / Cancel.</li>
+      <li><b>Live review.</b> While a participant works, the session is listed as in progress on the start page and in the overview. Opened in a second tab of the same browser, it shows one card per trial: decided ones with outcome and timeline, the current one marked "now", the upcoming ones dimmed. Each card has a note field that saves as you type. Cards fill in as decisions arrive, never under the cursor. When the session ends the tab switches to the finished dashboard.</li>
+      <li><b>Download.</b> Session JSON with the event log and notes; trials CSV; across sessions, one trial-level CSV and one summary CSV.</li>
+    </ul>
+  </section>
+
+  <section id="h-storage"><h3>Storage, addresses, themes</h3>
+    <ul>
+      <li>Sessions live in this browser's storage under participant codes only. Nothing leaves the device unless downloaded. Different addresses and browsers have separate storage.</li>
+      <li>Researcher screens have addresses: <span class="kbd">#overview</span>, <span class="kbd">#session=P07</span>, <span class="kbd">#sessions</span>, <span class="kbd">#explore=5&amp;c=C</span>. Reload, the back button and bookmarks work. A study in progress is deliberately not restored.</li>
+      <li>Night and day themes (the button below this one); the system setting is followed until you switch. Motion is reduced when the system asks for it.</li>
+    </ul>
+  </section>
+
+  <section id="h-limits"><h3>Limitations</h3>
+    <ul>
+      <li>Fictional encounters; simplified geometry and COLREG logic. Not for navigation.</li>
+      <li>One target per encounter, no wind, current or coastline.</li>
+      <li>Eight trials demonstrate the method; they are not enough for statistics. The overview says so: a pilot, not evidence.</li>
+      <li>Not yet tested with professional operators, which would be the first step of the PhD.</li>
+    </ul>
+    <p>Research prototype by Anastasiia Ilina for the PhD application “Human-AI Teaming for Maritime Operations” (NTNU).</p>
+  </section>
+</aside>
 <div class="wrap">
 <div class="content">
 <section id="start">
@@ -1447,6 +1545,20 @@ const toTop=$('toTop');
 function updateToTop(){toTop.classList.toggle('on',scrollY>innerHeight*0.35)}
 addEventListener('scroll',updateToTop,{passive:true}); addEventListener('resize',updateToTop);
 toTop.addEventListener('click',()=>smoothTo(0));
+
+// ---------- help drawer ----------
+let helpReturnFocus=null;
+function setHelp(open){
+  $('help').hidden=!open;$('helpVeil').hidden=!open;$('helpBtn').setAttribute('aria-expanded',open);
+  if(open){helpReturnFocus=document.activeElement;$('help').scrollTop=0;$('helpClose').focus()}
+  else{const back=helpReturnFocus&&helpReturnFocus!==document.body?helpReturnFocus:$('helpBtn');if(back.focus)back.focus();helpReturnFocus=null}
+}
+$('helpBtn').addEventListener('click',()=>setHelp($('help').hidden));
+$('helpClose').addEventListener('click',()=>setHelp(false));
+$('helpVeil').addEventListener('click',()=>setHelp(false));
+addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('help').hidden)setHelp(false)});
+// section links inside the drawer scroll the drawer, not the page, and leave the address alone
+$('help').addEventListener('click',e=>{const a=e.target.closest('a[href^="#h-"]');if(!a)return;e.preventDefault();const t=document.getElementById(a.getAttribute('href').slice(1));if(t)$('help').scrollTo({top:t.offsetTop-16,behavior:'auto'})});
 
 startClass(true);
 renderAll();drawStart();updateToTop();renderRecent();applyHash();

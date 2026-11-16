@@ -110,7 +110,7 @@ Everything can be downloaded: the session as **JSON** (with the event log), the 
 - One HTML file with markup, CSS and vanilla JavaScript, plus `design-system/tokens.css` for the design tokens. No libraries, build step or server. The plot is drawn on `<canvas>`.
 - `design-system/` holds the reusable part for a real codebase: tokens as CSS and as W3C Design Tokens JSON, component contracts, and the data model of a session with its exports.
 - CPA and TCPA are computed from relative motion using bearing, range, courses and speeds.
-- Dark mode (as on a bridge at night) and light mode; works on phones.
+- Dark mode (as on a bridge at night) and light mode; works on phones. The "?" button above the theme switch opens a drawer with this description, so the prototype explains itself without the repository.
 - Sessions are kept in the browser's `localStorage` under participant codes; nothing leaves the device unless the researcher downloads it.
 - To run it locally, open `index.html` in a browser. The live demo is served from this repository by GitHub Pages.
 

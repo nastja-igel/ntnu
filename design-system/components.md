@@ -45,7 +45,10 @@ Uppercase `--fs-s` label wrapping a `select`, `input[type=text]` or `.seg`. Inpu
 `textarea.notes` plus either explicit actions (`.noteacts` with Save `.btn.small.primary` and Cancel, shown only while the text differs from storage; `.dirty` paints the border `--ai`) or, with `data-auto`, silent autosave with a `--muted` "saving… / saved" in the corner (`.savedmsg`). Keyboard: Ctrl+Enter saves, Esc cancels (explicit mode only).
 
 ### Floating buttons `.fab`
-Round `--size-fab` buttons fixed bottom-right: theme toggle `.themeBtn`, back-to-top `.toTop` (visible via `.on`). On the workspace they move to the left edge.
+Round `--size-fab` buttons fixed bottom-right, stacked: theme toggle `.themeBtn`, help `.helpBtn` ("?", `aria-expanded`), back-to-top `.toTop` (visible via `.on`). On the workspace they move to the left edge.
+
+### Help drawer `.help` + `.helpVeil`
+`role="dialog"` slid in from the right (`min(560px, 100%)`), with a close button, a `.toc` of pill links that scroll the drawer itself, `h3` sections and small tables. Opens from `.helpBtn`; closes on ✕, Esc or a click on the veil; focus returns to where it was. Holds the "how this prototype works" text so the explanation travels with the file.
 
 ### Toast `.toast`, note `.note`, fine print `.fine`
 One-line feedback (`--good` by default, recoloured inline), secondary text `--fs-s --muted`, and `--fs-xs` legal text.
